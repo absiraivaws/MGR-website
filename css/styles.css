@@ -1,0 +1,298 @@
+/* ==========================================================================
+   MANNAR GREEN RIDE (MGR) - GLOBAL DESIGN SYSTEM & STYLESHEET
+   Global Color Scheme: Configured via CSS Custom Properties for easy changing.
+   Palette inspired by Seed Color: #12edae (Tetradic Harmony)
+   ========================================================================== */
+
+:root {
+  /* ========================================================================
+     1. GLOBAL COLOR PALETTE (EDIT HERE TO CHANGE ENTIRE SITE THEME EASILY)
+     ======================================================================== */
+  --theme-primary: #12edae;            /* Main Aqua / Mint / Cyan (#12edae from image) */
+  --theme-primary-hover: #0dbd8a;      /* Deeper primary on hover */
+  --theme-primary-dark: #097958;       /* High-contrast dark emerald for text & borders */
+  --theme-primary-soft: #eafdf7;       /* Ultra-soft background tint */
+  --theme-primary-glow: rgba(18, 237, 174, 0.35);
+
+  /* Secondary Tetradic Accents */
+  --theme-indigo: #4f46e5;            /* Tetradic Indigo Blue from image */
+  --theme-indigo-dark: #3730a3;
+  --theme-indigo-soft: #eef2ff;
+
+  --theme-rose: #e11d48;              /* Tetradic Vivid Crimson / Rose from image */
+  --theme-rose-soft: #ffe4e6;
+
+  --theme-lime: #84cc16;              /* Tetradic Lime Yellow-Green from image */
+  --theme-lime-soft: #f7fee7;
+
+  /* Neutrals */
+  --theme-dark: #0f172a;              /* Slate 900 text */
+  --theme-body-bg: #f8fafc;           /* Light surface */
+  --theme-card-bg: #ffffff;           /* Crisp white cards */
+  --theme-border: #e2e8f0;            /* Subtle borders */
+  --theme-muted: #64748b;             /* Subtext muted */
+
+  /* Direct WhatsApp Colors */
+  --whatsapp-color: #25D366;
+  --whatsapp-dark: #128C7E;
+
+  /* ========================================================================
+     2. NAVIGATION BUTTON TOKENS (UNIFORM SIZE & THEME COLORS)
+     ======================================================================== */
+  --nav-btn-min-width: 96px;
+  --nav-btn-height: 42px;
+  --nav-btn-bg: #f1f5f9;              /* Uniform default background */
+  --nav-btn-text: #1e293b;            /* Uniform default text */
+  --nav-btn-border: #cbd5e1;          /* Uniform default border */
+  
+  --nav-btn-hover-bg: var(--theme-primary);        /* Hover background (#12edae theme primary) */
+  --nav-btn-hover-text: #064e3b;                  /* Hover text (crisp dark contrast) */
+  --nav-btn-hover-border: var(--theme-primary-hover);
+
+  --nav-btn-active-bg: var(--theme-primary-dark);  /* Active page background (distinct deep emerald) */
+  --nav-btn-active-text: #ffffff;                 /* Active text (bright white) */
+  --nav-btn-active-border: #065f46;
+  --nav-btn-active-glow: 0 4px 14px rgba(9, 121, 88, 0.35);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+/* Global resets & typography */
+html {
+  scroll-behavior: smooth;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Tamil', 'Noto Sans Sinhala', sans-serif;
+}
+
+body {
+  background-color: var(--theme-body-bg);
+  color: var(--theme-dark);
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Light-themed Hero Background with clean overlay */
+.hero-light-bg {
+  background: linear-gradient(rgba(234, 253, 247, 0.92), rgba(255, 255, 255, 0.96)), 
+              url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=1600') center/cover no-repeat;
+}
+
+/* Glassmorphic Navbar */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+/* ==========================================================================
+   NAVIGATION BUTTONS: UNIFORM SIZE, HOVER & ACTIVE DISPLAY
+   ========================================================================== */
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--nav-btn-min-width);
+  height: var(--nav-btn-height);
+  padding: 4px 10px;
+  font-size: 0.775rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  background-color: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  border: 1px solid var(--nav-btn-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: normal;
+  text-align: center;
+  line-height: 1.15;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Mouse Hover State: changes to primary theme color (#12edae) */
+.nav-btn:hover {
+  background-color: var(--nav-btn-hover-bg);
+  color: var(--nav-btn-hover-text);
+  border-color: var(--nav-btn-hover-border);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px var(--theme-primary-glow);
+}
+
+/* Active Page State: distinctly colored in deep theme emerald */
+.nav-btn.active {
+  background-color: var(--nav-btn-active-bg);
+  color: var(--nav-btn-active-text);
+  border-color: var(--nav-btn-active-border);
+  box-shadow: var(--nav-btn-active-glow);
+  transform: translateY(0);
+}
+
+/* Language Dropdown Button: Same uniform height and appearance */
+.lang-btn-container {
+  display: inline-flex;
+  align-items: center;
+  height: var(--nav-btn-height);
+  padding: 0 12px;
+  border-radius: 0.75rem;
+  background-color: var(--nav-btn-bg);
+  border: 1px solid var(--nav-btn-border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.22s ease;
+}
+
+.lang-btn-container:hover,
+.lang-btn-container:focus-within {
+  border-color: var(--theme-primary-hover);
+  box-shadow: 0 0 0 2px var(--theme-primary-glow);
+  background-color: #ffffff;
+}
+
+/* ==========================================================================
+   GLOBAL THEME UTILITY HELPERS (CHANGE IN :root TO APPLY EVERYWHERE)
+   ========================================================================== */
+.text-theme-primary { color: var(--theme-primary-dark) !important; }
+.bg-theme-primary { background-color: var(--theme-primary-dark) !important; }
+.border-theme-primary { border-color: var(--theme-primary-dark) !important; }
+
+.text-theme-bright { color: var(--theme-primary) !important; }
+.bg-theme-bright { background-color: var(--theme-primary) !important; }
+.border-theme-bright { border-color: var(--theme-primary) !important; }
+
+.bg-theme-soft { background-color: var(--theme-primary-soft) !important; }
+.border-theme-soft { border-color: rgba(18, 237, 174, 0.3) !important; }
+
+.text-theme-indigo { color: var(--theme-indigo) !important; }
+.bg-theme-indigo { background-color: var(--theme-indigo) !important; }
+
+.text-theme-rose { color: var(--theme-rose) !important; }
+.bg-theme-rose { background-color: var(--theme-rose) !important; }
+
+.text-theme-lime { color: var(--theme-lime) !important; }
+.bg-theme-lime { background-color: var(--theme-lime) !important; }
+
+/* Continuous Review Marquee */
+@keyframes scrollMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: scrollMarquee 40s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Floating Action WhatsApp Button */
+.floating-wa-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--whatsapp-color);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px rgba(37, 211, 102, 0.4);
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.floating-wa-btn:hover {
+  background-color: var(--whatsapp-dark);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 15px 30px rgba(18, 140, 126, 0.5);
+}
+
+.floating-wa-btn .pulse-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 9999px;
+  border: 2px solid var(--whatsapp-color);
+  animation: waPulse 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes waPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* Card hover animation */
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Focus rings */
+.form-input-focus:focus {
+  outline: none;
+  border-color: var(--theme-primary-hover);
+  box-shadow: 0 0 0 3px var(--theme-primary-glow);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-marquee {
+    animation: none;
+    overflow-x: auto;
+  }
+  .floating-wa-btn .pulse-ring {
+    animation: none;
+  }
+}

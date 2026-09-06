@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="favGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#097958" />
+      <stop offset="100%" stop-color="#12edae" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#favGrad)" />
+  <!-- Bicycle Icon in Crisp White -->
+  <circle cx="21" cy="40" r="10" fill="none" stroke="#ffffff" stroke-width="3" />
+  <circle cx="43" cy="40" r="10" fill="none" stroke="#ffffff" stroke-width="3" />
+  <path d="M 21 40 L 32 40 L 39 26 L 28 26 Z" fill="none" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" />
+  <line x1="32" y1="40" x2="30" y2="24" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+  <path d="M 27 24 L 33 24" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+  <line x1="43" y1="40" x2="39" y2="26" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+  <path d="M 36 21 L 40 21 L 42 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Small Leaf on top right -->
+  <path d="M 44 14 C 41 12 45 8 49 7 C 51 11 48 14 44 14 Z" fill="#12edae" />
+</svg>

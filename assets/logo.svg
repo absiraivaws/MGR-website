@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="mgrGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#097958" />
+      <stop offset="50%" stop-color="#0dbd8a" />
+      <stop offset="100%" stop-color="#12edae" />
+    </linearGradient>
+    <linearGradient id="mgrAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#12edae" />
+      <stop offset="100%" stop-color="#84cc16" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <!-- Outer Eco Circle -->
+  <circle cx="250" cy="250" r="235" fill="#eafdf7" stroke="#0dbd8a" stroke-width="8" />
+  <circle cx="250" cy="250" r="215" fill="none" stroke="#12edae" stroke-width="3" stroke-dasharray="6,6" />
+
+  <!-- Sun / Coastal Breeze -->
+  <circle cx="250" cy="135" r="40" fill="#fef08a" opacity="0.9" />
+
+  <!-- Mannar Palmyrah / Coconut Palm Silhouettes -->
+  <path d="M 175 180 Q 185 130 205 105 Q 180 120 160 145 Z" fill="#097958" opacity="0.85" />
+  <path d="M 180 180 Q 155 140 135 125 Q 155 145 165 175 Z" fill="#0dbd8a" opacity="0.85" />
+  <path d="M 180 180 Q 210 140 225 130 Q 205 150 190 180 Z" fill="#12edae" opacity="0.85" />
+  <path d="M 180 180 Q 178 220 176 250" stroke="#097958" stroke-width="5" stroke-linecap="round" fill="none" />
+
+  <!-- Road / Pathway Curve -->
+  <path d="M 70 340 Q 250 280 430 340" stroke="#e2e8f0" stroke-width="28" fill="none" stroke-linecap="round" />
+  <path d="M 70 340 Q 250 280 430 340" stroke="#0dbd8a" stroke-width="3.5" stroke-dasharray="12,12" fill="none" stroke-linecap="round" />
+
+  <!-- Vehicle Silhouette Motif (Car/Van Roofline on right) -->
+  <path d="M 315 285 Q 335 255 375 255 Q 405 255 425 285" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round" opacity="0.85" />
+  <circle cx="335" cy="295" r="10" fill="#3730a3" />
+  <circle cx="405" cy="295" r="10" fill="#3730a3" />
+
+  <!-- Centerpiece: Modern Bicycle in Emerald & Mint -->
+  <!-- Rear Wheel -->
+  <circle cx="170" cy="285" r="45" fill="none" stroke="#097958" stroke-width="8" filter="url(#shadow)" />
+  <circle cx="170" cy="285" r="6" fill="#0dbd8a" />
+  <!-- Front Wheel -->
+  <circle cx="295" cy="285" r="45" fill="none" stroke="#097958" stroke-width="8" filter="url(#shadow)" />
+  <circle cx="295" cy="285" r="6" fill="#0dbd8a" />
+
+  <!-- Bike Frame (Diamond Geometry) -->
+  <!-- Bottom Bracket -->
+  <circle cx="225" cy="285" r="7" fill="#12edae" />
+  <!-- Chainstay -->
+  <line x1="170" y1="285" x2="225" y2="285" stroke="#097958" stroke-width="6" stroke-linecap="round" />
+  <!-- Seatstay -->
+  <line x1="170" y1="285" x2="210" y2="215" stroke="#097958" stroke-width="6" stroke-linecap="round" />
+  <!-- Seat Tube -->
+  <line x1="225" y1="285" x2="208" y2="205" stroke="#0dbd8a" stroke-width="7" stroke-linecap="round" />
+  <!-- Saddle -->
+  <path d="M 190 205 Q 210 200 230 207" stroke="#0f172a" stroke-width="8" stroke-linecap="round" />
+  <!-- Down Tube -->
+  <line x1="225" y1="285" x2="275" y2="215" stroke="#0dbd8a" stroke-width="7" stroke-linecap="round" />
+  <!-- Top Tube -->
+  <line x1="210" y1="215" x2="275" y2="215" stroke="#12edae" stroke-width="7" stroke-linecap="round" />
+  <!-- Fork & Head Tube -->
+  <line x1="295" y1="285" x2="275" y2="215" stroke="#0dbd8a" stroke-width="6" stroke-linecap="round" />
+  <line x1="275" y1="215" x2="270" y2="195" stroke="#0dbd8a" stroke-width="7" stroke-linecap="round" />
+  <!-- Handlebars -->
+  <path d="M 255 195 L 273 195 L 285 205" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Dynamic Green Leaf Emblem (Floating Above Bike) -->
+  <path d="M 235 155 C 210 135 240 100 270 95 C 285 120 265 150 235 155 Z" fill="url(#mgrAccentGrad)" />
+  <path d="M 240 148 Q 255 125 268 100" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+  <!-- Brand Typography Arc / Banner -->
+  <text x="250" y="390" font-family="'Plus Jakarta Sans', Inter, -apple-system, sans-serif" font-weight="900" font-size="28" fill="#0f172a" text-anchor="middle" letter-spacing="1.5">
+    MANNAR <tspan fill="#097958">GREEN RIDE</tspan>
+  </text>
+  <text x="250" y="420" font-family="'Plus Jakarta Sans', Inter, -apple-system, sans-serif" font-weight="700" font-size="13" fill="#0dbd8a" text-anchor="middle" letter-spacing="3">
+    ALL PASSENGER TRANSPORT
+  </text>
+  <text x="250" y="445" font-family="'Plus Jakarta Sans', Inter, -apple-system, sans-serif" font-weight="600" font-size="11" fill="#64748b" text-anchor="middle" letter-spacing="1">
+    SRI LANKA • EST. MANNAR
+  </text>
+</svg>
