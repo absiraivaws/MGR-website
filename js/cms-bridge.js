@@ -197,6 +197,105 @@
       const linkTt = document.getElementById('link-tt');
       if (linkTt) linkTt.href = map.tiktok_url;
     }
+
+    // Duration Pricing Matrix (Hourly, Half-Day, Full-Day)
+    if (map.pricing_matrix) {
+      try {
+        const matrix = typeof map.pricing_matrix === 'string' ? JSON.parse(map.pricing_matrix) : map.pricing_matrix;
+        if (matrix && window.PRICING_CONFIG) {
+          if (matrix.hourly) {
+            if (matrix.hourly.bicycle) window.PRICING_CONFIG.hourly.bicycle = `Rs. ${matrix.hourly.bicycle}`;
+            if (matrix.hourly.moto) window.PRICING_CONFIG.hourly.moto = `Rs. ${matrix.hourly.moto}`;
+            if (matrix.hourly.car) window.PRICING_CONFIG.hourly.car = `From Rs. ${Number(matrix.hourly.car).toLocaleString()}`;
+          }
+          if (matrix.halfday) {
+            if (matrix.halfday.bicycle) window.PRICING_CONFIG.halfday.bicycle = `Rs. ${matrix.halfday.bicycle}`;
+            if (matrix.halfday.moto) window.PRICING_CONFIG.halfday.moto = `Rs. ${matrix.halfday.moto}`;
+            if (matrix.halfday.car) window.PRICING_CONFIG.halfday.car = `From Rs. ${Number(matrix.halfday.car).toLocaleString()}`;
+          }
+          if (matrix.fullday) {
+            if (matrix.fullday.bicycle) window.PRICING_CONFIG.fullday.bicycle = `Rs. ${matrix.fullday.bicycle}`;
+            if (matrix.fullday.moto) window.PRICING_CONFIG.fullday.moto = `Rs. ${matrix.fullday.moto}`;
+            if (matrix.fullday.car) window.PRICING_CONFIG.fullday.car = `From Rs. ${Number(matrix.fullday.car).toLocaleString()}`;
+          }
+          if (typeof window.switchPricingDuration === 'function') {
+            window.switchPricingDuration(window.currentDurationTab || 'hourly');
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply pricing_matrix from website_settings:", err);
+      }
+    }
+
+    // Dynamic Multi-Language Configuration
+    if (map.website_languages) {
+      try {
+        const list = typeof map.website_languages === 'string' ? JSON.parse(map.website_languages) : map.website_languages;
+        if (Array.isArray(list) && list.length) {
+          const activeLangs = list.filter(l => l.status === 'active');
+          const langSelect = document.getElementById('lang-select');
+          const langSelectMobile = document.getElementById('lang-select-mobile');
+          const currentLang = localStorage.getItem('mgr_lang') || 'en';
+
+          if (langSelect && activeLangs.length) {
+            langSelect.innerHTML = activeLangs.map(l => 
+              `<option value="${escapeHtml(l.code)}" ${l.code === currentLang ? 'selected' : ''}>${escapeHtml(l.native || l.name)} (${escapeHtml(l.name)})</option>`
+            ).join('');
+          }
+          if (langSelectMobile && activeLangs.length) {
+            langSelectMobile.innerHTML = activeLangs.map(l => 
+              `<option value="${escapeHtml(l.code)}" ${l.code === currentLang ? 'selected' : ''}>${escapeHtml(l.flag || '')} ${escapeHtml(l.code.toUpperCase())}</option>`
+            ).join('');
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply website_languages:", err);
+      }
+    }
+
+    // AI Travel Assistant Settings & API Key
+    if (map.ai_assistant_config) {
+      try {
+        const aiCfg = typeof map.ai_assistant_config === 'string' ? JSON.parse(map.ai_assistant_config) : map.ai_assistant_config;
+        if (aiCfg) {
+          if (aiCfg.gemini_api_key) {
+            window.MGR_GEMINI_API_KEY = aiCfg.gemini_api_key;
+          }
+          const aiSec = document.getElementById('ai-planner');
+          if (aiSec && aiCfg.status === 'inactive') {
+            aiSec.classList.add('hidden');
+          } else if (aiSec) {
+            aiSec.classList.remove('hidden');
+          }
+
+          if (aiCfg.title) {
+            document.querySelectorAll('[data-i18n="ai_title"]').forEach(el => el.textContent = aiCfg.title);
+            propagateToAllTranslations('ai_title', aiCfg.title);
+          }
+          if (aiCfg.badge) {
+            document.querySelectorAll('[data-i18n="ai_badge"]').forEach(el => el.textContent = aiCfg.badge);
+            propagateToAllTranslations('ai_badge', aiCfg.badge);
+          }
+          if (aiCfg.description) {
+            document.querySelectorAll('[data-i18n="ai_desc"]').forEach(el => el.textContent = aiCfg.description);
+            propagateToAllTranslations('ai_desc', aiCfg.description);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply ai_assistant_config:", err);
+      }
+    }
+  }
+
+  // Helper to ensure English details update all active languages
+  function propagateToAllTranslations(key, value) {
+    if (!value) return;
+    if (window.translations) {
+      Object.keys(window.translations).forEach(lang => {
+        if (!window.translations[lang]) window.translations[lang] = {};
+        window.translations[lang][key] = value;
+      });
+    }
   }
 
   /* ----------------- Apply Sections ----------------- */
@@ -208,27 +307,21 @@
         heroTitleEls.forEach(el => {
           if (sec.title) el.textContent = sec.title;
         });
-        if (window.translations && window.translations.en && sec.title) {
-          window.translations.en.hero_main_title = sec.title;
-        }
+        if (sec.title) propagateToAllTranslations('hero_main_title', sec.title);
 
         // Hero Subtitle / Tamil
         const heroSubEls = document.querySelectorAll('#home .hero-subtitle, [data-i18n="hero_tamil_title"]');
         heroSubEls.forEach(el => {
           if (sec.subtitle) el.textContent = sec.subtitle;
         });
-        if (window.translations && window.translations.en && sec.subtitle) {
-          window.translations.en.hero_tamil_title = sec.subtitle;
-        }
+        if (sec.subtitle) propagateToAllTranslations('hero_tamil_title', sec.subtitle);
 
         // Hero Description / Content
         const heroDescEls = document.querySelectorAll('[data-i18n="hero_description"], #home p[data-i18n="hero_description"]');
         heroDescEls.forEach(el => {
           if (sec.content) el.textContent = sec.content;
         });
-        if (window.translations && window.translations.en && sec.content) {
-          window.translations.en.hero_description = sec.content;
-        }
+        if (sec.content) propagateToAllTranslations('hero_description', sec.content);
 
         // CTA Button
         const heroCta = document.getElementById('hero-cta-btn');
@@ -236,9 +329,7 @@
           if (sec.button_text) {
             const span = heroCta.querySelector('span');
             if (span) span.textContent = sec.button_text;
-            if (window.translations && window.translations.en) {
-              window.translations.en.cta_rates = sec.button_text;
-            }
+            propagateToAllTranslations('cta_rates', sec.button_text);
           }
           if (sec.button_url) {
             heroCta.href = sec.button_url;
@@ -249,40 +340,30 @@
         fitTitleEls.forEach(el => {
           if (sec.title) el.textContent = sec.title;
         });
-        if (window.translations && window.translations.en && sec.title) {
-          window.translations.en.fitness_title = sec.title;
-        }
+        if (sec.title) propagateToAllTranslations('fitness_title', sec.title);
 
         const fitDescEls = document.querySelectorAll('[data-i18n="fitness_desc"]');
         fitDescEls.forEach(el => {
           if (sec.content) el.textContent = sec.content;
         });
-        if (window.translations && window.translations.en && sec.content) {
-          window.translations.en.fitness_desc = sec.content;
-        }
+        if (sec.content) propagateToAllTranslations('fitness_desc', sec.content);
       } else if (sec.section_key === 'about') {
         const aboutTitleEls = document.querySelectorAll('[data-i18n="about_title"]');
         aboutTitleEls.forEach(el => {
           if (sec.title) el.textContent = sec.title;
         });
-        if (window.translations && window.translations.en && sec.title) {
-          window.translations.en.about_title = sec.title;
-        }
+        if (sec.title) propagateToAllTranslations('about_title', sec.title);
 
         const aboutDescEls = document.querySelectorAll('[data-i18n="about_desc1"]');
         aboutDescEls.forEach(el => {
           if (sec.subtitle) el.textContent = sec.subtitle;
         });
-        if (window.translations && window.translations.en && sec.subtitle) {
-          window.translations.en.about_desc1 = sec.subtitle;
-        }
+        if (sec.subtitle) propagateToAllTranslations('about_desc1', sec.subtitle);
 
         if (sec.content) {
           const aboutContentEls = document.querySelectorAll('[data-i18n="about_desc2"]');
           aboutContentEls.forEach(el => el.textContent = sec.content);
-          if (window.translations && window.translations.en) {
-            window.translations.en.about_desc2 = sec.content;
-          }
+          propagateToAllTranslations('about_desc2', sec.content);
         }
       }
     });
@@ -430,9 +511,12 @@
         </div>
         <p class="text-xs text-gray-700 italic leading-relaxed">"${escapeHtml(t.quote)}"</p>
         <div class="mt-4 flex items-center space-x-3 pt-3 border-t border-gray-200">
-          <div class="w-8 h-8 rounded-full bg-emerald-100 text-brand-primary flex items-center justify-center font-bold text-xs">
-            ${escapeHtml((t.author_name || 'U').charAt(0))}
-          </div>
+          ${t.avatar_url 
+            ? `<img src="${escapeHtml(t.avatar_url)}" alt="${escapeHtml(t.author_name)}" class="w-8 h-8 rounded-full object-cover border border-emerald-200" onerror="this.outerHTML='<div class=\\'w-8 h-8 rounded-full bg-emerald-100 text-brand-primary flex items-center justify-center font-bold text-xs\\'>${escapeHtml((t.author_name || 'U').charAt(0))}</div>'">`
+            : `<div class="w-8 h-8 rounded-full bg-emerald-100 text-brand-primary flex items-center justify-center font-bold text-xs">
+                ${escapeHtml((t.author_name || 'U').charAt(0))}
+               </div>`
+          }
           <div>
             <p class="text-xs font-bold text-gray-900">${escapeHtml(t.author_name)}</p>
             <p class="text-[10px] text-gray-500">${escapeHtml(t.author_role || 'Rider')}</p>

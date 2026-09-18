@@ -18,6 +18,41 @@ const SITE_CONFIG = {
   }
 };
 
+/**
+ * Milestone rounding helper (10, 100, 1,000, 10K, 1M...)
+ * Formats rounded milestone target and display string
+ */
+function getMilestoneTarget(rawNum) {
+  const n = Number(rawNum) || 0;
+  if (n <= 0) return { target: 0, display: "0", isAbbreviated: false };
+
+  const tiers = [
+    { threshold: 10, target: 10, display: "10", isAbbreviated: false },
+    { threshold: 50, target: 50, display: "50", isAbbreviated: false },
+    { threshold: 100, target: 100, display: "100", isAbbreviated: false },
+    { threshold: 250, target: 250, display: "250", isAbbreviated: false },
+    { threshold: 500, target: 500, display: "500", isAbbreviated: false },
+    { threshold: 1000, target: 1000, display: "1,000", isAbbreviated: false },
+    { threshold: 2500, target: 2500, display: "2.5K", isAbbreviated: true },
+    { threshold: 5000, target: 5000, display: "5K", isAbbreviated: true },
+    { threshold: 10000, target: 10000, display: "10K", isAbbreviated: true },
+    { threshold: 25000, target: 25000, display: "25K", isAbbreviated: true },
+    { threshold: 50000, target: 50000, display: "50K", isAbbreviated: true },
+    { threshold: 100000, target: 100000, display: "100K", isAbbreviated: true },
+    { threshold: 500000, target: 500000, display: "500K", isAbbreviated: true },
+    { threshold: 1000000, target: 1000000, display: "1M", isAbbreviated: true }
+  ];
+
+  for (let i = 0; i < tiers.length; i++) {
+    if (n <= tiers[i].threshold) {
+      return tiers[i];
+    }
+  }
+
+  const m = Math.ceil(n / 1000000);
+  return { target: n, display: `${m}M`, isAbbreviated: true };
+}
+
 const STATS_CONFIG = [
   { target: 68, suffix: "+", label: "Completed Rides & Tours", key: "completed_services" },
   { target: 86, suffix: "+", label: "Happy Riders & Customers", key: "total_customers" },
@@ -38,29 +73,45 @@ function renderStats(config, forceAnimate = false) {
   const currentConfig = config || window.STATS_CONFIG || STATS_CONFIG;
   window.STATS_CONFIG = currentConfig;
 
-  container.innerHTML = currentConfig.map((item, idx) => `
-    <div class="p-4 bg-white/70 rounded-2xl border border-emerald-100 shadow-sm backdrop-blur-sm">
-      <p class="text-3xl sm:text-4xl font-black text-brand-primary tracking-tight">
-        <span id="counter-${idx}">${statsAnimated && !forceAnimate ? item.target : 0}</span>${item.suffix}
-      </p>
-      <p class="text-xs text-gray-600 uppercase font-bold tracking-wider mt-1">${item.label}</p>
-    </div>
-  `).join('');
+  container.innerHTML = currentConfig.map((item, idx) => {
+    const isMilestone = item.suffix === '+';
+    const milestoneInfo = isMilestone ? getMilestoneTarget(item.target) : { target: Number(item.target) || 0, display: String(item.target) };
+    const displayVal = statsAnimated && !forceAnimate ? milestoneInfo.display : 0;
+    const suffixHtml = item.suffix === '+' 
+      ? `<span class="inline-flex items-center text-brand-primary ml-1" style="font-size: 0.72em; vertical-align: middle;" title="Milestone Target"><i class="fa-solid fa-plus font-black"></i></span>`
+      : item.suffix;
+
+    return `
+      <div class="p-4 bg-white/70 rounded-2xl border border-emerald-100 shadow-sm backdrop-blur-sm">
+        <p class="text-3xl sm:text-4xl font-black text-brand-primary tracking-tight flex items-center justify-center">
+          <span id="counter-${idx}">${displayVal}</span>${suffixHtml}
+        </p>
+        <p class="text-xs text-gray-600 uppercase font-bold tracking-wider mt-1 text-center">${item.label}</p>
+      </div>
+    `;
+  }).join('');
 
   function runCounterAnimation() {
     currentConfig.forEach((item, idx) => {
-      let start = 0;
-      const targetVal = Number(item.target) || 0;
-      if (targetVal <= 0) return;
-      const stepTime = Math.max(8, Math.floor(1200 / targetVal));
       const counterEl = document.getElementById(`counter-${idx}`);
       if (!counterEl) return;
+
+      const isMilestone = item.suffix === '+';
+      const milestoneInfo = isMilestone ? getMilestoneTarget(item.target) : { target: Number(item.target) || 0, display: String(item.target) };
+      const targetVal = milestoneInfo.target;
+      if (targetVal <= 0) return;
+
+      let start = 0;
+      const step = Math.max(1, Math.floor(targetVal / 40));
+      const stepTime = Math.max(15, Math.floor(1000 / (targetVal / step)));
+
       const timer = setInterval(() => {
-        start += 1;
-        counterEl.innerText = start;
+        start += step;
         if (start >= targetVal) {
-          counterEl.innerText = targetVal;
+          counterEl.innerText = milestoneInfo.display;
           clearInterval(timer);
+        } else {
+          counterEl.innerText = milestoneInfo.isAbbreviated ? `${Math.floor(start / 1000)}K` : start;
         }
       }, stepTime);
     });

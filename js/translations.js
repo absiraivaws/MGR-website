@@ -451,16 +451,22 @@ function updateSEOMetadata(lang) {
   document.documentElement.lang = lang;
 }
 
+window.translations = translations;
+
 /**
  * Switch website language across all data-i18n elements
  */
 function changeLanguage(langKey) {
-  const dict = translations[langKey] || translations.en;
+  const allTranslations = window.translations || translations;
+  const dict = allTranslations[langKey] || allTranslations.en || {};
+  const fallback = allTranslations.en || {};
   
   document.querySelectorAll('[data-i18n]').forEach(element => {
     const key = element.getAttribute('data-i18n');
-    if (dict[key]) {
+    if (dict[key] !== undefined && dict[key] !== "") {
       element.innerHTML = dict[key];
+    } else if (fallback[key] !== undefined) {
+      element.innerHTML = fallback[key];
     }
   });
 

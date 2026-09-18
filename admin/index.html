@@ -58,8 +58,14 @@
         <a class="nav-item" data-nav-tab="testimonials">
           <i class="fa-solid fa-comments"></i> Testimonials
         </a>
+        <a class="nav-item" data-nav-tab="ai-assistant">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI Travel Assistant
+        </a>
 
         <div class="nav-section-label">Configuration</div>
+        <a class="nav-item" data-nav-tab="languages">
+          <i class="fa-solid fa-language"></i> Language Manager
+        </a>
         <a class="nav-item" data-nav-tab="settings">
           <i class="fa-solid fa-sliders"></i> Global Settings
         </a>
@@ -182,9 +188,28 @@
           <label class="form-label">Offer Description</label>
           <textarea class="form-textarea" id="offer-desc" placeholder="Details of this discount deal..."></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">Action Button Text</label>
-          <input type="text" class="form-input" id="offer-btn-text" value="Claim Offer on WhatsApp">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Action Button Text</label>
+            <input type="text" class="form-input" id="offer-btn-text" value="Claim Offer on WhatsApp">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Action Button URL</label>
+            <input type="text" class="form-input" id="offer-btn-url" value="#booking">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Offer Image URL (Optional)</label>
+            <input type="url" class="form-input" id="offer-image-url" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status (Active / Deactive)</label>
+            <select class="form-select" id="offer-status">
+              <option value="active">Active (Visible)</option>
+              <option value="inactive">Deactive (Hidden)</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -264,6 +289,10 @@
           </div>
         </div>
         <div class="form-group">
+          <label class="form-label">Avatar / Photo URL (Optional)</label>
+          <input type="url" class="form-input" id="test-avatar" placeholder="https://...">
+        </div>
+        <div class="form-group">
           <label class="form-label">Review Quote *</label>
           <textarea class="form-textarea" id="test-quote" rows="3" placeholder="What did they say about Mannar Green Ride?"></textarea>
         </div>
@@ -271,6 +300,239 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close-modal="add-testimonial-modal">Cancel</button>
         <button class="btn btn-primary" onclick="window.adminCMS.handleCreateTestimonial()"><i class="fa-solid fa-check"></i> Add Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4b. Edit Testimonial Modal -->
+  <div class="modal-backdrop" id="edit-testimonial-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Edit Customer Review</h4>
+        <button class="btn-close-modal" data-close-modal="edit-testimonial-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-test-id">
+        <div class="form-group">
+          <label class="form-label">Customer Name *</label>
+          <input type="text" class="form-input" id="edit-test-name">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Customer Role / City</label>
+            <input type="text" class="form-input" id="edit-test-role">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rating (1 to 5 Stars)</label>
+            <select class="form-select" id="edit-test-rating">
+              <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+              <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+              <option value="3">⭐⭐⭐ (3 Stars)</option>
+              <option value="2">⭐⭐ (2 Stars)</option>
+              <option value="1">⭐ (1 Star)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Avatar / Photo URL</label>
+            <input type="url" class="form-input" id="edit-test-avatar" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="edit-test-status">
+              <option value="published">Published</option>
+              <option value="draft">Draft (Hidden)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Review Quote *</label>
+          <textarea class="form-textarea" id="edit-test-quote" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="edit-testimonial-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveEditTestimonial()"><i class="fa-solid fa-check"></i> Save Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2b. Edit Promotional Offer Modal -->
+  <div class="modal-backdrop" id="edit-offer-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Edit Promotional Offer</h4>
+        <button class="btn-close-modal" data-close-modal="edit-offer-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-offer-id">
+        <div class="form-group">
+          <label class="form-label">Offer Title *</label>
+          <input type="text" class="form-input" id="edit-offer-title">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Discount Badge / Value *</label>
+            <input type="text" class="form-input" id="edit-offer-discount" placeholder="e.g. 50% OFF 2nd Hour">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status (Active / Deactive) *</label>
+            <select class="form-select" id="edit-offer-status">
+              <option value="active">Active (Visible on Website)</option>
+              <option value="inactive">Deactive (Hidden from Website)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Offer Description</label>
+          <textarea class="form-textarea" id="edit-offer-desc" rows="3"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Action Button Text</label>
+            <input type="text" class="form-input" id="edit-offer-btn-text">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Action Button URL</label>
+            <input type="text" class="form-input" id="edit-offer-btn-url" placeholder="#booking">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Offer Banner Image URL (Optional)</label>
+          <input type="url" class="form-input" id="edit-offer-image-url" placeholder="https://...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="edit-offer-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveEditOffer()"><i class="fa-solid fa-check"></i> Update Offer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Add Image from URL Modal -->
+  <div class="modal-backdrop" id="add-media-url-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-link"></i> Add Image from URL</h4>
+        <button class="btn-close-modal" data-close-modal="add-media-url-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Image Title / Name *</label>
+          <input type="text" class="form-input" id="media-url-name" placeholder="e.g. Sunset Causeway Bicycle Ride">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Paste Image Public URL *</label>
+          <input type="url" class="form-input" id="media-url-input" placeholder="https://images.unsplash.com/..." oninput="window.adminCMS.previewMediaUrl(this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="media-url-category">
+            <option value="general">General</option>
+            <option value="hero">Hero Banners</option>
+            <option value="fleet">Vehicle Fleet</option>
+            <option value="tourism">Mannar Tourism &amp; Landmarks</option>
+            <option value="testimonials">Customer Avatars</option>
+          </select>
+        </div>
+        <div id="media-url-preview-box" style="display:none; margin-top:12px; border-radius: 8px; overflow:hidden; border: 1px solid var(--slate-200); height: 160px;">
+          <img id="media-url-preview-img" src="" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="add-media-url-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveMediaUrl()"><i class="fa-solid fa-plus"></i> Add to Library</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Add Language Modal -->
+  <div class="modal-backdrop" id="add-language-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-language"></i> Add New Language</h4>
+        <button class="btn-close-modal" data-close-modal="add-language-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Language Code (ISO 2-letter) *</label>
+            <input type="text" class="form-input" id="lang-code-input" placeholder="e.g. de, it, ar, es" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flag Emoji</label>
+            <input type="text" class="form-input" id="lang-flag-input" placeholder="e.g. 🇩🇪">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Language Name (in English) *</label>
+            <input type="text" class="form-input" id="lang-name-input" placeholder="e.g. German">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Native Name *</label>
+            <input type="text" class="form-input" id="lang-native-input" placeholder="e.g. Deutsch">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="lang-status-input">
+            <option value="active">Active (Visible in Website Language Switcher)</option>
+            <option value="inactive">Inactive (Hidden)</option>
+          </select>
+        </div>
+        <p style="font-size: 12px; color: var(--slate-500); margin-top: 4px;">
+          <i class="fa-solid fa-circle-info"></i> English website content automatically serves as the base dictionary for this language.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="add-language-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleCreateLanguage()"><i class="fa-solid fa-plus"></i> Add Language</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Edit Language Modal -->
+  <div class="modal-backdrop" id="edit-language-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Edit Language</h4>
+        <button class="btn-close-modal" data-close-modal="edit-language-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-lang-code-hidden">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Language Code</label>
+            <input type="text" class="form-input" id="edit-lang-code-display" disabled style="background:#f1f5f9; cursor:not-allowed;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flag Emoji</label>
+            <input type="text" class="form-input" id="edit-lang-flag-input" placeholder="e.g. 🇱🇰">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Language Name (in English) *</label>
+            <input type="text" class="form-input" id="edit-lang-name-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Native Name *</label>
+            <input type="text" class="form-input" id="edit-lang-native-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="edit-lang-status-input">
+            <option value="active">Active (Visible in Website Language Switcher)</option>
+            <option value="inactive">Inactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="edit-language-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveEditLanguage()"><i class="fa-solid fa-check"></i> Save Changes</button>
       </div>
     </div>
   </div>
