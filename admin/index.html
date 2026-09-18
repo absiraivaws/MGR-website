@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MGR Website Admin | Backend CMS</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z'/></svg>">
+  
+  <!-- FontAwesome 6 Free CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Admin Stylesheet -->
+  <link rel="stylesheet" href="css/admin.css">
+  
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">
+          <i class="fa-solid fa-leaf"></i>
+        </div>
+        <div class="brand-text">
+          <h1>MGR Admin</h1>
+          <span>Website CMS</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="nav-section-label">Core Navigation</div>
+        <a class="nav-item active" data-nav-tab="dashboard">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+
+        <div class="nav-section-label">Website Management</div>
+        <a class="nav-item" data-nav-tab="content">
+          <i class="fa-solid fa-pen-to-square"></i> Website Content
+        </a>
+        <a class="nav-item" data-nav-tab="services">
+          <i class="fa-solid fa-bicycle"></i> Services & Rates
+        </a>
+        <a class="nav-item" data-nav-tab="seo" style="color: #34d399; font-weight: 600;">
+          <i class="fa-solid fa-magnifying-glass"></i> SEO & Keywords
+        </a>
+        <a class="nav-item" data-nav-tab="offers">
+          <i class="fa-solid fa-gift"></i> Offers & Deals
+        </a>
+        <a class="nav-item" data-nav-tab="blogs">
+          <i class="fa-solid fa-newspaper"></i> Blog & Guides
+        </a>
+        <a class="nav-item" data-nav-tab="gallery">
+          <i class="fa-solid fa-photo-film"></i> Media Library
+        </a>
+        <a class="nav-item" data-nav-tab="testimonials">
+          <i class="fa-solid fa-comments"></i> Testimonials
+        </a>
+
+        <div class="nav-section-label">Configuration</div>
+        <a class="nav-item" data-nav-tab="settings">
+          <i class="fa-solid fa-sliders"></i> Global Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-user-card" id="sidebar-user-card">
+          <div class="user-info">
+            <div class="user-avatar">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+              <div class="user-name" id="user-email-display">Administrator</div>
+              <span class="user-role-badge" id="user-role-display">Single Admin</span>
+            </div>
+          </div>
+          <button class="btn-logout" id="btn-logout" title="Sign Out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="btn-mobile-menu" id="mobile-drawer-toggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            <h2 id="header-title">Dashboard Overview</h2>
+            <p id="header-subtitle">Live operational metrics & CMS summary</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn btn-outline btn-sm" id="btn-open-preview">
+            <i class="fa-solid fa-laptop"></i> Preview Website
+          </button>
+          <a href="/" target="_blank" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Live Website
+          </a>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Body -->
+      <div class="page-body" id="page-container">
+        <!-- Injected by admin.js -->
+        <div style="text-align: center; padding: 60px 20px;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: var(--primary);"></i>
+          <p style="margin-top: 14px; font-size: 14px; color: var(--slate-600);">Loading MGR Website Admin...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Edit Service Modal -->
+  <div class="modal-backdrop" id="edit-service-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Edit Service & Display Price</h4>
+        <button class="btn-close-modal" data-close-modal="edit-service-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-svc-id">
+        <div class="form-group">
+          <label class="form-label">Service Title</label>
+          <input type="text" class="form-input" id="edit-svc-name" readonly style="background: var(--slate-100);">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Short Description</label>
+          <textarea class="form-textarea" id="edit-svc-desc" rows="2"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Price Source</label>
+            <select class="form-select" id="edit-svc-source">
+              <option value="AUTO">AUTO (Sync from Rental Config)</option>
+              <option value="MANUAL">MANUAL (Custom Display Rate)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Display Price (Rs.)</label>
+            <input type="number" class="form-input" id="edit-svc-price" min="0" step="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price Unit / Period</label>
+          <input type="text" class="form-input" id="edit-svc-unit" placeholder="e.g. per hour, per day">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="edit-service-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveService()"><i class="fa-solid fa-check"></i> Save Rate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Add Promotional Offer Modal -->
+  <div class="modal-backdrop" id="add-offer-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-gift"></i> New Promotional Offer</h4>
+        <button class="btn-close-modal" data-close-modal="add-offer-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Offer Title *</label>
+          <input type="text" class="form-input" id="offer-title" placeholder="e.g. Weekend Island Explorer Deal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Discount Badge / Value *</label>
+          <input type="text" class="form-input" id="offer-discount" placeholder="e.g. 20% OFF or 2nd Hour Free">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Offer Description</label>
+          <textarea class="form-textarea" id="offer-desc" placeholder="Details of this discount deal..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Action Button Text</label>
+          <input type="text" class="form-input" id="offer-btn-text" value="Claim Offer on WhatsApp">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="add-offer-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleCreateOffer()"><i class="fa-solid fa-check"></i> Publish Offer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Add Blog Modal -->
+  <div class="modal-backdrop" id="add-blog-modal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-pen-nib"></i> Publish New Travel Guide / Blog Article</h4>
+        <button class="btn-close-modal" data-close-modal="add-blog-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Article Headline *</label>
+          <input type="text" class="form-input" id="blog-title" placeholder="e.g. Cycling to Talaimannar Pier: Sunset Routes">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="blog-category">
+              <option value="Route Guide">Route Guide</option>
+              <option value="Passenger Safety">Passenger Safety</option>
+              <option value="Local Economy">Local Economy</option>
+              <option value="Fitness & Health">Fitness & Health</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Featured Image URL</label>
+            <input type="url" class="form-input" id="blog-image-url" placeholder="https://images.unsplash.com/...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Summary / Excerpt (Shows on card)</label>
+          <textarea class="form-textarea" id="blog-summary" rows="2" placeholder="Brief summary of the article..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Article Content</label>
+          <textarea class="form-textarea" id="blog-content" rows="6" placeholder="Write the full guide or article here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="add-blog-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleCreateBlog()"><i class="fa-solid fa-upload"></i> Publish Article</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Add Testimonial Modal -->
+  <div class="modal-backdrop" id="add-testimonial-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title"><i class="fa-solid fa-comment-medical"></i> Add Customer Review</h4>
+        <button class="btn-close-modal" data-close-modal="add-testimonial-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Customer Name *</label>
+          <input type="text" class="form-input" id="test-name" placeholder="e.g. Sarah Jenkins">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Customer Role / City</label>
+            <input type="text" class="form-input" id="test-role" placeholder="e.g. Tourist from UK / Fitness Cyclist">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rating (1 to 5 Stars)</label>
+            <select class="form-select" id="test-rating">
+              <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+              <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+              <option value="3">⭐⭐⭐ (3 Stars)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Review Quote *</label>
+          <textarea class="form-textarea" id="test-quote" rows="3" placeholder="What did they say about Mannar Green Ride?"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="add-testimonial-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleCreateTestimonial()"><i class="fa-solid fa-check"></i> Add Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Live Website Preview Modal (Desktop, Tablet, Mobile) -->
+  <div class="modal-backdrop" id="preview-modal">
+    <div class="modal-box modal-lg" style="max-width: 1100px; height: 85vh;">
+      <div class="modal-header" style="background: var(--slate-900); color: #fff; border-bottom: none;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <h4 class="modal-title" style="color: #fff;"><i class="fa-solid fa-eye" style="color: #34d399;"></i> Live Public Website Preview</h4>
+          <span style="font-size: 11.5px; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px;">Draft & Published Content</span>
+        </div>
+        
+        <!-- Device Switcher Bar -->
+        <div class="device-preview-bar">
+          <button class="device-btn active" id="device-btn-desktop" onclick="window.adminCMS.switchPreviewSize('desktop')">
+            <i class="fa-solid fa-desktop"></i> Desktop
+          </button>
+          <button class="device-btn" id="device-btn-tablet" onclick="window.adminCMS.switchPreviewSize('tablet')">
+            <i class="fa-solid fa-tablet-screen-button"></i> Tablet
+          </button>
+          <button class="device-btn" id="device-btn-mobile" onclick="window.adminCMS.switchPreviewSize('mobile')">
+            <i class="fa-solid fa-mobile-screen-button"></i> Mobile
+          </button>
+        </div>
+
+        <button class="btn-close-modal" data-close-modal="preview-modal" style="color: #94a3b8;">&times;</button>
+      </div>
+      
+      <div class="preview-iframe-wrapper">
+        <iframe id="preview-iframe" src="" style="width: 100%;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/supabase-config.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    // Initialize global instance
+    window.adminCMS = new AdminCMSApp();
+    window.adminCMS.init();
+  </script>
+</body>
+</html>

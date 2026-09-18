@@ -1,0 +1,30 @@
+# ==============================================================================
+# MANNAR GREEN RIDE (MGR) - ROBOTS.TXT CRAWLER DIRECTIVES
+# Target: Optimized for Googlebot (google.com, google.lk), Bingbot, and web crawlers
+# Site: https://mannargreenride.com
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+
+# Disallow internal admin panel and backend management from public index
+Disallow: /admin/
+Disallow: /supabase/
+
+# Googlebot specific rules
+User-agent: Googlebot
+Allow: /
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+Disallow: /admin/
+
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /
+
+# Sitemap location
+Sitemap: https://mannargreenride.com/sitemap.xml

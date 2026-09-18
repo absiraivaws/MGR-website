@@ -19,54 +19,90 @@ const SITE_CONFIG = {
 };
 
 const STATS_CONFIG = [
-  { target: 100, suffix: "%", label: "Fitness Ready" },
-  { target: 50,  suffix: "+", label: "Local Passenger Fleet" },
-  { target: 24,  suffix: "/7", label: "Customer Support" },
-  { target: 6,   suffix: "+", label: "Languages Supported" }
+  { target: 68, suffix: "+", label: "Completed Rides & Tours", key: "completed_services" },
+  { target: 86, suffix: "+", label: "Happy Riders & Customers", key: "total_customers" },
+  { target: 12, suffix: "+", label: "Passenger Fleet Vehicles", key: "registered_vehicles" },
+  { target: 100, suffix: "%", label: "Fitness & Eco Friendly", key: "fitness_ready" }
 ];
 
+window.STATS_CONFIG = STATS_CONFIG;
 let statsAnimated = false;
 
 /**
- * Animated statistics counters triggered on scroll
+ * Animated statistics counters triggered on scroll or dynamic database hydration
  */
-function renderStats() {
+function renderStats(config, forceAnimate = false) {
   const container = document.getElementById('stats-container');
   if (!container) return;
 
-  container.innerHTML = STATS_CONFIG.map((item, idx) => `
+  const currentConfig = config || window.STATS_CONFIG || STATS_CONFIG;
+  window.STATS_CONFIG = currentConfig;
+
+  container.innerHTML = currentConfig.map((item, idx) => `
     <div class="p-4 bg-white/70 rounded-2xl border border-emerald-100 shadow-sm backdrop-blur-sm">
       <p class="text-3xl sm:text-4xl font-black text-brand-primary tracking-tight">
-        <span id="counter-${idx}">0</span>${item.suffix}
+        <span id="counter-${idx}">${statsAnimated && !forceAnimate ? item.target : 0}</span>${item.suffix}
       </p>
       <p class="text-xs text-gray-600 uppercase font-bold tracking-wider mt-1">${item.label}</p>
     </div>
   `).join('');
 
+  function runCounterAnimation() {
+    currentConfig.forEach((item, idx) => {
+      let start = 0;
+      const targetVal = Number(item.target) || 0;
+      if (targetVal <= 0) return;
+      const stepTime = Math.max(8, Math.floor(1200 / targetVal));
+      const counterEl = document.getElementById(`counter-${idx}`);
+      if (!counterEl) return;
+      const timer = setInterval(() => {
+        start += 1;
+        counterEl.innerText = start;
+        if (start >= targetVal) {
+          counterEl.innerText = targetVal;
+          clearInterval(timer);
+        }
+      }, stepTime);
+    });
+  }
+
+  if (forceAnimate) {
+    statsAnimated = true;
+    runCounterAnimation();
+    return;
+  }
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && !statsAnimated) {
         statsAnimated = true;
-        STATS_CONFIG.forEach((item, idx) => {
-          let start = 0;
-          const stepTime = Math.max(10, Math.floor(1400 / item.target));
-          const counterEl = document.getElementById(`counter-${idx}`);
-          if (!counterEl) return;
-          const timer = setInterval(() => {
-            start += 1;
-            counterEl.innerText = start;
-            if (start >= item.target) {
-              counterEl.innerText = item.target;
-              clearInterval(timer);
-            }
-          }, stepTime);
-        });
+        runCounterAnimation();
       }
     });
-  }, { threshold: 0.2 });
+  }, { threshold: 0.15 });
 
   observer.observe(container);
 }
+
+/**
+ * Global live stats update hook called by CMS bridge
+ */
+window.renderLiveStats = function(liveStats) {
+  if (!liveStats) return;
+  const cfg = window.STATS_CONFIG || STATS_CONFIG;
+  if (liveStats.completed_services !== undefined && cfg[0]) {
+    cfg[0].target = Number(liveStats.completed_services);
+  }
+  if (liveStats.total_customers !== undefined && cfg[1]) {
+    cfg[1].target = Number(liveStats.total_customers);
+  }
+  if (liveStats.registered_vehicles !== undefined && cfg[2]) {
+    cfg[2].target = Number(liveStats.registered_vehicles);
+  }
+  renderStats(cfg, statsAnimated);
+};
+
+window.renderStats = renderStats;
 
 /**
  * Mobile Navigation Drawer Toggle

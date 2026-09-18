@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Primary Home Page -->
+  <url>
+    <loc>https://mannargreenride.com/</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-LK" href="https://mannargreenride.com/" />
+    <xhtml:link rel="alternate" hreflang="ta-LK" href="https://mannargreenride.com/?lang=ta" />
+    <xhtml:link rel="alternate" hreflang="si-LK" href="https://mannargreenride.com/?lang=si" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://mannargreenride.com/" />
+    <image:image>
+      <image:loc>https://mannargreenride.com/assets/logo.svg</image:loc>
+      <image:title>Mannar Green Ride - Passenger Transport &amp; Bike Rentals</image:title>
+      <image:caption>Comprehensive passenger transport and bicycle rentals across Mannar Island, Sri Lanka</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Passenger Services & Fleet -->
+  <url>
+    <loc>https://mannargreenride.com/#services</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Rental Rates & Pricing Matrix -->
+  <url>
+    <loc>https://mannargreenride.com/#pricing-rates</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Body Fitness & Eco Tourism -->
+  <url>
+    <loc>https://mannargreenride.com/#fitness</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- About Mannar Green Ride -->
+  <url>
+    <loc>https://mannargreenride.com/#about</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Vehicle Owners Host Community -->
+  <url>
+    <loc>https://mannargreenride.com/#partner-vehicles</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Travel Blogs & Guides -->
+  <url>
+    <loc>https://mannargreenride.com/#blogs</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Contact & WhatsApp Hub -->
+  <url>
+    <loc>https://mannargreenride.com/#contact</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

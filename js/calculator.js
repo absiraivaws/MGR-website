@@ -29,6 +29,8 @@ const PRICING_CONFIG = {
   }
 };
 
+window.PRICING_CONFIG = PRICING_CONFIG;
+
 let currentDurationTab = 'hourly';
 
 /**
