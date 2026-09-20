@@ -36,15 +36,22 @@ let currentDurationTab = 'hourly';
 /**
  * Switch pricing duration cards between hourly, halfday, fullday
  */
+/**
+ * Switch pricing duration cards between hourly, halfday, fullday
+ */
 function switchPricingDuration(duration) {
   currentDurationTab = duration;
   ['hourly', 'halfday', 'fullday'].forEach(d => {
     const btn = document.getElementById(`tab-${d}`);
     if (btn) {
       if (d === duration) {
-        btn.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-brand-primary text-white shadow-sm transition";
+        btn.classList.add('active', 'border-brand-primary', 'bg-emerald-50/90', 'text-brand-dark', 'ring-2', 'ring-brand-primary/20', 'shadow-md');
+        btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+        btn.setAttribute('aria-selected', 'true');
       } else {
-        btn.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition";
+        btn.classList.remove('active', 'border-brand-primary', 'bg-emerald-50/90', 'text-brand-dark', 'ring-2', 'ring-brand-primary/20', 'shadow-md');
+        btn.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+        btn.setAttribute('aria-selected', 'false');
       }
     }
   });
@@ -82,7 +89,22 @@ function preselectVehicle(vehicleName, packageType) {
   const packageInput = document.getElementById('book-package');
   
   if (vehicleInput && vehicleName) {
-    vehicleInput.value = vehicleName;
+    // Check if option exists, if not add it dynamically
+    let optionExists = false;
+    for (let i = 0; i < vehicleInput.options.length; i++) {
+      if (vehicleInput.options[i].value === vehicleName || vehicleInput.options[i].text.includes(vehicleName)) {
+        vehicleInput.selectedIndex = i;
+        optionExists = true;
+        break;
+      }
+    }
+    if (!optionExists) {
+      const newOpt = document.createElement('option');
+      newOpt.value = vehicleName;
+      newOpt.textContent = vehicleName;
+      vehicleInput.appendChild(newOpt);
+      vehicleInput.value = vehicleName;
+    }
   }
   if (packageInput && packageType) {
     packageInput.value = packageType;

@@ -176,6 +176,10 @@ body {
 .bg-theme-lime { background-color: var(--theme-lime) !important; }
 
 /* Continuous Review Marquee */
+:root {
+  --marquee-speed: 40s;
+}
+
 @keyframes scrollMarquee {
   0% {
     transform: translateX(0%);
@@ -188,11 +192,106 @@ body {
 .animate-marquee {
   display: flex;
   width: max-content;
-  animation: scrollMarquee 40s linear infinite;
+  animation: scrollMarquee var(--marquee-speed, 40s) linear infinite;
+  will-change: transform;
 }
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+.animate-marquee.marquee-paused {
+  animation: none !important;
+}
+
+.marquee-scroll-container.manual-scroll {
+  overflow-x: auto !important;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Distinct Outlined Rental Duration Option Cards */
+.duration-options-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 44rem;
+  margin: 1.5rem auto 0 auto;
+}
+
+@media (min-width: 640px) {
+  .duration-options-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.duration-option-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  border: 2px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  user-select: none;
+  min-height: 4.25rem;
+}
+
+.duration-option-card:hover {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+  color: #065f46;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.18);
+}
+
+.duration-option-card.active {
+  border-color: var(--brand-primary);
+  background-color: #ecfdf5;
+  color: var(--brand-dark);
+  box-shadow: 0 8px 20px -4px rgba(5, 150, 105, 0.25);
+  outline: 2px solid rgba(5, 150, 105, 0.3);
+  outline-offset: 1px;
+}
+
+.duration-option-card .duration-title {
+  font-size: 0.925rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1.25;
+}
+
+.duration-option-card .duration-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 0.25rem;
+  line-height: 1.2;
+}
+
+.duration-option-card.active .duration-subtitle {
+  color: #047857;
+}
+
+/* Category Grid Dynamic Resilience */
+.category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 8.5rem;
+  border-radius: 1rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Floating Action WhatsApp Button */

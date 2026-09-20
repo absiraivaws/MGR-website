@@ -229,13 +229,18 @@ class AdminCMSApp {
     // Update Header Title
     const titles = {
       dashboard: { title: "Dashboard Overview", subtitle: "Live operational metrics & CMS summary" },
-      content: { title: "Website Content Management", subtitle: "Edit Hero banner, About Us, Contact & footer copy" },
-      services: { title: "Services & Rates Management", subtitle: "Manage vehicle types, rates, auto/manual pricing" },
+      content: { title: "Website Content Management", subtitle: "Edit Hero banner, About Us, Join Us network, Contact & footer copy" },
+      categories: { title: "Transport Categories Manager", subtitle: "Add, edit, enable/disable, reorder, and manage vehicle & transport categories" },
+      counters: { title: "Statistics & Counter Metrics", subtitle: "Manage count values (100 rides, 100 riders, 50 fleet, 100% eco), data sources, and icons" },
+      services: { title: "Services & Rates Management", subtitle: "Manage vehicle types, rates, auto/manual pricing, active status, and card order" },
+      'host-network': { title: "Passenger Host Network & WhatsApp Group", subtitle: "Manage WhatsApp group join link, host community card text, active status, and vehicle sub-cards" },
+      'fitness-cards': { title: "Tourist & Body Fitness Feature Cards", subtitle: "Manage cardio, landmarks, and bike setup cards, icons, active status, and card order" },
+      'about-cards': { title: "About Us Highlight Cards", subtitle: "Manage multilingual support, safety guarantees, active status, and card order" },
       seo: { title: "Dedicated SEO & Keywords Manager", subtitle: "Configure focus keywords, page titles, and meta descriptions" },
-      offers: { title: "Promotions & Offers", subtitle: "Schedule discount deals and seasonal campaigns" },
-      blogs: { title: "Blog & Travel Guides", subtitle: "Manage cycling routes, travel tips, and articles" },
+      offers: { title: "Promotions & Offers", subtitle: "Schedule discount deals, active status, and campaign card order" },
+      blogs: { title: "Blog & Travel Guides", subtitle: "Manage cycling routes, travel tips, active status, and article card order" },
       gallery: { title: "Media Library & Gallery", subtitle: "Upload images to Supabase storage and manage photos" },
-      testimonials: { title: "Rider Testimonials", subtitle: "Manage customer reviews displayed on the website" },
+      testimonials: { title: "Rider Testimonials & Slider Speed", subtitle: "Manage customer reviews, active status, card order, and slider animation controls" },
       'ai-assistant': { title: "AI Travel Assistant & Route Generator", subtitle: "Configure AI trip planning, Gemini API key, and inspect generated routes" },
       languages: { title: "Multi-Language Manager", subtitle: "Add, edit, remove languages and synchronize English content to all languages" },
       settings: { title: "Global Settings & Audit Logs", subtitle: "Business settings, maintenance mode, and change history" }
@@ -262,9 +267,29 @@ class AdminCMSApp {
         container.innerHTML = this.renderContentView();
         this.bindContentEvents();
         break;
+      case 'categories':
+        container.innerHTML = this.renderCategoriesView();
+        this.bindCategoriesEvents();
+        break;
+      case 'counters':
+        container.innerHTML = this.renderCountersView();
+        this.bindCountersEvents();
+        break;
       case 'services':
         container.innerHTML = this.renderServicesView();
         this.bindServicesEvents();
+        break;
+      case 'host-network':
+        container.innerHTML = this.renderHostNetworkView();
+        this.bindHostNetworkEvents();
+        break;
+      case 'fitness-cards':
+        container.innerHTML = this.renderFitnessCardsView();
+        this.bindFitnessCardsEvents();
+        break;
+      case 'about-cards':
+        container.innerHTML = this.renderAboutCardsView();
+        this.bindAboutCardsEvents();
         break;
       case 'seo':
         container.innerHTML = this.renderSeoView();
@@ -490,7 +515,71 @@ class AdminCMSApp {
           <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save About Story</button>
         </form>
       </div>
+
+      <!-- Join Us Section & WhatsApp Join Link URL -->
+      <div class="card" style="border: 2px solid #fef3c7; background: #fffdf5;">
+        <div class="card-header" style="border-bottom: 1px solid #fde68a;">
+          <div>
+            <h3 class="card-title" style="color: #92400e;"><i class="fa-solid fa-car-side"></i> Join Us / Vehicle Host Community Network</h3>
+            <p style="font-size: 12.5px; color: var(--slate-600); margin-top: 2px;">
+              Manage the "Do You Own a Car, Van, or Tourist Bus in Mannar?" section and update the official WhatsApp community join link URL.
+            </p>
+          </div>
+          <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">Join Us Section</span>
+        </div>
+        <form id="join-content-form">
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">Section Tagline / Badge</label>
+              <input type="text" class="form-input" id="join-badge" value="${this.escapeHtml(this.getJoinUsConfig().badge || 'Join Our Passenger Host Network')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Section Heading *</label>
+              <input type="text" class="form-input" id="join-title" value="${this.escapeHtml(this.getJoinUsConfig().title || 'Do You Own a Car, Van, or Tourist Bus in Mannar?')}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description Text</label>
+            <textarea class="form-textarea" id="join-desc">${this.escapeHtml(this.getJoinUsConfig().description || 'Join our official WhatsApp Vehicle Owners Group. We connect your idle cars, passenger vans, and tourist buses with incoming tourists, NGOs, researchers, birdwatchers, and pilgrims visiting Mannar.')}</textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">Button Text</label>
+              <input type="text" class="form-input" id="join-btn-text" value="${this.escapeHtml(this.getJoinUsConfig().button_text || 'Join Host WhatsApp Group')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="color: #047857; font-weight: 700;"><i class="fa-brands fa-whatsapp"></i> WhatsApp Group Join Link URL *</label>
+              <input type="url" class="form-input" id="join-whatsapp-url" value="${this.escapeHtml(this.settings.host_whatsapp_group_url || this.getJoinUsConfig().whatsapp_url || 'https://chat.whatsapp.com/ExampleMannarGreenRideGroup')}" placeholder="https://chat.whatsapp.com/..." style="border-color: #10b981; font-weight: 600;">
+              <span style="font-size: 11.5px; color: var(--slate-500); margin-top: 4px; display: block;">
+                Direct invite link for the Mannar Vehicle Owners WhatsApp group. Clicking "Join Host WhatsApp Group" on the website opens this link.
+              </span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Join Us Section & WhatsApp URL</button>
+        </form>
+      </div>
     `;
+  }
+
+  getJoinUsConfig() {
+    if (this.settings && this.settings.join_us_config) {
+      try {
+        const cfg = typeof this.settings.join_us_config === 'string'
+          ? JSON.parse(this.settings.join_us_config)
+          : this.settings.join_us_config;
+        if (cfg && typeof cfg === 'object') return cfg;
+      } catch (e) {}
+    }
+    return {
+      title: "Do You Own a Car, Van, or Tourist Bus in Mannar?",
+      badge: "Join Our Passenger Host Network",
+      description: "Join our official WhatsApp Vehicle Owners Group. We connect your idle cars, passenger vans, and tourist buses with incoming tourists, NGOs, researchers, birdwatchers, and pilgrims visiting Mannar.",
+      button_text: "Join Host WhatsApp Group",
+      whatsapp_url: this.settings.host_whatsapp_group_url || "https://chat.whatsapp.com/ExampleMannarGreenRideGroup"
+    };
   }
 
   bindContentEvents() {
@@ -536,6 +625,32 @@ class AdminCMSApp {
         await this.saveSection('about', payload, 'ABOUT');
       });
     }
+
+    const joinForm = document.getElementById('join-content-form');
+    if (joinForm) {
+      joinForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const whatsappUrl = document.getElementById('join-whatsapp-url').value.trim();
+        const joinCfg = {
+          title: document.getElementById('join-title').value.trim(),
+          badge: document.getElementById('join-badge').value.trim(),
+          description: document.getElementById('join-desc').value.trim(),
+          button_text: document.getElementById('join-btn-text').value.trim(),
+          whatsapp_url: whatsappUrl,
+          updated_at: new Date().toISOString()
+        };
+
+        try {
+          this.showToast("Saving Join Us section & WhatsApp URL...", "info");
+          await this.saveSettingsItem('join_us_config', joinCfg);
+          await this.saveSettingsItem('host_whatsapp_group_url', whatsappUrl);
+          await this.logAudit("UPDATE", "JOIN_US", "join_us_config", joinCfg);
+          this.showToast("Join Us section and WhatsApp link updated successfully!", "success");
+        } catch (err) {
+          this.showToast(err.message || "Failed to save Join Us section", "error");
+        }
+      });
+    }
   }
 
   async saveSection(sectionKey, payload, moduleName) {
@@ -579,30 +694,58 @@ class AdminCMSApp {
     return `
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-tags"></i> Website Services & Base Rates</h3>
-          <button class="btn btn-outline btn-sm" onclick="window.adminCMS.switchTab('dashboard')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-tags"></i> Services & Rates Management</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage service listings, change featured images, customize rates, and toggle Active/Deactive visibility.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddServiceModal()">
+              <i class="fa-solid fa-plus"></i> Add New Service
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="window.adminCMS.switchTab('dashboard')"><i class="fa-solid fa-arrow-left"></i> Back</button>
+          </div>
         </div>
-        <p style="font-size: 13px; color: var(--slate-600); margin-bottom: 20px;">
-          Control how individual service listings appear on the public website. You can set the price source to <strong>AUTO</strong> (linked to Supabase rental database) or <strong>MANUAL</strong> (custom marketing rate).
-        </p>
 
-        <div style="overflow-x: auto;">
+        <div style="overflow-x: auto; margin-top: 16px;">
           <table class="custom-table">
             <thead>
               <tr>
-                <th>Service Name</th>
+                <th style="width: 75px;">Order</th>
+                <th style="width: 70px;">Image</th>
+                <th>Service Name & Description</th>
                 <th>Icon</th>
                 <th>Price Source</th>
                 <th>Display Rate</th>
                 <th>Unit</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th style="width: 170px;">Actions</th>
               </tr>
             </thead>
             <tbody>
-              ${this.services.map(svc => `
+              ${(() => {
+                const sorted = [...this.services].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+                return sorted.map((svc, idx) => `
                 <tr>
-                  <td><strong>${this.escapeHtml(svc.service_name)}</strong><br><span style="font-size: 11.5px; color: var(--slate-500);">${this.escapeHtml(svc.short_description || '')}</span></td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveService('${svc.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveService('${svc.id}', 1)" ${idx === sorted.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
+                  <td>
+                    ${svc.image_url 
+                      ? `<img src="${this.escapeHtml(svc.image_url)}" alt="${this.escapeHtml(svc.service_name)}" style="width: 54px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid var(--slate-200);">`
+                      : `<div style="width: 54px; height: 38px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--primary); font-size: 16px;"><i class="fa-solid ${this.escapeHtml(svc.icon_reference || 'fa-bicycle')}"></i></div>`
+                    }
+                  </td>
+                  <td>
+                    <strong>${this.escapeHtml(svc.service_name)}</strong>
+                    <br><span style="font-size: 11.5px; color: var(--slate-500);">${this.escapeHtml(svc.short_description || '')}</span>
+                  </td>
                   <td><i class="fa-solid ${this.escapeHtml(svc.icon_reference || 'fa-bicycle')}" style="font-size: 18px; color: var(--primary);"></i></td>
                   <td>
                     <span class="badge ${svc.price_source === 'AUTO' ? 'badge-published' : 'badge-draft'}">
@@ -611,14 +754,25 @@ class AdminCMSApp {
                   </td>
                   <td><strong>Rs. ${svc.manual_price || 100}</strong></td>
                   <td>${this.escapeHtml(svc.price_unit || 'per hour')}</td>
-                  <td><span class="badge badge-published">Published</span></td>
                   <td>
-                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditServiceModal('${svc.id}')">
-                      <i class="fa-solid fa-pen"></i> Edit Rate
+                    <span class="badge ${svc.status === 'published' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${svc.status === 'published' ? 'fa-check' : 'fa-ban'}"></i> ${svc.status === 'published' ? 'Active' : 'Deactive'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditServiceModal('${svc.id}')" title="Edit Service & Image">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${svc.status === 'published' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleServiceStatus('${svc.id}')" title="${svc.status === 'published' ? 'Deactivate' : 'Activate'}" style="margin-left: 4px;">
+                      ${svc.status === 'published' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteService('${svc.id}')" title="Delete Service" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
                     </button>
                   </td>
                 </tr>
-              `).join('')}
+              `).join('');
+              })()}
             </tbody>
           </table>
         </div>
@@ -763,7 +917,97 @@ class AdminCMSApp {
     }
   }
 
+  previewImage(inputId, previewImgId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewImgId);
+    if (!input || !preview) return;
+    const val = input.value.trim();
+    if (val) {
+      preview.src = val;
+      preview.style.display = 'block';
+      preview.onerror = () => { preview.style.display = 'none'; };
+    } else {
+      preview.src = '';
+      preview.style.display = 'none';
+    }
+  }
+
+  async handleFileUpload(fileInput, targetUrlInputId, previewImgId) {
+    if (!fileInput.files || !fileInput.files[0]) return;
+    const file = fileInput.files[0];
+    if (!file.type.startsWith('image/')) {
+      this.showToast('Please select a valid image file (PNG, JPG, WebP, SVG)', 'error');
+      return;
+    }
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    try {
+      this.showToast("Uploading image to storage...", "info");
+      const { error: uploadError } = await this.supabase.storage
+        .from('website-media')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = this.supabase.storage
+        .from('website-media')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      const targetInput = document.getElementById(targetUrlInputId);
+      if (targetInput) {
+        targetInput.value = publicUrl;
+      }
+      if (previewImgId) {
+        const preview = document.getElementById(previewImgId);
+        if (preview) {
+          preview.src = publicUrl;
+          preview.style.display = 'block';
+        }
+      }
+
+      try {
+        await this.supabase.from('website_media').insert({
+          file_name: file.name,
+          storage_path: filePath,
+          public_url: publicUrl,
+          media_type: file.type,
+          file_size: file.size,
+          category: 'general'
+        });
+      } catch (mErr) {
+        console.warn("Media record note:", mErr);
+      }
+
+      this.showToast("Image uploaded successfully!", "success");
+    } catch (err) {
+      this.showToast(err.message || "Failed to upload image", "error");
+    }
+  }
+
   bindServicesEvents() {}
+
+  openAddServiceModal() {
+    const modalTitle = document.getElementById('service-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-plus"></i> Add New Service';
+
+    document.getElementById('edit-svc-id').value = '';
+    document.getElementById('edit-svc-name').value = '';
+    document.getElementById('edit-svc-icon').value = 'fa-solid fa-bicycle';
+    document.getElementById('edit-svc-image-url').value = '';
+    const preview = document.getElementById('edit-svc-image-preview');
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    document.getElementById('edit-svc-desc').value = '';
+    document.getElementById('edit-svc-source').value = 'AUTO';
+    document.getElementById('edit-svc-price').value = '100';
+    document.getElementById('edit-svc-unit').value = 'per hour';
+    document.getElementById('edit-svc-status').value = 'published';
+
+    this.openModal('edit-service-modal');
+  }
 
   openEditServiceModal(serviceId) {
     const svc = this.services.find(s => s.id === serviceId);
@@ -772,48 +1016,178 @@ class AdminCMSApp {
     const modal = document.getElementById('edit-service-modal');
     if (!modal) return;
 
+    const modalTitle = document.getElementById('service-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Service & Rates';
+
     document.getElementById('edit-svc-id').value = svc.id;
-    document.getElementById('edit-svc-name').value = svc.service_name;
+    document.getElementById('edit-svc-name').value = svc.service_name || '';
+    document.getElementById('edit-svc-icon').value = svc.icon_reference || 'fa-solid fa-bicycle';
+    document.getElementById('edit-svc-image-url').value = svc.image_url || '';
+    const preview = document.getElementById('edit-svc-image-preview');
+    if (preview) {
+      if (svc.image_url) {
+        preview.src = svc.image_url;
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
     document.getElementById('edit-svc-desc').value = svc.short_description || '';
     document.getElementById('edit-svc-source').value = svc.price_source || 'AUTO';
     document.getElementById('edit-svc-price').value = svc.manual_price || 100;
     document.getElementById('edit-svc-unit').value = svc.price_unit || 'per hour';
+    document.getElementById('edit-svc-status').value = svc.status || 'published';
 
     this.openModal('edit-service-modal');
   }
 
   async handleSaveService() {
     const id = document.getElementById('edit-svc-id').value;
+    const service_name = document.getElementById('edit-svc-name').value.trim();
+    const icon_reference = document.getElementById('edit-svc-icon').value.trim() || 'fa-solid fa-bicycle';
+    const image_url = document.getElementById('edit-svc-image-url').value.trim();
+    const short_description = document.getElementById('edit-svc-desc').value.trim();
     const price_source = document.getElementById('edit-svc-source').value;
     const manual_price = parseFloat(document.getElementById('edit-svc-price').value) || 0;
-    const price_unit = document.getElementById('edit-svc-unit').value;
-    const short_description = document.getElementById('edit-svc-desc').value;
+    const price_unit = document.getElementById('edit-svc-unit').value.trim() || 'per hour';
+    const status = document.getElementById('edit-svc-status').value || 'published';
+
+    if (!service_name) {
+      this.showToast("Service title is required!", "error");
+      return;
+    }
 
     try {
-      this.showToast("Saving service rate...", "info");
-      const { data, error } = await this.supabase
-        .from('website_services')
-        .update({
-          price_source,
-          manual_price,
-          price_unit,
-          short_description,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select();
+      this.showToast("Saving service...", "info");
 
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        throw new Error("No service updated. Please verify service ID.");
+      if (id) {
+        const { data, error } = await this.supabase
+          .from('website_services')
+          .update({
+            service_name,
+            icon_reference,
+            image_url,
+            short_description,
+            price_source,
+            manual_price,
+            price_unit,
+            status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .select();
+
+        if (error) throw error;
+        await this.logAudit("UPDATE", "SERVICES", id, { service_name, image_url, manual_price, status });
+        this.showToast("Service updated successfully!", "success");
+      } else {
+        const newId = 'srv-' + service_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+        const slug = service_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const maxOrder = this.services.reduce((m, s) => Math.max(m, s.display_order || 0), 0);
+
+        const { data, error } = await this.supabase
+          .from('website_services')
+          .insert({
+            id: newId,
+            service_name,
+            slug,
+            icon_reference,
+            image_url,
+            short_description,
+            price_source,
+            manual_price,
+            price_unit,
+            status,
+            display_order: maxOrder + 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select();
+
+        if (error) throw error;
+        await this.logAudit("CREATE", "SERVICES", newId, { service_name, image_url, manual_price, status });
+        this.showToast("New service added successfully!", "success");
       }
-      await this.logAudit("PRICE_CHANGE", "SERVICES", id, { manual_price, price_source, price_unit });
+
       this.closeModal('edit-service-modal');
-      this.showToast("Service rate updated successfully!", "success");
       await this.loadAllData();
       this.render();
     } catch (err) {
-      this.showToast(err.message || "Failed to update service", "error");
+      this.showToast(err.message || "Failed to save service", "error");
+    }
+  }
+
+  async toggleServiceStatus(id) {
+    const svc = this.services.find(s => s.id === id);
+    if (!svc) return;
+    const newStatus = svc.status === 'published' ? 'inactive' : 'published';
+
+    try {
+      this.showToast("Updating service visibility...", "info");
+      const { error } = await this.supabase
+        .from('website_services')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+      await this.logAudit("STATUS_CHANGE", "SERVICES", id, { status: newStatus });
+      this.showToast(`Service '${svc.service_name}' is now ${newStatus === 'published' ? 'Active' : 'Deactive'}.`, "success");
+      await this.loadAllData();
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to update service status", "error");
+    }
+  }
+
+  async deleteService(id) {
+    const svc = this.services.find(s => s.id === id);
+    if (!svc) return;
+
+    if (!confirm(`Are you sure you want to delete service '${svc.service_name}'?`)) return;
+
+    try {
+      this.showToast("Deleting service...", "info");
+      const { error } = await this.supabase
+        .from('website_services')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await this.logAudit("DELETE", "SERVICES", id, { service_name: svc.service_name });
+      this.showToast(`Service '${svc.service_name}' deleted.`, "info");
+      await this.loadAllData();
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete service", "error");
+    }
+  }
+
+  async moveService(id, direction) {
+    let list = [...this.services].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const index = list.findIndex(s => s.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.display_order = i + 1; });
+    this.services = list;
+
+    try {
+      this.showToast("Updating service display order...", "info");
+      for (const item of list) {
+        await this.supabase.from('website_services').update({ display_order: item.display_order }).eq('id', item.id);
+      }
+      await this.logAudit("REORDER", "SERVICES", id, { new_order: targetIndex + 1 });
+      this.showToast("Services rearranged successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder services", "error");
     }
   }
 
@@ -1087,6 +1461,7 @@ class AdminCMSApp {
           <table class="custom-table">
             <thead>
               <tr>
+                <th style="width: 75px;">Order</th>
                 <th>Offer Title</th>
                 <th>Discount Value</th>
                 <th>Description</th>
@@ -1096,8 +1471,18 @@ class AdminCMSApp {
               </tr>
             </thead>
             <tbody>
-              ${this.offers.length ? this.offers.map(o => `
+              ${(() => {
+                const sorted = [...this.offers].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+                return sorted.length ? sorted.map((o, idx) => `
                 <tr>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveOffer('${o.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveOffer('${o.id}', 1)" ${idx === sorted.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
                   <td><strong>${this.escapeHtml(o.title)}</strong></td>
                   <td><span class="badge badge-published">${this.escapeHtml(o.discount_value || '')}</span></td>
                   <td><span style="font-size: 12px; color: var(--slate-600);">${this.escapeHtml(o.description || '')}</span></td>
@@ -1119,7 +1504,8 @@ class AdminCMSApp {
                     </button>
                   </td>
                 </tr>
-              `).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--slate-500);">No promotional offers found.</td></tr>`}
+              `).join('') : `<tr><td colspan="7" style="text-align:center; color:var(--slate-500);">No promotional offers found.</td></tr>`;
+              })()}
             </tbody>
           </table>
         </div>
@@ -1264,31 +1650,98 @@ class AdminCMSApp {
     }
   }
 
+  async moveOffer(id, direction) {
+    let list = [...this.offers].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const index = list.findIndex(o => o.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.display_order = i + 1; });
+    this.offers = list;
+
+    try {
+      this.showToast("Updating offer display order...", "info");
+      for (const item of list) {
+        await this.supabase.from('website_offers').update({ display_order: item.display_order }).eq('id', item.id);
+      }
+      await this.logAudit("REORDER", "OFFERS", id, { new_order: targetIndex + 1 });
+      this.showToast("Offers rearranged successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder offers", "error");
+    }
+  }
+
   /* ----------------- 6. BLOGS VIEW ----------------- */
   renderBlogsView() {
     return `
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-newspaper"></i> Blog & Travel Articles</h3>
-          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddBlogModal()"><i class="fa-solid fa-plus"></i> Write Article</button>
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-newspaper"></i> Blog & Travel Guides Management</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Publish articles, edit featured cover images, update travel guides, and toggle Active/Deactive status.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddBlogModal()">
+            <i class="fa-solid fa-plus"></i> Write New Article
+          </button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-          ${this.blogs.map(blog => `
-            <div style="background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column;">
-              <img src="${this.escapeHtml(blog.featured_image_url || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600')}" style="height: 160px; width: 100%; object-fit: cover;">
-              <div style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                  <span class="badge badge-published" style="margin-bottom: 8px;">${this.escapeHtml(blog.category_id || 'Travel Guide')}</span>
-                  <h4 style="font-size: 14.5px; font-weight: 700; color: var(--slate-900); margin-bottom: 6px;">${this.escapeHtml(blog.title)}</h4>
-                  <p style="font-size: 12px; color: var(--slate-600); line-height: 1.5;">${this.escapeHtml(blog.summary || '')}</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 16px;">
+          ${(() => {
+            const sorted = [...this.blogs].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            return sorted.map((blog, idx) => {
+            const isPublished = blog.status === 'published';
+            return `
+              <div style="background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);">
+                <div style="position: relative; height: 170px; background: #f8fafc;">
+                  <img src="${this.escapeHtml(blog.featured_image_url || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600')}" alt="${this.escapeHtml(blog.title)}" style="height: 100%; width: 100%; object-fit: cover;">
+                  <span style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.65); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; z-index: 2;">
+                    #${idx + 1}
+                  </span>
+                  <span class="badge ${isPublished ? 'badge-published' : 'badge-draft'}" style="position: absolute; top: 10px; right: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2;">
+                    <i class="fa-solid ${isPublished ? 'fa-check' : 'fa-ban'}"></i> ${isPublished ? 'Active' : 'Deactive'}
+                  </span>
                 </div>
-                <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-100); padding-top: 10px;">
-                  <span style="font-size: 11px; color: var(--slate-400);">${this.escapeHtml(blog.author_name || 'Admin')}</span>
-                  <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteBlog('${blog.id}')"><i class="fa-solid fa-trash"></i></button>
+                <div style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                  <div>
+                    <span class="badge badge-emerald" style="margin-bottom: 8px; font-size: 11px;">${this.escapeHtml(blog.category_id || 'Travel Guide')}</span>
+                    <h4 style="font-size: 15px; font-weight: 700; color: var(--slate-900); margin-bottom: 6px; line-height: 1.4;">${this.escapeHtml(blog.title)}</h4>
+                    <p style="font-size: 12.5px; color: var(--slate-600); line-height: 1.5;">${this.escapeHtml(blog.summary || '')}</p>
+                  </div>
+                  <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--slate-100); padding-top: 12px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                      <button class="btn-reorder" onclick="window.adminCMS.moveBlog('${blog.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Earlier">
+                        <i class="fa-solid fa-arrow-left"></i>
+                      </button>
+                      <button class="btn-reorder" onclick="window.adminCMS.moveBlog('${blog.id}', 1)" ${idx === sorted.length - 1 ? 'disabled' : ''} title="Move Later">
+                        <i class="fa-solid fa-arrow-right"></i>
+                      </button>
+                      <span style="font-size: 11px; color: var(--slate-400); margin-left: 4px;"><i class="fa-solid fa-user-pen"></i> ${this.escapeHtml(blog.author_name || 'Admin')}</span>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditBlogModal('${blog.id}')" title="Edit Article & Image">
+                        <i class="fa-solid fa-pen"></i> Edit
+                      </button>
+                      <button class="btn ${isPublished ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleBlogStatus('${blog.id}')" title="${isPublished ? 'Deactivate (Draft)' : 'Activate (Publish)'}">
+                        ${isPublished ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                      </button>
+                      <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteBlog('${blog.id}')" title="Delete Article">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('');
+          })()}
         </div>
       </div>
     `;
@@ -1297,58 +1750,191 @@ class AdminCMSApp {
   bindBlogsEvents() {}
 
   openAddBlogModal() {
+    const modalTitle = document.getElementById('blog-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Publish New Travel Guide Article';
+
+    document.getElementById('blog-id-hidden').value = '';
+    document.getElementById('blog-title').value = '';
+    document.getElementById('blog-category').value = 'Route Guide';
+    document.getElementById('blog-author').value = 'Mannar Green Ride Team';
+    document.getElementById('blog-status').value = 'published';
+    document.getElementById('blog-image-url').value = '';
+    const preview = document.getElementById('blog-image-preview');
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    document.getElementById('blog-summary').value = '';
+    document.getElementById('blog-content').value = '';
+
+    const saveBtn = document.getElementById('blog-save-btn');
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-upload"></i> Publish Article';
+
     this.openModal('add-blog-modal');
   }
 
-  async handleCreateBlog() {
-    const title = document.getElementById('blog-title').value;
+  openEditBlogModal(id) {
+    const blog = this.blogs.find(b => b.id === id);
+    if (!blog) return;
+
+    const modalTitle = document.getElementById('blog-modal-title');
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Travel Guide Article';
+
+    document.getElementById('blog-id-hidden').value = blog.id;
+    document.getElementById('blog-title').value = blog.title || '';
+    document.getElementById('blog-category').value = blog.category_id || 'Route Guide';
+    document.getElementById('blog-author').value = blog.author_name || 'Mannar Green Ride Team';
+    document.getElementById('blog-status').value = blog.status || 'published';
+    document.getElementById('blog-image-url').value = blog.featured_image_url || '';
+
+    const preview = document.getElementById('blog-image-preview');
+    if (preview) {
+      if (blog.featured_image_url) {
+        preview.src = blog.featured_image_url;
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+
+    document.getElementById('blog-summary').value = blog.summary || '';
+    document.getElementById('blog-content').value = blog.content || '';
+
+    const saveBtn = document.getElementById('blog-save-btn');
+    if (saveBtn) saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Save Changes';
+
+    this.openModal('add-blog-modal');
+  }
+
+  async handleSaveBlog() {
+    const idHidden = document.getElementById('blog-id-hidden')?.value;
+    const title = document.getElementById('blog-title').value.trim();
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const summary = document.getElementById('blog-summary').value;
-    const content = document.getElementById('blog-content').value;
+    const summary = document.getElementById('blog-summary').value.trim();
+    const content = document.getElementById('blog-content').value.trim();
     const category_id = document.getElementById('blog-category').value;
-    const featured_image_url = document.getElementById('blog-image-url').value || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600';
+    const author_name = document.getElementById('blog-author').value.trim() || 'Mannar Green Ride Team';
+    const status = document.getElementById('blog-status').value || 'published';
+    const featured_image_url = document.getElementById('blog-image-url').value.trim() || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600';
 
     if (!title) {
-      this.showToast("Title is required", "error");
+      this.showToast("Article headline is required!", "error");
       return;
     }
 
     try {
-      this.showToast("Publishing article...", "info");
-      const { error } = await this.supabase
-        .from('blog_posts')
-        .insert({
-          title,
-          slug,
-          summary,
-          content,
-          category_id,
-          featured_image_url,
-          author_name: 'Mannar Green Ride Team',
-          status: 'published'
-        });
+      this.showToast("Saving blog article...", "info");
 
-      if (error) throw error;
-      await this.logAudit("CREATE", "BLOGS", slug, { title });
+      if (idHidden) {
+        const { error } = await this.supabase
+          .from('blog_posts')
+          .update({
+            title,
+            slug,
+            summary,
+            content,
+            category_id,
+            author_name,
+            status,
+            featured_image_url,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', idHidden);
+
+        if (error) throw error;
+        await this.logAudit("UPDATE", "BLOGS", idHidden, { title, status, featured_image_url });
+        this.showToast("Blog article updated successfully!", "success");
+      } else {
+        const { error } = await this.supabase
+          .from('blog_posts')
+          .insert({
+            title,
+            slug,
+            summary,
+            content,
+            category_id,
+            author_name,
+            status,
+            featured_image_url,
+            published_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        await this.logAudit("CREATE", "BLOGS", slug, { title, status, featured_image_url });
+        this.showToast("New blog article published!", "success");
+      }
+
       this.closeModal('add-blog-modal');
-      this.showToast("Blog article published to website!", "success");
       await this.loadAllData();
       this.render();
     } catch (err) {
-      this.showToast(err.message || "Failed to publish blog", "error");
+      this.showToast(err.message || "Failed to save blog", "error");
+    }
+  }
+
+  async toggleBlogStatus(id) {
+    const blog = this.blogs.find(b => b.id === id);
+    if (!blog) return;
+    const newStatus = blog.status === 'published' ? 'draft' : 'published';
+
+    try {
+      this.showToast("Updating article visibility...", "info");
+      const { error } = await this.supabase
+        .from('blog_posts')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+      await this.logAudit("STATUS_CHANGE", "BLOGS", id, { status: newStatus });
+      this.showToast(`Article '${blog.title}' is now ${newStatus === 'published' ? 'Active' : 'Deactive'}.`, "success");
+      await this.loadAllData();
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to update article status", "error");
     }
   }
 
   async deleteBlog(id) {
-    if (!confirm("Are you sure you want to delete this article?")) return;
+    const blog = this.blogs.find(b => b.id === id);
+    const title = blog ? blog.title : id;
+    if (!confirm(`Are you sure you want to delete article '${title}'?`)) return;
+
     try {
-      await this.supabase.from('blog_posts').delete().eq('id', id);
-      await this.logAudit("DELETE", "BLOGS", id, {});
-      this.showToast("Article deleted.", "info");
+      this.showToast("Deleting article...", "info");
+      const { error } = await this.supabase.from('blog_posts').delete().eq('id', id);
+      if (error) throw error;
+      await this.logAudit("DELETE", "BLOGS", id, { title });
+      this.showToast("Article deleted successfully.", "info");
       await this.loadAllData();
       this.render();
     } catch (err) {
       this.showToast(err.message || "Failed to delete article", "error");
+    }
+  }
+
+  async moveBlog(id, direction) {
+    let list = [...this.blogs].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const index = list.findIndex(b => b.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.display_order = i + 1; });
+    this.blogs = list;
+
+    try {
+      this.showToast("Updating article display order...", "info");
+      for (const item of list) {
+        await this.supabase.from('blog_posts').update({ display_order: item.display_order }).eq('id', item.id);
+      }
+      await this.logAudit("REORDER", "BLOGS", id, { new_order: targetIndex + 1 });
+      this.showToast("Articles rearranged successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder blogs", "error");
     }
   }
 
@@ -1534,8 +2120,68 @@ class AdminCMSApp {
   }
 
   /* ----------------- 8. TESTIMONIALS VIEW ----------------- */
+  getReviewSliderConfig() {
+    if (this.settings && this.settings.reviews_slider_config) {
+      try {
+        const cfg = typeof this.settings.reviews_slider_config === 'string'
+          ? JSON.parse(this.settings.reviews_slider_config)
+          : this.settings.reviews_slider_config;
+        if (cfg && typeof cfg === 'object') return cfg;
+      } catch (e) {}
+    }
+    return { auto_slide: true, speed: 40 };
+  }
+
   renderTestimonialsView() {
+    const sliderCfg = this.getReviewSliderConfig();
+
     return `
+      <!-- Review Slider Speed & Autoplay Controls -->
+      <div class="card" style="border: 2px solid #a7f3d0; background: #f0fdf4; margin-bottom: 24px;">
+        <div class="card-header" style="border-bottom: 1px solid #d1fae5;">
+          <div>
+            <h3 class="card-title" style="color: #065f46;"><i class="fa-solid fa-sliders"></i> Review Slider Speed & Autoplay Controls</h3>
+            <p style="font-size: 12.5px; color: var(--slate-600); margin-top: 2px;">
+              Control the continuous moving speed and autoplay behavior of the customer review carousel on the live website.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.handleSaveReviewSlider()"><i class="fa-solid fa-check"></i> Save Slider Settings</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; align-items: center; padding-top: 6px;">
+          <div>
+            <label class="form-label" style="font-weight: 700;">Auto-Slide Mode</label>
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 600;">
+                <input type="checkbox" id="rev-autoslide-toggle" ${sliderCfg.auto_slide !== false ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                Enable Continuous Auto-Slide
+              </label>
+            </div>
+            <span style="font-size: 11.5px; color: var(--slate-500); display: block; margin-top: 4px;">
+              When disabled, reviews stay stationary and allow touch / horizontal swipe on mobile and desktop.
+            </span>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="form-label" style="font-weight: 700;">Slide Speed / Loop Duration</label>
+              <span id="rev-speed-display" style="font-weight: 800; color: #059669; font-size: 15px;">${sliderCfg.speed || 40}s</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px;">
+              <input type="range" id="rev-speed-range" min="10" max="120" step="5" value="${sliderCfg.speed || 40}" style="flex: 1; accent-color: var(--primary);" oninput="document.getElementById('rev-speed-display').innerText = this.value + 's'; document.getElementById('rev-speed-input').value = this.value;">
+              <input type="number" id="rev-speed-input" min="10" max="120" value="${sliderCfg.speed || 40}" style="width: 75px;" class="form-input" oninput="document.getElementById('rev-speed-display').innerText = this.value + 's'; document.getElementById('rev-speed-range').value = this.value;">
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 10px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setReviewSpeedPreset(20)">Fast (20s)</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setReviewSpeedPreset(40)">Standard (40s)</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setReviewSpeedPreset(60)">Relaxed (60s)</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setReviewSpeedPreset(90)">Slow (90s)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonials Table Card -->
       <div class="card">
         <div class="card-header">
           <h3 class="card-title"><i class="fa-solid fa-comments"></i> Rider Testimonials & Reviews</h3>
@@ -1548,6 +2194,7 @@ class AdminCMSApp {
           <table class="custom-table">
             <thead>
               <tr>
+                <th style="width: 75px;">Order</th>
                 <th>Customer Name</th>
                 <th>Role / Location</th>
                 <th>Rating</th>
@@ -1557,8 +2204,18 @@ class AdminCMSApp {
               </tr>
             </thead>
             <tbody>
-              ${this.testimonials.length ? this.testimonials.map(t => `
+              ${(() => {
+                const sorted = [...this.testimonials].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+                return sorted.length ? sorted.map((t, idx) => `
                 <tr>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveTestimonial('${t.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveTestimonial('${t.id}', 1)" ${idx === sorted.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
                   <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                       ${t.avatar_url ? `<img src="${this.escapeHtml(t.avatar_url)}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">` : `<div style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #475569;">${this.escapeHtml((t.author_name || 'U').charAt(0))}</div>`}
@@ -1589,12 +2246,42 @@ class AdminCMSApp {
                     </button>
                   </td>
                 </tr>
-              `).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--slate-500);">No testimonials added yet.</td></tr>`}
+              `).join('') : `<tr><td colspan="7" style="text-align:center; color:var(--slate-500);">No testimonials added yet.</td></tr>`;
+              })()}
             </tbody>
           </table>
         </div>
       </div>
     `;
+  }
+
+  setReviewSpeedPreset(seconds) {
+    const r = document.getElementById('rev-speed-range');
+    const i = document.getElementById('rev-speed-input');
+    const d = document.getElementById('rev-speed-display');
+    if (r) r.value = seconds;
+    if (i) i.value = seconds;
+    if (d) d.innerText = seconds + 's';
+  }
+
+  async handleSaveReviewSlider() {
+    const isAutoSlide = document.getElementById('rev-autoslide-toggle')?.checked ?? true;
+    const speed = parseInt(document.getElementById('rev-speed-input')?.value || document.getElementById('rev-speed-range')?.value) || 40;
+
+    const payload = {
+      auto_slide: isAutoSlide,
+      speed: speed,
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      this.showToast("Saving review slider settings...", "info");
+      await this.saveSettingsItem('reviews_slider_config', payload);
+      await this.logAudit("UPDATE", "TESTIMONIALS", "reviews_slider_config", payload);
+      this.showToast("Review slider speed and auto-slide settings updated!", "success");
+    } catch (err) {
+      this.showToast(err.message || "Failed to save review slider settings", "error");
+    }
   }
 
   bindTestimonialsEvents() {}
@@ -1724,6 +2411,34 @@ class AdminCMSApp {
       this.render();
     } catch (err) {
       this.showToast(err.message || "Failed to delete testimonial", "error");
+    }
+  }
+
+  async moveTestimonial(id, direction) {
+    let list = [...this.testimonials].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    const index = list.findIndex(t => t.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.display_order = i + 1; });
+    this.testimonials = list;
+
+    try {
+      this.showToast("Updating review display order...", "info");
+      for (const item of list) {
+        await this.supabase.from('website_testimonials').update({ display_order: item.display_order }).eq('id', item.id);
+      }
+      await this.logAudit("REORDER", "TESTIMONIALS", id, { new_order: targetIndex + 1 });
+      this.showToast("Reviews rearranged successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder testimonials", "error");
     }
   }
 
@@ -2271,6 +2986,575 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     }
   }
 
+  /* ----------------- SETTINGS HELPER ----------------- */
+  async saveSettingsItem(key, value, auditModule = 'SETTINGS') {
+    const stringVal = typeof value === 'string' ? value : JSON.stringify(value);
+    this.settings[key] = stringVal;
+    try {
+      localStorage.setItem('mgr_setting_' + key, stringVal);
+    } catch (e) {}
+
+    if (this.supabase) {
+      try {
+        await this.supabase.from('website_settings').upsert({
+          setting_key: key,
+          setting_value: stringVal,
+          setting_type: typeof value === 'object' ? 'json' : 'text',
+          is_public: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_key' });
+      } catch (err) {
+        console.warn(`Could not save ${key} to Supabase:`, err);
+      }
+    }
+  }
+
+  /* ----------------- 9. TRANSPORT CATEGORIES MANAGER ----------------- */
+  getCategoriesList() {
+    if (this.settings && this.settings.transport_categories) {
+      try {
+        const list = typeof this.settings.transport_categories === 'string'
+          ? JSON.parse(this.settings.transport_categories)
+          : this.settings.transport_categories;
+        if (Array.isArray(list) && list.length) {
+          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'cat-bike', name: 'Bicycle', i18n: 'cat_bike', subtext: 'Fitness & City', badge: 'Rs. 100/hr', icon: 'fa-solid fa-bicycle', color: 'emerald', preselect: 'Bicycle (Rs. 100/hr)', package: 'Hourly Rental', status: 'active', order: 1 },
+      { id: 'cat-moto', name: 'Motorcycle', i18n: 'cat_moto', subtext: 'Scooter & Tour', badge: '', icon: 'fa-solid fa-motorcycle', color: 'sky', preselect: 'Motorcycle / Scooter', package: 'Hourly Rental', status: 'active', order: 2 },
+      { id: 'cat-car', name: 'Car', i18n: 'cat_car', subtext: 'Alto, Sedan', badge: '', icon: 'fa-solid fa-car', color: 'blue', preselect: 'Car / Sedan / Hatchback', package: 'Hourly Rental', status: 'active', order: 3 },
+      { id: 'cat-van', name: 'Van', i18n: 'cat_van', subtext: 'KDH, 10-15 Seat', badge: '', icon: 'fa-solid fa-van-shuttle', color: 'amber', preselect: 'Passenger Van (KDH / Caravan)', package: 'Half-Day (4-5 hrs)', status: 'active', order: 4 },
+      { id: 'cat-bus', name: 'Tourist Bus', i18n: 'cat_bus', subtext: '24-42 Coach', badge: '', icon: 'fa-solid fa-bus', color: 'purple', preselect: 'Tourist Bus / Mini-Bus', package: 'Full Day (24 hrs)', status: 'active', order: 5 },
+      { id: 'cat-boat', name: 'Boat', i18n: 'cat_boat', subtext: 'Lagoon & Islands', badge: 'Safari', icon: 'fa-solid fa-ship', color: 'teal', preselect: 'Boat / Lagoon & Island Safari', package: 'Multi-day Passenger Tour', status: 'active', order: 6 }
+    ];
+  }
+
+  renderCategoriesView() {
+    const list = this.getCategoriesList();
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-shapes"></i> Transport Categories Manager</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage the <strong>"Select Your Transport Category"</strong> quick selector cards on the homepage. Add, edit, enable/disable, and reorder categories.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddCategoryModal()">
+            <i class="fa-solid fa-plus"></i> Add Transport Category
+          </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 16px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Order</th>
+                <th>Category & Icon</th>
+                <th>Subtitle / Description</th>
+                <th>Badge / Rate Tag</th>
+                <th>Theme Accent</th>
+                <th>Booking Preselect</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((cat, idx) => `
+                <tr>
+                  <td>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <button class="btn-reorder" onclick="window.adminCMS.moveCategory('${cat.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
+                      <button class="btn-reorder" onclick="window.adminCMS.moveCategory('${cat.id}', 1)" ${idx === list.length - 1 ? 'disabled' : ''} title="Move Down"><i class="fa-solid fa-arrow-down"></i></button>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 32px; height: 32px; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                        <i class="${this.escapeHtml(cat.icon || 'fa-solid fa-car')}"></i>
+                      </div>
+                      <strong>${this.escapeHtml(cat.name)}</strong>
+                    </div>
+                  </td>
+                  <td><span style="font-size: 12.5px; color: var(--slate-600);">${this.escapeHtml(cat.subtext || '—')}</span></td>
+                  <td>
+                    ${cat.badge ? `<span class="badge" style="background:#047857; color:#fff; font-weight:800; font-size:10px;">${this.escapeHtml(cat.badge)}</span>` : '<span style="color:var(--slate-400); font-size:12px;">None</span>'}
+                  </td>
+                  <td>
+                    <span class="badge badge-${this.escapeHtml(cat.color || 'emerald')}">${this.escapeHtml((cat.color || 'emerald').toUpperCase())}</span>
+                  </td>
+                  <td><code style="font-size: 11px;">${this.escapeHtml(cat.preselect || cat.name)}</code></td>
+                  <td>
+                    <span class="badge ${cat.status === 'active' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${cat.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${cat.status === 'active' ? 'Active' : 'Disabled'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditCategoryModal('${cat.id}')" title="Edit Category">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${cat.status === 'active' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleCategoryStatus('${cat.id}')" title="${cat.status === 'active' ? 'Disable' : 'Enable'}" style="margin-left: 4px;">
+                      ${cat.status === 'active' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteCategory('${cat.id}')" title="Delete Category" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  bindCategoriesEvents() {}
+
+  openAddCategoryModal() {
+    document.getElementById('category-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Add Transport Category';
+    document.getElementById('edit-cat-id-hidden').value = '';
+    document.getElementById('edit-cat-name-input').value = '';
+    document.getElementById('edit-cat-subtext-input').value = '';
+    document.getElementById('edit-cat-icon-input').value = 'fa-solid fa-car';
+    document.getElementById('edit-cat-image-input').value = '';
+    const preview = document.getElementById('edit-cat-image-preview');
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    document.getElementById('edit-cat-badge-input').value = '';
+    document.getElementById('edit-cat-color-input').value = 'emerald';
+    document.getElementById('edit-cat-status-input').value = 'active';
+    document.getElementById('edit-cat-preselect-input').value = '';
+    document.getElementById('edit-cat-package-input').value = 'Hourly Rental';
+    this.openModal('category-modal');
+  }
+
+  openEditCategoryModal(id) {
+    const list = this.getCategoriesList();
+    const cat = list.find(c => c.id === id);
+    if (!cat) return;
+
+    document.getElementById('category-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Transport Category';
+    document.getElementById('edit-cat-id-hidden').value = cat.id;
+    document.getElementById('edit-cat-name-input').value = cat.name || '';
+    document.getElementById('edit-cat-subtext-input').value = cat.subtext || '';
+    document.getElementById('edit-cat-icon-input').value = cat.icon || '';
+    document.getElementById('edit-cat-image-input').value = cat.image || '';
+    const preview = document.getElementById('edit-cat-image-preview');
+    if (preview) {
+      if (cat.image) {
+        preview.src = cat.image;
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+    document.getElementById('edit-cat-badge-input').value = cat.badge || '';
+    document.getElementById('edit-cat-color-input').value = cat.color || 'emerald';
+    document.getElementById('edit-cat-status-input').value = cat.status || 'active';
+    document.getElementById('edit-cat-preselect-input').value = cat.preselect || cat.name || '';
+    document.getElementById('edit-cat-package-input').value = cat.package || 'Hourly Rental';
+
+    this.openModal('category-modal');
+  }
+
+  async handleSaveCategory() {
+    const idHidden = document.getElementById('edit-cat-id-hidden')?.value;
+    const name = document.getElementById('edit-cat-name-input')?.value.trim();
+    const subtext = document.getElementById('edit-cat-subtext-input')?.value.trim();
+    const icon = document.getElementById('edit-cat-icon-input')?.value.trim() || 'fa-solid fa-car';
+    const image = document.getElementById('edit-cat-image-input')?.value.trim() || '';
+    const badge = document.getElementById('edit-cat-badge-input')?.value.trim();
+    const color = document.getElementById('edit-cat-color-input')?.value || 'emerald';
+    const status = document.getElementById('edit-cat-status-input')?.value || 'active';
+    const preselect = document.getElementById('edit-cat-preselect-input')?.value.trim() || name;
+    const pkg = document.getElementById('edit-cat-package-input')?.value || 'Hourly Rental';
+
+    if (!name) {
+      this.showToast("Category name is required!", "error");
+      return;
+    }
+
+    let list = this.getCategoriesList();
+
+    if (idHidden) {
+      const idx = list.findIndex(c => c.id === idHidden);
+      if (idx !== -1) {
+        list[idx] = {
+          ...list[idx],
+          name,
+          subtext,
+          icon,
+          image,
+          badge,
+          color,
+          status,
+          preselect,
+          package: pkg,
+          updated_at: new Date().toISOString()
+        };
+      }
+    } else {
+      const newId = 'cat-' + name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
+      const maxOrder = list.reduce((m, c) => Math.max(m, c.order || 0), 0);
+      list.push({
+        id: newId,
+        name,
+        subtext,
+        icon,
+        image,
+        badge,
+        color,
+        status,
+        preselect,
+        package: pkg,
+        order: maxOrder + 1,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    try {
+      this.showToast("Saving transport categories...", "info");
+      await this.saveSettingsItem('transport_categories', list);
+      await this.logAudit(idHidden ? "UPDATE" : "CREATE", "CATEGORIES", name, { id: idHidden });
+      this.closeModal('category-modal');
+      this.showToast("Transport category saved successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save category", "error");
+    }
+  }
+
+  async toggleCategoryStatus(id) {
+    let list = this.getCategoriesList();
+    const cat = list.find(c => c.id === id);
+    if (!cat) return;
+
+    cat.status = cat.status === 'active' ? 'inactive' : 'active';
+    cat.updated_at = new Date().toISOString();
+
+    try {
+      await this.saveSettingsItem('transport_categories', list);
+      this.showToast(`Category '${cat.name}' is now ${cat.status === 'active' ? 'Enabled' : 'Disabled'}.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to update category status", "error");
+    }
+  }
+
+  async moveCategory(id, direction) {
+    let list = this.getCategoriesList();
+    const index = list.findIndex(c => c.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('transport_categories', list);
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder categories", "error");
+    }
+  }
+
+  async deleteCategory(id) {
+    let list = this.getCategoriesList();
+    const cat = list.find(c => c.id === id);
+    if (!cat) return;
+
+    if (!confirm(`Are you sure you want to delete category '${cat.name}'?`)) return;
+
+    list = list.filter(c => c.id !== id);
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('transport_categories', list);
+      await this.logAudit("DELETE", "CATEGORIES", id, { name: cat.name });
+      this.showToast(`Category '${cat.name}' deleted.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete category", "error");
+    }
+  }
+
+  /* ----------------- 10. STATISTICS COUNTERS MANAGER ----------------- */
+  getCountersList() {
+    if (this.settings && this.settings.statistics_counters_config) {
+      try {
+        const list = typeof this.settings.statistics_counters_config === 'string'
+          ? JSON.parse(this.settings.statistics_counters_config)
+          : this.settings.statistics_counters_config;
+        if (Array.isArray(list) && list.length) {
+          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'stat-rides', title: 'Completed Rides & Tours', target: 100, suffix: '+', icon: 'fa-solid fa-route', image: '', dataSource: 'rpc:get_public_business_stats.completed_services', status: 'active', order: 1 },
+      { id: 'stat-customers', title: 'Happy Riders & Customers', target: 100, suffix: '+', icon: 'fa-solid fa-users', image: '', dataSource: 'rpc:get_public_business_stats.total_customers', status: 'active', order: 2 },
+      { id: 'stat-fleet', title: 'Passenger Fleet Vehicles', target: 50, suffix: '+', icon: 'fa-solid fa-van-shuttle', image: '', dataSource: 'rpc:get_public_business_stats.registered_vehicles', status: 'active', order: 3 },
+      { id: 'stat-eco', title: 'Fitness & Eco', target: 100, suffix: '%', icon: 'fa-solid fa-leaf', image: '', dataSource: 'manual', status: 'active', order: 4 }
+    ];
+  }
+
+  renderCountersView() {
+    const list = this.getCountersList();
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-calculator"></i> Statistics & Counter Metrics Manager</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage the 4 homepage statistic counter cards: <strong>100 Rides</strong>, <strong>100 Happy Riders</strong>, <strong>50 Fleet Vehicles</strong>, and <strong>100% Fitness & Eco</strong>. Edit titles, manual counts, icons/images, dynamic table data source URLs, status, and order.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddCounterModal()">
+            <i class="fa-solid fa-plus"></i> Add New Counter
+          </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 16px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Order</th>
+                <th>Counter Title & Icon</th>
+                <th>Manual Value</th>
+                <th>Suffix</th>
+                <th>Data Source (Table URL / RPC)</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((c, idx) => `
+                <tr>
+                  <td>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                      <button class="btn-reorder" onclick="window.adminCMS.moveCounter('${c.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up"><i class="fa-solid fa-arrow-up"></i></button>
+                      <button class="btn-reorder" onclick="window.adminCMS.moveCounter('${c.id}', 1)" ${idx === list.length - 1 ? 'disabled' : ''} title="Move Down"><i class="fa-solid fa-arrow-down"></i></button>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      ${c.image 
+                        ? `<img src="${this.escapeHtml(c.image)}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px;">`
+                        : `<div style="width: 32px; height: 32px; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><i class="${this.escapeHtml(c.icon || 'fa-solid fa-chart-simple')}"></i></div>`
+                      }
+                      <strong>${this.escapeHtml(c.title || c.label)}</strong>
+                    </div>
+                  </td>
+                  <td><span style="font-size: 16px; font-weight: 800; color: #047857;">${this.escapeHtml(c.target)}</span></td>
+                  <td><code>${this.escapeHtml(c.suffix || '')}</code></td>
+                  <td>
+                    ${c.dataSource && c.dataSource !== 'manual' 
+                      ? `<span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;"><i class="fa-solid fa-database"></i> ${this.escapeHtml(c.dataSource)}</span>`
+                      : '<span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;"><i class="fa-solid fa-pen"></i> Manual Count</span>'
+                    }
+                  </td>
+                  <td>
+                    <span class="badge ${c.status === 'active' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${c.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${c.status === 'active' ? 'Active' : 'Hidden'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditCounterModal('${c.id}')" title="Edit Counter">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${c.status === 'active' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleCounterStatus('${c.id}')" title="${c.status === 'active' ? 'Hide' : 'Show'}" style="margin-left: 4px;">
+                      ${c.status === 'active' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteCounter('${c.id}')" title="Delete Counter" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  bindCountersEvents() {}
+
+  openAddCounterModal() {
+    document.getElementById('counter-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Add Statistics Counter';
+    document.getElementById('edit-counter-id-hidden').value = '';
+    document.getElementById('edit-counter-title-input').value = '';
+    document.getElementById('edit-counter-target-input').value = '100';
+    document.getElementById('edit-counter-suffix-input').value = '+';
+    document.getElementById('edit-counter-icon-input').value = 'fa-solid fa-chart-line';
+    document.getElementById('edit-counter-image-input').value = '';
+    const preview = document.getElementById('edit-counter-image-preview');
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    document.getElementById('edit-counter-datasource-input').value = 'manual';
+    document.getElementById('edit-counter-status-input').value = 'active';
+    this.openModal('counter-modal');
+  }
+
+  openEditCounterModal(id) {
+    const list = this.getCountersList();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    document.getElementById('counter-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Statistics Counter';
+    document.getElementById('edit-counter-id-hidden').value = c.id;
+    document.getElementById('edit-counter-title-input').value = c.title || c.label || '';
+    document.getElementById('edit-counter-target-input').value = c.target ?? 100;
+    document.getElementById('edit-counter-suffix-input').value = c.suffix || '';
+    document.getElementById('edit-counter-icon-input').value = c.icon || '';
+    document.getElementById('edit-counter-image-input').value = c.image || '';
+    const preview = document.getElementById('edit-counter-image-preview');
+    if (preview) {
+      if (c.image) {
+        preview.src = c.image;
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+    document.getElementById('edit-counter-datasource-input').value = c.dataSource || 'manual';
+    document.getElementById('edit-counter-status-input').value = c.status || 'active';
+
+    this.openModal('counter-modal');
+  }
+
+  async handleSaveCounter() {
+    const idHidden = document.getElementById('edit-counter-id-hidden')?.value;
+    const title = document.getElementById('edit-counter-title-input')?.value.trim();
+    const target = parseInt(document.getElementById('edit-counter-target-input')?.value) || 0;
+    const suffix = document.getElementById('edit-counter-suffix-input')?.value.trim();
+    const icon = document.getElementById('edit-counter-icon-input')?.value.trim();
+    const image = document.getElementById('edit-counter-image-input')?.value.trim();
+    const dataSource = document.getElementById('edit-counter-datasource-input')?.value.trim() || 'manual';
+    const status = document.getElementById('edit-counter-status-input')?.value || 'active';
+
+    if (!title) {
+      this.showToast("Counter title is required!", "error");
+      return;
+    }
+
+    let list = this.getCountersList();
+
+    if (idHidden) {
+      const idx = list.findIndex(c => c.id === idHidden);
+      if (idx !== -1) {
+        list[idx] = {
+          ...list[idx],
+          title,
+          label: title,
+          target,
+          suffix,
+          icon,
+          image,
+          dataSource,
+          status,
+          updated_at: new Date().toISOString()
+        };
+      }
+    } else {
+      const newId = 'stat-' + title.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
+      const maxOrder = list.reduce((m, c) => Math.max(m, c.order || 0), 0);
+      list.push({
+        id: newId,
+        title,
+        label: title,
+        target,
+        suffix,
+        icon,
+        image,
+        dataSource,
+        status,
+        order: maxOrder + 1,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    try {
+      this.showToast("Saving statistics counter...", "info");
+      await this.saveSettingsItem('statistics_counters_config', list);
+      await this.logAudit(idHidden ? "UPDATE" : "CREATE", "COUNTERS", title, { id: idHidden });
+      this.closeModal('counter-modal');
+      this.showToast("Statistics counter saved successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save statistics counter", "error");
+    }
+  }
+
+  async toggleCounterStatus(id) {
+    let list = this.getCountersList();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    c.status = c.status === 'active' ? 'inactive' : 'active';
+    c.updated_at = new Date().toISOString();
+
+    try {
+      await this.saveSettingsItem('statistics_counters_config', list);
+      this.showToast(`Counter '${c.title || c.label}' is now ${c.status === 'active' ? 'Visible' : 'Hidden'}.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to update counter status", "error");
+    }
+  }
+
+  async moveCounter(id, direction) {
+    let list = this.getCountersList();
+    const index = list.findIndex(c => c.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('statistics_counters_config', list);
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder counters", "error");
+    }
+  }
+
+  async deleteCounter(id) {
+    let list = this.getCountersList();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    if (!confirm(`Are you sure you want to delete counter '${c.title || c.label}'?`)) return;
+
+    list = list.filter(item => item.id !== id);
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('statistics_counters_config', list);
+      await this.logAudit("DELETE", "COUNTERS", id, { title: c.title || c.label });
+      this.showToast(`Counter '${c.title || c.label}' deleted.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete counter", "error");
+    }
+  }
+
   /* ----------------- 11. SETTINGS & AUDIT LOG VIEW ----------------- */
   renderSettingsView() {
     const s = this.settings;
@@ -2480,6 +3764,830 @@ ${safetyTips.map(t => "• " + t).join('\n')}
       mobile: '375px'
     };
     iframe.style.width = widths[device] || '100%';
+  }
+
+  /* ----------------- PASSENGER HOST NETWORK & WHATSAPP LINK ----------------- */
+  getHostNetworkConfig() {
+    let cfg = {
+      title: "Do You Own a Car, Van, or Tourist Bus in Mannar?",
+      badge: "Join Our Passenger Host Network",
+      description: "Join our official WhatsApp Vehicle Owners Group. We connect your idle cars, passenger vans, and tourist buses with incoming tourists, NGOs, researchers, birdwatchers, and pilgrims visiting Mannar.",
+      button_text: "Join Host WhatsApp Group",
+      whatsapp_url: this.settings.host_whatsapp_group_url || "https://chat.whatsapp.com/ExampleMannarGreenRideGroup",
+      status: "active"
+    };
+    if (this.settings && this.settings.join_us_config) {
+      try {
+        const parsed = typeof this.settings.join_us_config === 'string'
+          ? JSON.parse(this.settings.join_us_config)
+          : this.settings.join_us_config;
+        if (parsed && typeof parsed === 'object') {
+          cfg = { ...cfg, ...parsed };
+          if (this.settings.host_whatsapp_group_url) {
+            cfg.whatsapp_url = this.settings.host_whatsapp_group_url;
+          }
+        }
+      } catch (e) {}
+    }
+    return cfg;
+  }
+
+  getHostVehicleCards() {
+    if (this.settings && this.settings.host_vehicle_cards) {
+      try {
+        const list = typeof this.settings.host_vehicle_cards === 'string'
+          ? JSON.parse(this.settings.host_vehicle_cards)
+          : this.settings.host_vehicle_cards;
+        if (Array.isArray(list) && list.length) {
+          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'h-car', name: 'Cars', subtitle: 'Alto, WagonR, Sedan', icon: 'fa-solid fa-car', status: 'active', order: 1 },
+      { id: 'h-van', name: 'Passenger Vans', subtitle: 'Toyota KDH, Caravan', icon: 'fa-solid fa-van-shuttle', status: 'active', order: 2 },
+      { id: 'h-bus', name: 'Tourist Buses', subtitle: '24-42 Seater Coaches', icon: 'fa-solid fa-bus', status: 'active', order: 3 }
+    ];
+  }
+
+  renderHostNetworkView() {
+    const cfg = this.getHostNetworkConfig();
+    const vehicleCards = this.getHostVehicleCards();
+    const isSectionActive = cfg.status !== 'inactive';
+
+    return `
+      <!-- TOP WHATSAPP LINK HIGHLIGHT & DIRECT ACTION -->
+      <div class="card" style="border: 2px solid #10b981; background: #ecfdf5; margin-bottom: 24px;">
+        <div class="card-header" style="border-bottom: 1px solid #a7f3d0;">
+          <div>
+            <h3 class="card-title" style="color: #065f46; font-size: 17px;">
+              <i class="fa-brands fa-whatsapp" style="color: #10b981; font-size: 20px;"></i>
+              Vehicle Owners WhatsApp Group Invite Link
+            </h3>
+            <p style="font-size: 12.5px; color: #047857; margin-top: 3px;">
+              Update the official WhatsApp group join link. Clicking "Join Host WhatsApp Group" on the website immediately directs owners to this link.
+            </p>
+          </div>
+          <span class="badge badge-published" style="background: #10b981; color: #fff; font-size: 11px;">
+            <i class="fa-brands fa-whatsapp"></i> Live Link Active
+          </span>
+        </div>
+
+        <form id="host-whatsapp-link-form" style="padding-top: 12px;">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-weight: 700; color: #065f46;">
+              WhatsApp Group Join Link URL (e.g. https://chat.whatsapp.com/...) *
+            </label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="url" class="form-input" id="host-whatsapp-url-input" value="${this.escapeHtml(cfg.whatsapp_url)}" placeholder="https://chat.whatsapp.com/..." style="border-color: #10b981; font-weight: 600; font-size: 14px; background: #fff;" required>
+              <a href="${this.escapeHtml(cfg.whatsapp_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" id="host-wa-test-btn" style="white-space: nowrap; height: 42px; display: inline-flex; align-items: center; gap: 6px; background: #fff; border-color: #10b981; color: #065f46; font-weight: 700;" title="Test this link now in a new browser tab">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Test Link
+              </a>
+              <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap; height: 42px; background: #059669; border-color: #059669; font-weight: 700; padding: 0 20px;">
+                <i class="fa-solid fa-floppy-disk"></i> Save WhatsApp Link
+              </button>
+            </div>
+            <span style="font-size: 11.5px; color: #047857; margin-top: 5px; display: block;">
+              <i class="fa-solid fa-circle-check"></i> Changes to this URL will immediately update the website button on desktop and mobile.
+            </span>
+          </div>
+        </form>
+      </div>
+
+      <!-- MAIN CARD CONTENT & STATUS SETTINGS -->
+      <div class="card" style="border: 1px solid var(--slate-200); margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-id-card"></i> "Join Our Passenger Host Network" Card Settings</h3>
+            <p style="font-size: 12.5px; color: var(--slate-600); margin-top: 3px;">
+              Manage the title, badge, marketing text, button label, and overall section active/deactive status.
+            </p>
+          </div>
+          <span class="badge ${isSectionActive ? 'badge-published' : 'badge-draft'}">
+            <i class="fa-solid ${isSectionActive ? 'fa-check' : 'fa-ban'}"></i> ${isSectionActive ? 'Section Active' : 'Section Deactive'}
+          </span>
+        </div>
+
+        <form id="host-main-card-form" style="padding-top: 8px;">
+          <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">Tagline / Badge Text</label>
+              <input type="text" class="form-input" id="host-card-badge" value="${this.escapeHtml(cfg.badge || 'Join Our Passenger Host Network')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Card Main Heading *</label>
+              <input type="text" class="form-input" id="host-card-title" value="${this.escapeHtml(cfg.title || 'Do You Own a Car, Van, or Tourist Bus in Mannar?')}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Section Status</label>
+              <select class="form-select" id="host-card-status">
+                <option value="active" ${isSectionActive ? 'selected' : ''}>Active (Visible on Website)</option>
+                <option value="inactive" ${!isSectionActive ? 'selected' : ''}>Deactive (Hidden from Website)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description Text</label>
+            <textarea class="form-textarea" id="host-card-desc" rows="3">${this.escapeHtml(cfg.description || '')}</textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">Action Button Text</label>
+              <input type="text" class="form-input" id="host-card-btn-text" value="${this.escapeHtml(cfg.button_text || 'Join Host WhatsApp Group')}">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+              <button type="submit" class="btn btn-primary" style="width: 100%; height: 42px;">
+                <i class="fa-solid fa-floppy-disk"></i> Save Card Content & Status
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- VEHICLE CATEGORY SUB-CARDS (Cars, Vans, Tourist Buses) -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-shapes"></i> Host Vehicle Sub-Cards</h3>
+            <p style="font-size: 12.5px; color: var(--slate-600); margin-top: 3px;">
+              Manage the vehicle type cards displayed inside the Host Network section (Cars, Passenger Vans, Tourist Buses, etc.).
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddHostVehicleModal()">
+            <i class="fa-solid fa-plus"></i> Add Vehicle Type
+          </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 12px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 75px;">Order</th>
+                <th style="width: 60px;">Icon</th>
+                <th>Vehicle Category Name</th>
+                <th>Subtitle / Sample Models</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${vehicleCards.map((veh, idx) => `
+                <tr>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveHostVehicle('${veh.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveHostVehicle('${veh.id}', 1)" ${idx === vehicleCards.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
+                  <td>
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: #b45309; font-size: 17px;">
+                      <i class="${this.escapeHtml(veh.icon || 'fa-solid fa-car')}"></i>
+                    </div>
+                  </td>
+                  <td><strong>${this.escapeHtml(veh.name)}</strong></td>
+                  <td><span style="font-size: 12.5px; color: var(--slate-600);">${this.escapeHtml(veh.subtitle || '')}</span></td>
+                  <td>
+                    <span class="badge ${veh.status === 'active' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${veh.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${veh.status === 'active' ? 'Active' : 'Deactive'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditHostVehicleModal('${veh.id}')" title="Edit">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${veh.status === 'active' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleHostVehicleStatus('${veh.id}')" title="${veh.status === 'active' ? 'Deactivate' : 'Activate'}" style="margin-left: 4px;">
+                      ${veh.status === 'active' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteHostVehicle('${veh.id}')" title="Delete" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE LIVE PREVIEW OF HOST CARD -->
+      <div class="card" style="background: #fffbeb; border: 1px solid #fde68a;">
+        <div class="card-header" style="border-bottom: 1px solid #fde68a;">
+          <h3 class="card-title" style="color: #92400e;"><i class="fa-solid fa-eye"></i> Live Homepage Card Mockup</h3>
+          <span style="font-size: 11.5px; color: #b45309; font-weight: 700;">Exact Public Appearance</span>
+        </div>
+
+        <div style="background: #ffffff; border-radius: 16px; padding: 24px; border: 1px solid #fde68a; margin-top: 14px; position: relative; overflow: hidden;">
+          <span style="background: #fef3c7; color: #78350f; border: 1px solid #fde68a; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">
+            ${this.escapeHtml(cfg.badge || 'Join Our Passenger Host Network')}
+          </span>
+          <h2 style="font-size: 20px; font-weight: 800; color: #111827; margin: 12px 0 8px 0; line-height: 1.3;">
+            ${this.escapeHtml(cfg.title || 'Do You Own a Car, Van, or Tourist Bus in Mannar?')}
+          </h2>
+          <p style="font-size: 13px; color: #4b5563; line-height: 1.6; max-width: 700px; margin-bottom: 16px;">
+            ${this.escapeHtml(cfg.description || '')}
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
+            ${vehicleCards.filter(v => v.status === 'active').map(v => `
+              <div style="background: #fffdf5; border: 1px solid #fde68a; border-radius: 12px; padding: 12px; text-align: center;">
+                <i class="${this.escapeHtml(v.icon || 'fa-solid fa-car')}" style="font-size: 20px; color: #b45309; margin-bottom: 4px; display: inline-block;"></i>
+                <div style="font-weight: 700; font-size: 13px; color: #111827;">${this.escapeHtml(v.name)}</div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${this.escapeHtml(v.subtitle || '')}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="${this.escapeHtml(cfg.whatsapp_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background: #059669; border-color: #059669; font-weight: 700; padding: 10px 20px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #fff;">
+              <i class="fa-brands fa-whatsapp" style="font-size: 18px;"></i>
+              <span>${this.escapeHtml(cfg.button_text || 'Join Host WhatsApp Group')}</span>
+            </a>
+            <span style="font-size: 12px; color: #6b7280;">Questions? Contact Us</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  bindHostNetworkEvents() {
+    const waForm = document.getElementById('host-whatsapp-link-form');
+    if (waForm) {
+      waForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = document.getElementById('host-whatsapp-url-input').value.trim();
+        if (!url) {
+          this.showToast("WhatsApp URL is required", "error");
+          return;
+        }
+
+        try {
+          this.showToast("Saving WhatsApp group link...", "info");
+          let cfg = this.getHostNetworkConfig();
+          cfg.whatsapp_url = url;
+          cfg.updated_at = new Date().toISOString();
+
+          await this.saveSettingsItem('host_whatsapp_group_url', url);
+          await this.saveSettingsItem('join_us_config', cfg);
+          await this.logAudit("UPDATE", "HOST_NETWORK", "whatsapp_url", { url });
+          this.showToast("WhatsApp group join link updated successfully!", "success");
+          this.render();
+        } catch (err) {
+          this.showToast(err.message || "Failed to save WhatsApp link", "error");
+        }
+      });
+    }
+
+    const cardForm = document.getElementById('host-main-card-form');
+    if (cardForm) {
+      cardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const badge = document.getElementById('host-card-badge').value.trim();
+        const title = document.getElementById('host-card-title').value.trim();
+        const description = document.getElementById('host-card-desc').value.trim();
+        const button_text = document.getElementById('host-card-btn-text').value.trim();
+        const status = document.getElementById('host-card-status').value;
+
+        if (!title) {
+          this.showToast("Card heading is required", "error");
+          return;
+        }
+
+        try {
+          this.showToast("Saving Host Network card settings...", "info");
+          let cfg = this.getHostNetworkConfig();
+          cfg = { ...cfg, badge, title, description, button_text, status, updated_at: new Date().toISOString() };
+
+          await this.saveSettingsItem('join_us_config', cfg);
+          await this.logAudit("UPDATE", "HOST_NETWORK", "card_content", cfg);
+          this.showToast("Host Network card content & status updated!", "success");
+          this.render();
+        } catch (err) {
+          this.showToast(err.message || "Failed to save card settings", "error");
+        }
+      });
+    }
+  }
+
+  openAddHostVehicleModal() {
+    document.getElementById('host-vehicle-modal-title').innerHTML = '<i class="fa-solid fa-car-side"></i> Add Host Vehicle Type';
+    document.getElementById('edit-host-veh-id-hidden').value = '';
+    document.getElementById('edit-host-veh-name').value = '';
+    document.getElementById('edit-host-veh-subtitle').value = '';
+    document.getElementById('edit-host-veh-icon').value = 'fa-solid fa-car';
+    document.getElementById('edit-host-veh-status').value = 'active';
+    this.openModal('host-vehicle-modal');
+  }
+
+  openEditHostVehicleModal(id) {
+    const list = this.getHostVehicleCards();
+    const veh = list.find(v => v.id === id);
+    if (!veh) return;
+
+    document.getElementById('host-vehicle-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Host Vehicle Type';
+    document.getElementById('edit-host-veh-id-hidden').value = veh.id;
+    document.getElementById('edit-host-veh-name').value = veh.name || '';
+    document.getElementById('edit-host-veh-subtitle').value = veh.subtitle || '';
+    document.getElementById('edit-host-veh-icon').value = veh.icon || 'fa-solid fa-car';
+    document.getElementById('edit-host-veh-status').value = veh.status || 'active';
+    this.openModal('host-vehicle-modal');
+  }
+
+  async handleSaveHostVehicle() {
+    const id = document.getElementById('edit-host-veh-id-hidden').value;
+    const name = document.getElementById('edit-host-veh-name').value.trim();
+    const subtitle = document.getElementById('edit-host-veh-subtitle').value.trim();
+    const icon = document.getElementById('edit-host-veh-icon').value.trim() || 'fa-solid fa-car';
+    const status = document.getElementById('edit-host-veh-status').value;
+
+    if (!name || !subtitle) {
+      this.showToast("Category name and subtitle models are required", "error");
+      return;
+    }
+
+    let list = this.getHostVehicleCards();
+    if (id) {
+      const idx = list.findIndex(v => v.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], name, subtitle, icon, status };
+      }
+    } else {
+      const newId = 'h-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+      const maxOrder = list.reduce((m, v) => Math.max(m, v.order || 0), 0);
+      list.push({ id: newId, name, subtitle, icon, status, order: maxOrder + 1 });
+    }
+
+    try {
+      await this.saveSettingsItem('host_vehicle_cards', list);
+      this.closeModal('host-vehicle-modal');
+      this.showToast("Host vehicle category saved successfully!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save vehicle category", "error");
+    }
+  }
+
+  async toggleHostVehicleStatus(id) {
+    let list = this.getHostVehicleCards();
+    const veh = list.find(v => v.id === id);
+    if (!veh) return;
+
+    veh.status = veh.status === 'active' ? 'inactive' : 'active';
+    try {
+      await this.saveSettingsItem('host_vehicle_cards', list);
+      this.showToast(`Vehicle '${veh.name}' is now ${veh.status === 'active' ? 'Active' : 'Deactive'}.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to toggle status", "error");
+    }
+  }
+
+  async moveHostVehicle(id, direction) {
+    let list = this.getHostVehicleCards();
+    const index = list.findIndex(v => v.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('host_vehicle_cards', list);
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder host vehicle cards", "error");
+    }
+  }
+
+  async deleteHostVehicle(id) {
+    let list = this.getHostVehicleCards();
+    const veh = list.find(v => v.id === id);
+    if (!veh) return;
+
+    if (!confirm(`Are you sure you want to delete '${veh.name}'?`)) return;
+
+    list = list.filter(v => v.id !== id);
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('host_vehicle_cards', list);
+      this.showToast(`Vehicle '${veh.name}' deleted.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete vehicle category", "error");
+    }
+  }
+
+  /* ----------------- FITNESS FEATURE CARDS ----------------- */
+  getFitnessCards() {
+    if (this.settings && this.settings.fitness_feature_cards) {
+      try {
+        const list = typeof this.settings.fitness_feature_cards === 'string'
+          ? JSON.parse(this.settings.fitness_feature_cards)
+          : this.settings.fitness_feature_cards;
+        if (Array.isArray(list) && list.length) {
+          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'fit-cardio', title: 'Cardio & Coastal Fitness', description: 'Maintain your fitness regimen on high-quality multi-gear bicycles with low impact on joints while breathing clean sea breeze.', icon: 'fa-solid fa-heart-pulse', status: 'active', order: 1 },
+      { id: 'fit-landmarks', title: 'Scenic Tourist Landmarks', description: 'Ride directly to the ancient Baobab Tree, historic Portuguese Fort, Vankalai Bird Sanctuary, and Talaimannar Lighthouse.', icon: 'fa-solid fa-map-location-dot', status: 'active', order: 2 },
+      { id: 'fit-setup', title: 'Tailored Bike Setup', description: 'Adjustable seat posts, sports helmets, water bottle holders, and fitness tracking recommendations for cyclists.', icon: 'fa-solid fa-person-biking', status: 'active', order: 3 }
+    ];
+  }
+
+  renderFitnessCardsView() {
+    const list = this.getFitnessCards();
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-heart-pulse"></i> Tourist & Body Fitness Feature Cards</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage the 3-step fitness & eco highlights shown in the "Tourist & Body Fitness" section of the website.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddFitnessCardModal()">
+            <i class="fa-solid fa-plus"></i> Add Feature Card
+          </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 14px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 75px;">Order</th>
+                <th style="width: 60px;">Icon</th>
+                <th>Card Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((c, idx) => `
+                <tr>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveFitnessCard('${c.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveFitnessCard('${c.id}', 1)" ${idx === list.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
+                  <td>
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 17px;">
+                      <i class="${this.escapeHtml(c.icon || 'fa-solid fa-heart-pulse')}"></i>
+                    </div>
+                  </td>
+                  <td><strong>${this.escapeHtml(c.title)}</strong></td>
+                  <td><span style="font-size: 12px; color: var(--slate-600);">${this.escapeHtml(c.description || '')}</span></td>
+                  <td>
+                    <span class="badge ${c.status === 'active' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${c.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${c.status === 'active' ? 'Active' : 'Deactive'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditFitnessCardModal('${c.id}')" title="Edit">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${c.status === 'active' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleFitnessCardStatus('${c.id}')" title="${c.status === 'active' ? 'Deactivate' : 'Activate'}" style="margin-left: 4px;">
+                      ${c.status === 'active' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteFitnessCard('${c.id}')" title="Delete" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  bindFitnessCardsEvents() {}
+
+  openAddFitnessCardModal() {
+    document.getElementById('fitness-card-modal-title').innerHTML = '<i class="fa-solid fa-heart-pulse"></i> Add Fitness Feature Card';
+    document.getElementById('edit-fit-card-id-hidden').value = '';
+    document.getElementById('edit-fit-card-title').value = '';
+    document.getElementById('edit-fit-card-icon').value = 'fa-solid fa-heart-pulse';
+    document.getElementById('edit-fit-card-desc').value = '';
+    document.getElementById('edit-fit-card-status').value = 'active';
+    this.openModal('fitness-card-modal');
+  }
+
+  openEditFitnessCardModal(id) {
+    const list = this.getFitnessCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    document.getElementById('fitness-card-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Fitness Feature Card';
+    document.getElementById('edit-fit-card-id-hidden').value = c.id;
+    document.getElementById('edit-fit-card-title').value = c.title || '';
+    document.getElementById('edit-fit-card-icon').value = c.icon || 'fa-solid fa-heart-pulse';
+    document.getElementById('edit-fit-card-desc').value = c.description || '';
+    document.getElementById('edit-fit-card-status').value = c.status || 'active';
+    this.openModal('fitness-card-modal');
+  }
+
+  async handleSaveFitnessCard() {
+    const id = document.getElementById('edit-fit-card-id-hidden').value;
+    const title = document.getElementById('edit-fit-card-title').value.trim();
+    const icon = document.getElementById('edit-fit-card-icon').value.trim() || 'fa-solid fa-heart-pulse';
+    const description = document.getElementById('edit-fit-card-desc').value.trim();
+    const status = document.getElementById('edit-fit-card-status').value;
+
+    if (!title || !description) {
+      this.showToast("Title and description are required", "error");
+      return;
+    }
+
+    let list = this.getFitnessCards();
+    if (id) {
+      const idx = list.findIndex(c => c.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], title, icon, description, status };
+      }
+    } else {
+      const newId = 'fit-' + Date.now();
+      const maxOrder = list.reduce((m, c) => Math.max(m, c.order || 0), 0);
+      list.push({ id: newId, title, icon, description, status, order: maxOrder + 1 });
+    }
+
+    try {
+      await this.saveSettingsItem('fitness_feature_cards', list);
+      this.closeModal('fitness-card-modal');
+      this.showToast("Fitness feature card saved!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save fitness card", "error");
+    }
+  }
+
+  async toggleFitnessCardStatus(id) {
+    let list = this.getFitnessCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    c.status = c.status === 'active' ? 'inactive' : 'active';
+    try {
+      await this.saveSettingsItem('fitness_feature_cards', list);
+      this.showToast(`Card '${c.title}' is now ${c.status === 'active' ? 'Active' : 'Deactive'}.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to toggle status", "error");
+    }
+  }
+
+  async moveFitnessCard(id, direction) {
+    let list = this.getFitnessCards();
+    const index = list.findIndex(c => c.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('fitness_feature_cards', list);
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder fitness cards", "error");
+    }
+  }
+
+  async deleteFitnessCard(id) {
+    let list = this.getFitnessCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    if (!confirm(`Are you sure you want to delete '${c.title}'?`)) return;
+
+    list = list.filter(item => item.id !== id);
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('fitness_feature_cards', list);
+      this.showToast(`Feature card '${c.title}' deleted.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete fitness card", "error");
+    }
+  }
+
+  /* ----------------- ABOUT US HIGHLIGHT CARDS ----------------- */
+  getAboutCards() {
+    if (this.settings && this.settings.about_feature_cards) {
+      try {
+        const list = typeof this.settings.about_feature_cards === 'string'
+          ? JSON.parse(this.settings.about_feature_cards)
+          : this.settings.about_feature_cards;
+        if (Array.isArray(list) && list.length) {
+          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+        }
+      } catch (e) {}
+    }
+    return [
+      { id: 'abt-multi', title: 'Multilingual Support', description: 'Tamil, English, Sinhala, Russian, French & Chinese', status: 'active', order: 1 },
+      { id: 'abt-safe', title: 'Verified & Safe', description: 'Verified local drivers and inspected passenger vehicles', status: 'active', order: 2 }
+    ];
+  }
+
+  renderAboutCardsView() {
+    const list = this.getAboutCards();
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-circle-info"></i> About Us Highlight Cards</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage the trust & guarantee highlight cards (Multilingual Support, Verified Drivers, etc.) shown in the About section.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.openAddAboutCardModal()">
+            <i class="fa-solid fa-plus"></i> Add Highlight Card
+          </button>
+        </div>
+
+        <div style="overflow-x: auto; margin-top: 14px;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 75px;">Order</th>
+                <th>Highlight Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th style="width: 180px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((c, idx) => `
+                <tr>
+                  <td style="white-space: nowrap;">
+                    <button class="btn-reorder" onclick="window.adminCMS.moveAboutCard('${c.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button class="btn-reorder" onclick="window.adminCMS.moveAboutCard('${c.id}', 1)" ${idx === list.length - 1 ? 'disabled' : ''} title="Move Down">
+                      <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                  </td>
+                  <td><strong>${this.escapeHtml(c.title)}</strong></td>
+                  <td><span style="font-size: 12.5px; color: var(--slate-600);">${this.escapeHtml(c.description || '')}</span></td>
+                  <td>
+                    <span class="badge ${c.status === 'active' ? 'badge-published' : 'badge-draft'}">
+                      <i class="fa-solid ${c.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${c.status === 'active' ? 'Active' : 'Deactive'}
+                    </span>
+                  </td>
+                  <td style="white-space: nowrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.adminCMS.openEditAboutCardModal('${c.id}')" title="Edit">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn ${c.status === 'active' ? 'btn-secondary' : 'btn-primary'} btn-sm" onclick="window.adminCMS.toggleAboutCardStatus('${c.id}')" title="${c.status === 'active' ? 'Deactivate' : 'Activate'}" style="margin-left: 4px;">
+                      ${c.status === 'active' ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="window.adminCMS.deleteAboutCard('${c.id}')" title="Delete" style="margin-left: 4px;">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  bindAboutCardsEvents() {}
+
+  openAddAboutCardModal() {
+    document.getElementById('about-card-modal-title').innerHTML = '<i class="fa-solid fa-circle-info"></i> Add About Highlight Card';
+    document.getElementById('edit-abt-card-id-hidden').value = '';
+    document.getElementById('edit-abt-card-title').value = '';
+    document.getElementById('edit-abt-card-desc').value = '';
+    document.getElementById('edit-abt-card-status').value = 'active';
+    this.openModal('about-card-modal');
+  }
+
+  openEditAboutCardModal(id) {
+    const list = this.getAboutCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    document.getElementById('about-card-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit About Highlight Card';
+    document.getElementById('edit-abt-card-id-hidden').value = c.id;
+    document.getElementById('edit-abt-card-title').value = c.title || '';
+    document.getElementById('edit-abt-card-desc').value = c.description || '';
+    document.getElementById('edit-abt-card-status').value = c.status || 'active';
+    this.openModal('about-card-modal');
+  }
+
+  async handleSaveAboutCard() {
+    const id = document.getElementById('edit-abt-card-id-hidden').value;
+    const title = document.getElementById('edit-abt-card-title').value.trim();
+    const description = document.getElementById('edit-abt-card-desc').value.trim();
+    const status = document.getElementById('edit-abt-card-status').value;
+
+    if (!title || !description) {
+      this.showToast("Title and description are required", "error");
+      return;
+    }
+
+    let list = this.getAboutCards();
+    if (id) {
+      const idx = list.findIndex(c => c.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], title, description, status };
+      }
+    } else {
+      const newId = 'abt-' + Date.now();
+      const maxOrder = list.reduce((m, c) => Math.max(m, c.order || 0), 0);
+      list.push({ id: newId, title, description, status, order: maxOrder + 1 });
+    }
+
+    try {
+      await this.saveSettingsItem('about_feature_cards', list);
+      this.closeModal('about-card-modal');
+      this.showToast("About highlight card saved!", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save about card", "error");
+    }
+  }
+
+  async toggleAboutCardStatus(id) {
+    let list = this.getAboutCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    c.status = c.status === 'active' ? 'inactive' : 'active';
+    try {
+      await this.saveSettingsItem('about_feature_cards', list);
+      this.showToast(`Highlight '${c.title}' is now ${c.status === 'active' ? 'Active' : 'Deactive'}.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to toggle status", "error");
+    }
+  }
+
+  async moveAboutCard(id, direction) {
+    let list = this.getAboutCards();
+    const index = list.findIndex(c => c.id === id);
+    if (index === -1) return;
+
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('about_feature_cards', list);
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to reorder about cards", "error");
+    }
+  }
+
+  async deleteAboutCard(id) {
+    let list = this.getAboutCards();
+    const c = list.find(item => item.id === id);
+    if (!c) return;
+
+    if (!confirm(`Are you sure you want to delete '${c.title}'?`)) return;
+
+    list = list.filter(item => item.id !== id);
+    list.forEach((item, i) => { item.order = i + 1; });
+
+    try {
+      await this.saveSettingsItem('about_feature_cards', list);
+      this.showToast(`Highlight '${c.title}' deleted.`, "info");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to delete about card", "error");
+    }
   }
 
   /* ----------------- Modal Helpers ----------------- */

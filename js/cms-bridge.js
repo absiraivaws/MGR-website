@@ -43,8 +43,21 @@
         .select('setting_key, setting_value')
         .eq('is_public', true);
 
+      // Overlay with any active localStorage settings
+      const settingsMap = {};
       if (settings && settings.length) {
-        applySettings(settings);
+        settings.forEach(s => { settingsMap[s.setting_key] = s.setting_value; });
+      }
+      ['transport_categories', 'statistics_counters_config', 'join_us_config', 'reviews_slider_config', 'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards', 'about_feature_cards'].forEach(k => {
+        try {
+          const val = localStorage.getItem('mgr_setting_' + k);
+          if (val) settingsMap[k] = val;
+        } catch (e) {}
+      });
+
+      const combinedSettings = Object.keys(settingsMap).map(k => ({ setting_key: k, setting_value: settingsMap[k] }));
+      if (combinedSettings.length) {
+        applySettings(combinedSettings);
       }
 
       // 3. Fetch Published Sections (Hero, Fitness, About)
@@ -58,7 +71,7 @@
         applySections(sections);
       }
 
-      // 4. Fetch Published Services & Pricing
+      // 4. Fetch Published Services & Pricing (Ordered by display_order)
       const { data: services } = await supabaseClient
         .from('website_services')
         .select('*')
@@ -69,13 +82,26 @@
         applyServices(services);
       }
 
-      // 5. Fetch Active Promotional Offers
+      // 5. Fetch Active Promotional Offers (Ordered by display_order)
       try {
-        const { data: offers } = await supabaseClient
-          .from('website_offers')
-          .select('*')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false });
+        let offers = null;
+        try {
+          const { data, error } = await supabaseClient
+            .from('website_offers')
+            .select('*')
+            .eq('status', 'active')
+            .order('display_order', { ascending: true });
+          if (!error && data && data.length) offers = data;
+        } catch (e) {}
+
+        if (!offers) {
+          const { data } = await supabaseClient
+            .from('website_offers')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+          offers = data;
+        }
 
         if (offers && offers.length) {
           applyOffers(offers);
@@ -94,7 +120,7 @@
         applySeoMetadata(seoData);
       }
 
-      // 7. Fetch Published Testimonials
+      // 7. Fetch Published Testimonials (Ordered by display_order)
       const { data: testimonials } = await supabaseClient
         .from('website_testimonials')
         .select('*')
@@ -105,13 +131,27 @@
         applyTestimonials(testimonials);
       }
 
-      // 8. Fetch Published Blogs
-      const { data: blogs } = await supabaseClient
-        .from('blog_posts')
-        .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false })
-        .limit(3);
+      // 8. Fetch Published Blogs (Ordered by display_order)
+      let blogs = null;
+      try {
+        const { data, error } = await supabaseClient
+          .from('blog_posts')
+          .select('*')
+          .eq('status', 'published')
+          .order('display_order', { ascending: true })
+          .limit(3);
+        if (!error && data && data.length) blogs = data;
+      } catch (e) {}
+
+      if (!blogs) {
+        const { data } = await supabaseClient
+          .from('blog_posts')
+          .select('*')
+          .eq('status', 'published')
+          .order('published_at', { ascending: false })
+          .limit(3);
+        blogs = data;
+      }
 
       if (blogs && blogs.length) {
         applyBlogs(blogs);
@@ -253,6 +293,157 @@
       }
     }
 
+    // Transport Categories Configuration
+    if (map.transport_categories) {
+      try {
+        const catList = typeof map.transport_categories === 'string' ? JSON.parse(map.transport_categories) : map.transport_categories;
+        if (Array.isArray(catList) && catList.length && typeof window.renderTransportCategories === 'function') {
+          window.renderTransportCategories(catList);
+        }
+      } catch (err) {
+        console.warn("Could not apply transport_categories:", err);
+      }
+    }
+
+    // Statistics / Counters Configuration
+    if (map.statistics_counters_config) {
+      try {
+        const statsList = typeof map.statistics_counters_config === 'string' ? JSON.parse(map.statistics_counters_config) : map.statistics_counters_config;
+        if (Array.isArray(statsList) && statsList.length && typeof window.renderStats === 'function') {
+          window.renderStats(statsList, true);
+        }
+      } catch (err) {
+        console.warn("Could not apply statistics_counters_config:", err);
+      }
+    }
+
+    // Review Slider & Marquee Speed Configuration
+    if (map.reviews_slider_config) {
+      try {
+        const revCfg = typeof map.reviews_slider_config === 'string' ? JSON.parse(map.reviews_slider_config) : map.reviews_slider_config;
+        if (revCfg && typeof window.applyReviewSliderConfig === 'function') {
+          window.applyReviewSliderConfig(revCfg);
+        }
+      } catch (err) {
+        console.warn("Could not apply reviews_slider_config:", err);
+      }
+    }
+
+    // Join Us Section Configuration
+    if (map.join_us_config) {
+      try {
+        const joinCfg = typeof map.join_us_config === 'string' ? JSON.parse(map.join_us_config) : map.join_us_config;
+        if (joinCfg) {
+          const hostSec = document.getElementById('partner-vehicles');
+          const navHost = document.getElementById('nav-partner-vehicles');
+          if (joinCfg.status === 'inactive') {
+            if (hostSec) hostSec.classList.add('hidden');
+            if (navHost) navHost.classList.add('hidden');
+          } else {
+            if (hostSec) hostSec.classList.remove('hidden');
+            if (navHost) navHost.classList.remove('hidden');
+          }
+
+          if (joinCfg.title) {
+            const el = document.getElementById('host-title');
+            if (el) el.textContent = joinCfg.title;
+            propagateToAllTranslations('host_title', joinCfg.title);
+          }
+          if (joinCfg.badge) {
+            const el = document.getElementById('host-badge');
+            if (el) el.textContent = joinCfg.badge;
+            propagateToAllTranslations('host_badge', joinCfg.badge);
+          }
+          if (joinCfg.description) {
+            const el = document.getElementById('host-desc');
+            if (el) el.textContent = joinCfg.description;
+            propagateToAllTranslations('host_desc', joinCfg.description);
+          }
+          if (joinCfg.button_text) {
+            const el = document.getElementById('host-btn-text');
+            if (el) el.textContent = joinCfg.button_text;
+            propagateToAllTranslations('host_btn', joinCfg.button_text);
+          }
+          const waUrl = joinCfg.whatsapp_url || map.host_whatsapp_group_url;
+          if (waUrl) {
+            const el = document.getElementById('host-whatsapp-link');
+            if (el) el.href = waUrl;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply join_us_config:", err);
+      }
+    }
+
+    // Host Vehicle Community Cards (Cars, Vans, Buses subcards)
+    if (map.host_vehicle_cards) {
+      try {
+        const list = typeof map.host_vehicle_cards === 'string' ? JSON.parse(map.host_vehicle_cards) : map.host_vehicle_cards;
+        if (Array.isArray(list) && list.length) {
+          const activeCards = list.filter(c => c.status !== 'inactive').sort((a, b) => (a.order || 0) - (b.order || 0));
+          const subcardsContainer = document.getElementById('host-vehicles-subcards-container');
+          if (subcardsContainer && activeCards.length) {
+            subcardsContainer.innerHTML = activeCards.map(c => `
+              <div class="bg-amber-50/80 p-4 rounded-2xl text-center border border-amber-200">
+                <i class="${escapeHtml(c.icon || 'fa-solid fa-car')} text-2xl mb-1.5" style="color: #065f46;"></i>
+                <p class="text-sm font-bold text-gray-900">${escapeHtml(c.name)}</p>
+                <span class="text-xs text-gray-500">${escapeHtml(c.subtitle || '')}</span>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply host_vehicle_cards:", err);
+      }
+    }
+
+    // Tourist & Body Fitness Feature Cards
+    if (map.fitness_feature_cards) {
+      try {
+        const list = typeof map.fitness_feature_cards === 'string' ? JSON.parse(map.fitness_feature_cards) : map.fitness_feature_cards;
+        if (Array.isArray(list) && list.length) {
+          const activeList = list.filter(c => c.status !== 'inactive').sort((a, b) => (a.order || 0) - (b.order || 0));
+          const fitContainer = document.getElementById('fitness-features-container');
+          if (fitContainer && activeList.length) {
+            fitContainer.innerHTML = activeList.map(c => `
+              <div class="flex items-start space-x-4 p-4 rounded-2xl bg-gray-50 border border-gray-200">
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-brand-primary flex-shrink-0 text-xl">
+                  <i class="${escapeHtml(c.icon || 'fa-solid fa-heart-pulse')}"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900 text-base">${escapeHtml(c.title)}</h4>
+                  <p class="text-xs sm:text-sm text-gray-600 mt-1">${escapeHtml(c.description || '')}</p>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply fitness_feature_cards:", err);
+      }
+    }
+
+    // About Us Highlight Cards
+    if (map.about_feature_cards) {
+      try {
+        const list = typeof map.about_feature_cards === 'string' ? JSON.parse(map.about_feature_cards) : map.about_feature_cards;
+        if (Array.isArray(list) && list.length) {
+          const activeList = list.filter(c => c.status !== 'inactive').sort((a, b) => (a.order || 0) - (b.order || 0));
+          const abtContainer = document.getElementById('about-highlights-container');
+          if (abtContainer && activeList.length) {
+            abtContainer.innerHTML = activeList.map(c => `
+              <div class="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <h4 class="font-bold text-gray-900 text-sm">${escapeHtml(c.title)}</h4>
+                <p class="text-xs text-gray-500 mt-1">${escapeHtml(c.description || '')}</p>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.warn("Could not apply about_feature_cards:", err);
+      }
+    }
+
     // AI Travel Assistant Settings & API Key
     if (map.ai_assistant_config) {
       try {
@@ -371,47 +562,85 @@
 
   /* ----------------- Apply Services ----------------- */
   function applyServices(services) {
-    services.forEach(svc => {
-      const isBicycle = svc.slug === 'bicycle-rental' || svc.service_name.toLowerCase().includes('bicycle');
-      const isMotorcycle = svc.slug === 'motorcycle-rental' || svc.service_name.toLowerCase().includes('motorcycle');
-      const isPassenger = svc.slug === 'passenger-transport' || svc.service_name.toLowerCase().includes('passenger');
+    if (!services || !services.length) return;
 
-      if (isBicycle) {
-        const rateEl = document.getElementById('price-bicycle');
-        const unitEl = document.getElementById('unit-bicycle');
-        if (rateEl && svc.manual_price) {
-          rateEl.textContent = `Rs. ${svc.manual_price}`;
+    // Filter active/published services and sort by display_order
+    const activeServices = services.filter(s => s.status === 'published' || s.status === 'active')
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+
+    const container = document.getElementById('services-fleet-container');
+    if (container && activeServices.length) {
+      container.innerHTML = activeServices.map(svc => {
+        const nameLower = (svc.service_name || '').toLowerCase();
+        const slugLower = (svc.slug || '').toLowerCase();
+        const isBicycle = slugLower.includes('bicycle') || nameLower.includes('bicycle');
+        const isMotorcycle = slugLower.includes('moto') || nameLower.includes('moto') || nameLower.includes('scooter');
+        const isPassenger = slugLower.includes('car') || slugLower.includes('passenger') || nameLower.includes('car') || nameLower.includes('van') || nameLower.includes('bus');
+
+        let badgeClass = 'text-brand-dark bg-emerald-100';
+        let priceClass = 'text-brand-primary';
+        let btnClass = 'bg-brand-primary hover:bg-brand-dark';
+        let btnText = `Reserve ${escapeHtml(svc.service_name)}`;
+
+        if (isBicycle) {
+          badgeClass = 'text-brand-dark bg-emerald-100';
+          priceClass = 'text-brand-primary';
+          btnClass = 'bg-brand-primary hover:bg-brand-dark';
+          btnText = 'Reserve Bicycle';
+        } else if (isMotorcycle) {
+          badgeClass = 'text-sky-800 bg-sky-100';
+          priceClass = 'text-sky-700';
+          btnClass = 'bg-sky-700 hover:bg-sky-800';
+          btnText = 'Reserve Motorcycle';
+        } else if (isPassenger) {
+          badgeClass = 'text-amber-800 bg-amber-100';
+          priceClass = 'text-amber-700';
+          btnClass = 'bg-amber-600 hover:bg-amber-700';
+          btnText = 'Inquire Car / Van / Bus';
+        } else {
+          badgeClass = 'text-emerald-800 bg-emerald-100';
+          priceClass = 'text-emerald-700';
+          btnClass = 'bg-emerald-600 hover:bg-emerald-700';
+          btnText = `Inquire ${escapeHtml(svc.service_name)}`;
         }
-        if (unitEl && svc.price_unit) {
-          unitEl.textContent = `/ ${svc.price_unit}`;
-        }
-        if (window.PRICING_CONFIG && window.PRICING_CONFIG.hourly && svc.manual_price) {
-          window.PRICING_CONFIG.hourly.bicycle = `Rs. ${svc.manual_price}`;
-        }
-      } else if (isMotorcycle) {
-        const rateEl = document.getElementById('price-moto');
-        const unitEl = document.getElementById('unit-moto');
-        if (rateEl && svc.manual_price) {
-          rateEl.textContent = `Rs. ${svc.manual_price}`;
-        }
-        if (unitEl && svc.price_unit) {
-          unitEl.textContent = `/ ${svc.price_unit}`;
-        }
-        if (window.PRICING_CONFIG && window.PRICING_CONFIG.hourly && svc.manual_price) {
-          window.PRICING_CONFIG.hourly.moto = `Rs. ${svc.manual_price}`;
-        }
-      } else if (isPassenger) {
-        const rateEl = document.getElementById('price-car');
-        const unitEl = document.getElementById('unit-car');
-        if (rateEl && svc.manual_price) {
-          rateEl.textContent = `From Rs. ${Number(svc.manual_price).toLocaleString()}`;
-        }
-        if (unitEl && svc.price_unit) {
-          unitEl.textContent = `/ ${svc.price_unit}`;
-        }
-        if (window.PRICING_CONFIG && window.PRICING_CONFIG.hourly && svc.manual_price) {
-          window.PRICING_CONFIG.hourly.car = `From Rs. ${Number(svc.manual_price).toLocaleString()}`;
-        }
+
+        const badgeLabel = svc.icon_reference || (isBicycle ? 'Eco & Cardio' : (isMotorcycle ? 'Fast Island Travel' : (isPassenger ? 'Groups & Families' : 'Island Transport')));
+        const rateText = svc.manual_price ? `From Rs. ${Number(svc.manual_price).toLocaleString()}/${escapeHtml(svc.price_unit || 'hr')}` : 'Inquire for Rates';
+        const imgUrl = svc.image_url || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
+
+        return `
+          <div id="service-card-${escapeHtml(svc.id)}"
+            class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between card-hover">
+            <div class="h-48 bg-cover bg-center" style="background-image: url('${escapeHtml(imgUrl)}');"></div>
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-xs font-bold uppercase ${badgeClass} px-3 py-1 rounded-full">${escapeHtml(badgeLabel)}</span>
+                  <span class="text-base font-extrabold ${priceClass}">${rateText}</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">${escapeHtml(svc.service_name)}</h3>
+                <p class="mt-2 text-gray-600 text-xs sm:text-sm leading-relaxed">${escapeHtml(svc.short_description || '')}</p>
+              </div>
+              <a href="#booking" onclick="preselectVehicle('${escapeHtml(svc.service_name).replace(/'/g, "\\'")}', 'Hourly Rental')"
+                class="mt-6 block text-center ${btnClass} text-white font-bold py-2.5 rounded-xl transition text-xs sm:text-sm shadow">${btnText}</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Keep duration pricing configs updated
+    services.forEach(svc => {
+      const nameLower = (svc.service_name || '').toLowerCase();
+      const slugLower = (svc.slug || '').toLowerCase();
+      const isBicycle = slugLower.includes('bicycle') || nameLower.includes('bicycle');
+      const isMotorcycle = slugLower.includes('moto') || nameLower.includes('moto') || nameLower.includes('scooter');
+      const isPassenger = slugLower.includes('car') || slugLower.includes('passenger') || nameLower.includes('car') || nameLower.includes('van') || nameLower.includes('bus');
+
+      if (window.PRICING_CONFIG && window.PRICING_CONFIG.hourly && svc.manual_price) {
+        if (isBicycle) window.PRICING_CONFIG.hourly.bicycle = `Rs. ${svc.manual_price}`;
+        if (isMotorcycle) window.PRICING_CONFIG.hourly.moto = `Rs. ${svc.manual_price}`;
+        if (isPassenger) window.PRICING_CONFIG.hourly.car = `From Rs. ${Number(svc.manual_price).toLocaleString()}`;
       }
     });
   }

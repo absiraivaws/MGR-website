@@ -54,10 +54,10 @@ function getMilestoneTarget(rawNum) {
 }
 
 const STATS_CONFIG = [
-  { target: 68, suffix: "+", label: "Completed Rides & Tours", key: "completed_services" },
-  { target: 86, suffix: "+", label: "Happy Riders & Customers", key: "total_customers" },
-  { target: 12, suffix: "+", label: "Passenger Fleet Vehicles", key: "registered_vehicles" },
-  { target: 100, suffix: "%", label: "Fitness & Eco Friendly", key: "fitness_ready" }
+  { id: "stat-rides", target: 100, suffix: "+", label: "Completed Rides & Tours", icon: "fa-solid fa-route", key: "completed_services", enabled: true, order: 1 },
+  { id: "stat-customers", target: 100, suffix: "+", label: "Happy Riders & Customers", icon: "fa-solid fa-users", key: "total_customers", enabled: true, order: 2 },
+  { id: "stat-fleet", target: 50, suffix: "+", label: "Passenger Fleet Vehicles", icon: "fa-solid fa-van-shuttle", key: "registered_vehicles", enabled: true, order: 3 },
+  { id: "stat-eco", target: 100, suffix: "%", label: "Fitness & Eco", icon: "fa-solid fa-leaf", key: "fitness_ready", enabled: true, order: 4 }
 ];
 
 window.STATS_CONFIG = STATS_CONFIG;
@@ -70,29 +70,41 @@ function renderStats(config, forceAnimate = false) {
   const container = document.getElementById('stats-container');
   if (!container) return;
 
-  const currentConfig = config || window.STATS_CONFIG || STATS_CONFIG;
-  window.STATS_CONFIG = currentConfig;
+  let currentConfig = config || window.STATS_CONFIG || STATS_CONFIG;
+  if (!Array.isArray(currentConfig)) currentConfig = STATS_CONFIG;
 
-  container.innerHTML = currentConfig.map((item, idx) => {
+  // Filter enabled and sort by order
+  const activeStats = currentConfig
+    .filter(item => item.enabled !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  window.STATS_CONFIG = activeStats;
+
+  container.innerHTML = activeStats.map((item, idx) => {
     const isMilestone = item.suffix === '+';
     const milestoneInfo = isMilestone ? getMilestoneTarget(item.target) : { target: Number(item.target) || 0, display: String(item.target) };
     const displayVal = statsAnimated && !forceAnimate ? milestoneInfo.display : 0;
     const suffixHtml = item.suffix === '+' 
       ? `<span class="inline-flex items-center text-brand-primary ml-1" style="font-size: 0.72em; vertical-align: middle;" title="Milestone Target"><i class="fa-solid fa-plus font-black"></i></span>`
-      : item.suffix;
+      : (item.suffix || '');
+
+    const iconHtml = item.image 
+      ? `<img src="${item.image}" alt="Icon" class="w-8 h-8 object-contain mx-auto mb-2">`
+      : (item.icon ? `<div class="w-9 h-9 mx-auto mb-2 rounded-xl bg-emerald-50 text-brand-primary flex items-center justify-center text-base"><i class="${item.icon}"></i></div>` : '');
 
     return `
-      <div class="p-4 bg-white/70 rounded-2xl border border-emerald-100 shadow-sm backdrop-blur-sm">
+      <div class="p-4 bg-white/80 rounded-2xl border border-emerald-100 shadow-sm backdrop-blur-sm flex flex-col items-center justify-between">
+        ${iconHtml}
         <p class="text-3xl sm:text-4xl font-black text-brand-primary tracking-tight flex items-center justify-center">
           <span id="counter-${idx}">${displayVal}</span>${suffixHtml}
         </p>
-        <p class="text-xs text-gray-600 uppercase font-bold tracking-wider mt-1 text-center">${item.label}</p>
+        <p class="text-xs text-gray-600 uppercase font-bold tracking-wider mt-1 text-center">${item.label || item.title || ''}</p>
       </div>
     `;
   }).join('');
 
   function runCounterAnimation() {
-    currentConfig.forEach((item, idx) => {
+    activeStats.forEach((item, idx) => {
       const counterEl = document.getElementById(`counter-${idx}`);
       if (!counterEl) return;
 
@@ -153,6 +165,66 @@ window.renderLiveStats = function(liveStats) {
   renderStats(cfg, statsAnimated);
 };
 
+/**
+ * Dynamic Transport Categories Renderer (Used by CMS Bridge)
+ */
+function renderTransportCategories(categories) {
+  const container = document.getElementById('transport-categories-container');
+  if (!container || !Array.isArray(categories) || !categories.length) return;
+
+  const activeCategories = categories
+    .filter(cat => cat.enabled !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Update grid columns dynamically based on count
+  const count = activeCategories.length;
+  container.className = `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-${Math.min(6, count)} gap-3`;
+
+  container.innerHTML = activeCategories.map(cat => {
+    const isPrimary = cat.isPrimary || cat.id === 'cat-bike';
+    const borderClass = isPrimary ? 'border-2 border-brand-primary' : 'border border-gray-200 hover:border-brand-primary';
+    const badgeHtml = cat.badge ? `<span class="absolute -top-2.5 right-2 bg-brand-primary text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">${cat.badge}</span>` : '';
+    const iconClass = cat.icon || 'fa-solid fa-car';
+    const colorBg = cat.color ? `bg-${cat.color}-50 text-${cat.color}-600` : 'bg-emerald-50 text-brand-primary';
+    const preselectCall = `preselectVehicle('${(cat.preselect || cat.name).replace(/'/g, "\\'")}', '${(cat.package || 'Hourly Rental').replace(/'/g, "\\'")}')`;
+
+    return `
+      <a href="#pricing-rates" onclick="${preselectCall}" class="category-card bg-white hover:bg-emerald-50 ${borderClass} rounded-2xl p-4 shadow-sm hover:shadow-md transition text-center group card-hover relative">
+        ${badgeHtml}
+        <div class="w-11 h-11 mx-auto rounded-xl ${colorBg} flex items-center justify-center text-xl group-hover:scale-110 transition">
+          <i class="${iconClass}"></i>
+        </div>
+        <h3 class="text-sm font-bold text-gray-900 mt-2" ${cat.i18n ? `data-i18n="${cat.i18n}"` : ''}>${cat.name}</h3>
+        <p class="text-[11px] text-gray-500">${cat.subtext || ''}</p>
+      </a>
+    `;
+  }).join('');
+}
+
+/**
+ * Review slider speed & autoplay controller
+ */
+function applyReviewSliderConfig(config) {
+  if (!config) return;
+  const track = document.getElementById('reviews-marquee-track') || document.querySelector('.animate-marquee');
+  const container = document.getElementById('reviews-marquee-container') || document.querySelector('.marquee-scroll-container');
+
+  if (config.speed) {
+    const duration = typeof config.speed === 'number' ? `${config.speed}s` : config.speed;
+    document.documentElement.style.setProperty('--marquee-speed', duration);
+  }
+
+  if (config.auto_slide === false) {
+    if (track) track.classList.add('marquee-paused');
+    if (container) container.classList.add('manual-scroll');
+  } else {
+    if (track) track.classList.remove('marquee-paused');
+    if (container) container.classList.remove('manual-scroll');
+  }
+}
+
+window.renderTransportCategories = renderTransportCategories;
+window.applyReviewSliderConfig = applyReviewSliderConfig;
 window.renderStats = renderStats;
 
 /**

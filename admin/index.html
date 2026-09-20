@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>MGR Website Admin | Backend CMS</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z'/></svg>">
   
   <!-- FontAwesome 6 Free CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   
-  <!-- Admin Stylesheet -->
-  <link rel="stylesheet" href="css/admin.css">
+  <!-- Admin Stylesheet with cache busting -->
+  <link rel="stylesheet" href="css/admin.css?v=20260920_v4">
   
   <!-- Supabase JS Client v2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -21,8 +24,8 @@
     <!-- ================= SIDEBAR ================= -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <div class="sidebar-logo">
-          <i class="fa-solid fa-leaf"></i>
+        <div class="sidebar-logo" style="overflow: hidden; padding: 2px; background: #fff;">
+          <img src="../mannar Green Ride logo.png" onerror="this.outerHTML='<i class=\'fa-solid fa-leaf\'></i>'" alt="MGR Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
         </div>
         <div class="brand-text">
           <h1>MGR Admin</h1>
@@ -40,8 +43,23 @@
         <a class="nav-item" data-nav-tab="content">
           <i class="fa-solid fa-pen-to-square"></i> Website Content
         </a>
+        <a class="nav-item" data-nav-tab="categories">
+          <i class="fa-solid fa-shapes"></i> Transport Categories
+        </a>
+        <a class="nav-item" data-nav-tab="counters">
+          <i class="fa-solid fa-calculator"></i> Statistics Counters
+        </a>
         <a class="nav-item" data-nav-tab="services">
           <i class="fa-solid fa-bicycle"></i> Services & Rates
+        </a>
+        <a class="nav-item" data-nav-tab="host-network" style="color: #10b981; font-weight: 700;">
+          <i class="fa-brands fa-whatsapp"></i> Passenger Host Network
+        </a>
+        <a class="nav-item" data-nav-tab="fitness-cards">
+          <i class="fa-solid fa-heart-pulse"></i> Fitness Features
+        </a>
+        <a class="nav-item" data-nav-tab="about-cards">
+          <i class="fa-solid fa-circle-info"></i> About Highlights
         </a>
         <a class="nav-item" data-nav-tab="seo" style="color: #34d399; font-weight: 600;">
           <i class="fa-solid fa-magnifying-glass"></i> SEO & Keywords
@@ -126,24 +144,46 @@
 
   <!-- ================= MODALS ================= -->
 
-  <!-- 1. Edit Service Modal -->
+  <!-- 1. Service & Rates Modal (Add & Edit) -->
   <div class="modal-backdrop" id="edit-service-modal">
-    <div class="modal-box">
+    <div class="modal-box modal-lg">
       <div class="modal-header">
-        <h4 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Edit Service & Display Price</h4>
+        <h4 class="modal-title" id="service-modal-title"><i class="fa-solid fa-tags"></i> Edit Service & Rates</h4>
         <button class="btn-close-modal" data-close-modal="edit-service-modal">&times;</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="edit-svc-id">
-        <div class="form-group">
-          <label class="form-label">Service Title</label>
-          <input type="text" class="form-input" id="edit-svc-name" readonly style="background: var(--slate-100);">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Service Title *</label>
+            <input type="text" class="form-input" id="edit-svc-name" placeholder="e.g. Standard & Fitness Bicycle">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon Class (FontAwesome)</label>
+            <input type="text" class="form-input" id="edit-svc-icon" placeholder="fa-solid fa-bicycle">
+          </div>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">Service Featured Image</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="url" class="form-input" id="edit-svc-image-url" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('edit-svc-image-url', 'edit-svc-image-preview')">
+            <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+              <i class="fa-solid fa-upload"></i> Upload Image
+              <input type="file" id="edit-svc-image-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'edit-svc-image-url', 'edit-svc-image-preview')">
+            </label>
+          </div>
+          <div id="edit-svc-image-preview-wrapper" style="margin-top: 8px;">
+            <img id="edit-svc-image-preview" src="" alt="Service Preview" style="max-height: 120px; border-radius: 8px; border: 1px solid var(--slate-200); display: none; object-fit: cover;">
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Short Description</label>
-          <textarea class="form-textarea" id="edit-svc-desc" rows="2"></textarea>
+          <textarea class="form-textarea" id="edit-svc-desc" rows="2" placeholder="Brief marketing description shown on the pricing card..."></textarea>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label class="form-label">Price Source</label>
             <select class="form-select" id="edit-svc-source">
@@ -155,15 +195,23 @@
             <label class="form-label">Display Price (Rs.)</label>
             <input type="number" class="form-input" id="edit-svc-price" min="0" step="10">
           </div>
+          <div class="form-group">
+            <label class="form-label">Price Unit / Period</label>
+            <input type="text" class="form-input" id="edit-svc-unit" placeholder="e.g. per hour, per day">
+          </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Price Unit / Period</label>
-          <input type="text" class="form-input" id="edit-svc-unit" placeholder="e.g. per hour, per day">
+          <label class="form-label">Status (Active / Deactive)</label>
+          <select class="form-select" id="edit-svc-status">
+            <option value="published">Active (Visible on Website)</option>
+            <option value="inactive">Deactive (Hidden / Inactive)</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close-modal="edit-service-modal">Cancel</button>
-        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveService()"><i class="fa-solid fa-check"></i> Save Rate</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveService()"><i class="fa-solid fa-check"></i> Save Service</button>
       </div>
     </div>
   </div>
@@ -219,19 +267,20 @@
     </div>
   </div>
 
-  <!-- 3. Add Blog Modal -->
+  <!-- 3. Blog & Travel Guide Modal (Add & Edit) -->
   <div class="modal-backdrop" id="add-blog-modal">
     <div class="modal-box modal-lg">
       <div class="modal-header">
-        <h4 class="modal-title"><i class="fa-solid fa-pen-nib"></i> Publish New Travel Guide / Blog Article</h4>
+        <h4 class="modal-title" id="blog-modal-title"><i class="fa-solid fa-pen-nib"></i> Publish New Travel Guide Article</h4>
         <button class="btn-close-modal" data-close-modal="add-blog-modal">&times;</button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="blog-id-hidden">
         <div class="form-group">
           <label class="form-label">Article Headline *</label>
           <input type="text" class="form-input" id="blog-title" placeholder="e.g. Cycling to Talaimannar Pier: Sunset Routes">
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label class="form-label">Category</label>
             <select class="form-select" id="blog-category">
@@ -239,15 +288,38 @@
               <option value="Passenger Safety">Passenger Safety</option>
               <option value="Local Economy">Local Economy</option>
               <option value="Fitness & Health">Fitness & Health</option>
+              <option value="Island Tour">Island Tour</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Featured Image URL</label>
-            <input type="url" class="form-input" id="blog-image-url" placeholder="https://images.unsplash.com/...">
+            <label class="form-label">Author Name</label>
+            <input type="text" class="form-input" id="blog-author" placeholder="e.g. Mannar Green Ride Team">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status (Active / Deactive)</label>
+            <select class="form-select" id="blog-status">
+              <option value="published">Active (Published on Website)</option>
+              <option value="draft">Deactive (Draft / Hidden)</option>
+            </select>
           </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label">Summary / Excerpt (Shows on card)</label>
+          <label class="form-label">Featured Image</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="url" class="form-input" id="blog-image-url" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('blog-image-url', 'blog-image-preview')">
+            <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+              <i class="fa-solid fa-upload"></i> Upload Image
+              <input type="file" id="blog-image-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'blog-image-url', 'blog-image-preview')">
+            </label>
+          </div>
+          <div id="blog-image-preview-wrapper" style="margin-top: 8px;">
+            <img id="blog-image-preview" src="" alt="Blog Image Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--slate-200); display: none; object-fit: cover;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Summary / Excerpt (Shows on preview card)</label>
           <textarea class="form-textarea" id="blog-summary" rows="2" placeholder="Brief summary of the article..."></textarea>
         </div>
         <div class="form-group">
@@ -257,7 +329,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close-modal="add-blog-modal">Cancel</button>
-        <button class="btn btn-primary" onclick="window.adminCMS.handleCreateBlog()"><i class="fa-solid fa-upload"></i> Publish Article</button>
+        <button class="btn btn-primary" id="blog-save-btn" onclick="window.adminCMS.handleSaveBlog()"><i class="fa-solid fa-check"></i> Save Article</button>
       </div>
     </div>
   </div>
@@ -537,6 +609,277 @@
     </div>
   </div>
 
+  <!-- 5. Transport Category Modal (Add / Edit) -->
+  <div class="modal-backdrop" id="category-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title" id="category-modal-title"><i class="fa-solid fa-shapes"></i> Add Transport Category</h4>
+        <button class="btn-close-modal" data-close-modal="category-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-cat-id-hidden">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Category Name *</label>
+            <input type="text" class="form-input" id="edit-cat-name-input" placeholder="e.g. Boat, Bicycle, Car">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subtitle / Description</label>
+            <input type="text" class="form-input" id="edit-cat-subtext-input" placeholder="e.g. Lagoon & Island Safari">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">FontAwesome Icon Class *</label>
+            <input type="text" class="form-input" id="edit-cat-icon-input" placeholder="e.g. fa-solid fa-ship">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge / Rate Tag (Optional)</label>
+            <input type="text" class="form-input" id="edit-cat-badge-input" placeholder="e.g. Rs. 100/hr, Safari">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category Image (Optional - overrides icon)</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="url" class="form-input" id="edit-cat-image-input" placeholder="https://... image URL (optional)" oninput="window.adminCMS.previewImage('edit-cat-image-input', 'edit-cat-image-preview')">
+            <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+              <i class="fa-solid fa-upload"></i> Upload
+              <input type="file" id="edit-cat-image-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'edit-cat-image-input', 'edit-cat-image-preview')">
+            </label>
+          </div>
+          <div id="edit-cat-image-preview-wrapper" style="margin-top: 8px;">
+            <img id="edit-cat-image-preview" src="" alt="Category Preview" style="max-height: 90px; border-radius: 8px; border: 1px solid var(--slate-200); display: none; object-fit: cover;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Theme Accent Color</label>
+            <select class="form-select" id="edit-cat-color-input">
+              <option value="emerald">Emerald Green (Brand)</option>
+              <option value="teal">Teal (Safari / Water)</option>
+              <option value="sky">Sky Blue (Moto / Scooter)</option>
+              <option value="blue">Blue (Car / Sedan)</option>
+              <option value="amber">Amber (Van / Group)</option>
+              <option value="purple">Purple (Coach / Bus)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status (Active / Deactive)</label>
+            <select class="form-select" id="edit-cat-status-input">
+              <option value="active">Active (Visible on Website)</option>
+              <option value="inactive">Deactive (Disabled / Hidden)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Booking Preselect Name</label>
+            <input type="text" class="form-input" id="edit-cat-preselect-input" placeholder="e.g. Boat / Lagoon & Island Safari">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Default Rental Package</label>
+            <select class="form-select" id="edit-cat-package-input">
+              <option value="Hourly Rental">Hourly Rental</option>
+              <option value="Half-Day (4-5 hrs)">Half-Day (4-5 hrs)</option>
+              <option value="Full Day (24 hrs)">Full Day (24 hrs)</option>
+              <option value="Multi-day Passenger Tour">Multi-day Passenger Tour</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="category-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveCategory()"><i class="fa-solid fa-check"></i> Save Category</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Statistics Counter Modal (Add / Edit) -->
+  <div class="modal-backdrop" id="counter-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title" id="counter-modal-title"><i class="fa-solid fa-calculator"></i> Edit Statistics Counter</h4>
+        <button class="btn-close-modal" data-close-modal="counter-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-counter-id-hidden">
+        <div class="form-group">
+          <label class="form-label">Counter Title / Label *</label>
+          <input type="text" class="form-input" id="edit-counter-title-input" placeholder="e.g. Completed Rides & Tours">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Manual Target Count / Value *</label>
+            <input type="number" class="form-input" id="edit-counter-target-input" placeholder="e.g. 100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Suffix Symbol</label>
+            <input type="text" class="form-input" id="edit-counter-suffix-input" placeholder="e.g. + or %">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">FontAwesome Icon Class</label>
+            <input type="text" class="form-input" id="edit-counter-icon-input" placeholder="e.g. fa-solid fa-route">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status (Active / Deactive)</label>
+            <select class="form-select" id="edit-counter-status-input">
+              <option value="active">Active (Visible on Homepage)</option>
+              <option value="inactive">Deactive (Hidden)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image or Custom Icon (Optional)</label>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" class="form-input" id="edit-counter-image-input" placeholder="https://... (optional image URL)" oninput="window.adminCMS.previewImage('edit-counter-image-input', 'edit-counter-image-preview')">
+            <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+              <i class="fa-solid fa-upload"></i> Upload
+              <input type="file" id="edit-counter-image-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'edit-counter-image-input', 'edit-counter-image-preview')">
+            </label>
+          </div>
+          <div id="edit-counter-image-preview-wrapper" style="margin-top: 8px;">
+            <img id="edit-counter-image-preview" src="" alt="Counter Preview" style="max-height: 90px; border-radius: 8px; border: 1px solid var(--slate-200); display: none; object-fit: cover;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Related Table / Data Source (Dynamic Auto-Count)</label>
+          <input type="text" class="form-input" id="edit-counter-datasource-input" placeholder="e.g. manual OR rpc:get_public_business_stats.completed_services">
+          <span style="font-size: 11.5px; color: var(--slate-500); margin-top: 4px; display: block;">
+            Leave as <code>manual</code> to use your custom manual count, or specify a table/RPC column like <code>completed_services</code>.
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="counter-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveCounter()"><i class="fa-solid fa-check"></i> Save Counter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Host Vehicle Sub-Card Modal (Add / Edit) -->
+  <div class="modal-backdrop" id="host-vehicle-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title" id="host-vehicle-modal-title"><i class="fa-solid fa-car-side"></i> Add Host Vehicle Type</h4>
+        <button class="btn-close-modal" data-close-modal="host-vehicle-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-host-veh-id-hidden">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Vehicle Category Name *</label>
+            <input type="text" class="form-input" id="edit-host-veh-name" placeholder="e.g. Cars, Passenger Vans, Tourist Buses">
+          </div>
+          <div class="form-group">
+            <label class="form-label">FontAwesome Icon Class *</label>
+            <input type="text" class="form-input" id="edit-host-veh-icon" placeholder="e.g. fa-solid fa-car">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vehicle Subtitle / Models *</label>
+          <input type="text" class="form-input" id="edit-host-veh-subtitle" placeholder="e.g. Alto, WagonR, Sedan or Toyota KDH, Caravan">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status (Active / Deactive)</label>
+          <select class="form-select" id="edit-host-veh-status">
+            <option value="active">Active (Visible in Host Network Card)</option>
+            <option value="inactive">Deactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="host-vehicle-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveHostVehicle()"><i class="fa-solid fa-check"></i> Save Vehicle Type</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Fitness Feature Card Modal (Add / Edit) -->
+  <div class="modal-backdrop" id="fitness-card-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title" id="fitness-card-modal-title"><i class="fa-solid fa-heart-pulse"></i> Edit Fitness Feature Card</h4>
+        <button class="btn-close-modal" data-close-modal="fitness-card-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-fit-card-id-hidden">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Feature Card Title *</label>
+            <input type="text" class="form-input" id="edit-fit-card-title" placeholder="e.g. Cardio & Coastal Fitness">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon Class *</label>
+            <input type="text" class="form-input" id="edit-fit-card-icon" placeholder="e.g. fa-solid fa-heart-pulse">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Feature Description *</label>
+          <textarea class="form-textarea" id="edit-fit-card-desc" rows="3" placeholder="Explain the fitness benefit or tourist landmark..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status (Active / Deactive)</label>
+          <select class="form-select" id="edit-fit-card-status">
+            <option value="active">Active (Visible on Homepage)</option>
+            <option value="inactive">Deactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="fitness-card-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveFitnessCard()"><i class="fa-solid fa-check"></i> Save Feature Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. About Us Highlight Card Modal (Add / Edit) -->
+  <div class="modal-backdrop" id="about-card-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4 class="modal-title" id="about-card-modal-title"><i class="fa-solid fa-circle-info"></i> Edit About Highlight Card</h4>
+        <button class="btn-close-modal" data-close-modal="about-card-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-abt-card-id-hidden">
+        <div class="form-group">
+          <label class="form-label">Highlight Title *</label>
+          <input type="text" class="form-input" id="edit-abt-card-title" placeholder="e.g. Multilingual Support">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Highlight Description / Subtitle *</label>
+          <textarea class="form-textarea" id="edit-abt-card-desc" rows="2" placeholder="e.g. Tamil, English, Sinhala, Russian, French & Chinese"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Status (Active / Deactive)</label>
+          <select class="form-select" id="edit-abt-card-status">
+            <option value="active">Active (Visible on Homepage)</option>
+            <option value="inactive">Deactive (Hidden)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close-modal="about-card-modal">Cancel</button>
+        <button class="btn btn-primary" onclick="window.adminCMS.handleSaveAboutCard()"><i class="fa-solid fa-check"></i> Save Highlight</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 5. Live Website Preview Modal (Desktop, Tablet, Mobile) -->
   <div class="modal-backdrop" id="preview-modal">
     <div class="modal-box modal-lg" style="max-width: 1100px; height: 85vh;">
@@ -571,13 +914,8 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <!-- Scripts -->
-  <script src="js/supabase-config.js"></script>
-  <script src="js/admin.js"></script>
-  <script>
-    // Initialize global instance
-    window.adminCMS = new AdminCMSApp();
-    window.adminCMS.init();
-  </script>
+  <!-- Scripts with cache busting -->
+  <script src="js/supabase-config.js?v=20260920_v4"></script>
+  <script src="js/admin.js?v=20260920_v4"></script>
 </body>
 </html>
