@@ -132,6 +132,7 @@ class AdminCMSApp {
       if (settingsData) {
         this.settings = {};
         settingsData.forEach(s => { this.settings[s.setting_key] = s.setting_value; });
+        this.updateLaunchCeremonyBadge();
       }
 
       // 3. Sections
@@ -229,6 +230,7 @@ class AdminCMSApp {
     // Update Header Title
     const titles = {
       dashboard: { title: "Dashboard Overview", subtitle: "Live operational metrics & CMS summary" },
+      'launch-ceremony': { title: "Government Agent (GA) Official Launch Ceremony", subtitle: "Configure the digital full-screen countdown and ceremony launch screen for Mannar GA inauguration" },
       content: { title: "Website Content Management", subtitle: "Edit Hero banner, About Us, Join Us network, Contact & footer copy" },
       categories: { title: "Transport Categories Manager", subtitle: "Add, edit, enable/disable, reorder, and manage vehicle & transport categories" },
       counters: { title: "Statistics & Counter Metrics", subtitle: "Manage count values (100 rides, 100 riders, 50 fleet, 100% eco), data sources, and icons" },
@@ -262,6 +264,10 @@ class AdminCMSApp {
       case 'dashboard':
         container.innerHTML = this.renderDashboardView();
         this.bindDashboardEvents();
+        break;
+      case 'launch-ceremony':
+        container.innerHTML = this.renderLaunchCeremonyView();
+        this.bindLaunchCeremonyEvents();
         break;
       case 'content':
         container.innerHTML = this.renderContentView();
@@ -917,19 +923,87 @@ class AdminCMSApp {
     }
   }
 
+  normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    if (!url) return '';
+
+    // Convert Google Drive view or open links to direct thumbnail CDN
+    const driveMatch1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+    const driveMatch2 = url.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([a-zA-Z0-9_-]+)/i);
+    const driveId = (driveMatch1 && driveMatch1[1]) || (driveMatch2 && driveMatch2[1]);
+
+    if (driveId) {
+      return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`;
+    }
+
+    return url;
+  }
+
+  setImageStatus(previewImgId, type, message) {
+    let statusEl = document.getElementById(previewImgId + '-status');
+    if (!statusEl) {
+      const preview = document.getElementById(previewImgId);
+      if (!preview) return;
+      statusEl = document.createElement('div');
+      statusEl.id = previewImgId + '-status';
+      if (preview.parentNode) {
+        preview.parentNode.appendChild(statusEl);
+      }
+    }
+
+    if (type === 'loading') {
+      statusEl.innerHTML = `<span style="font-size: 11px; color: #0284c7; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;"><i class="fa-solid fa-spinner fa-spin"></i> Checking preview...</span>`;
+    } else if (type === 'success') {
+      statusEl.innerHTML = `<span style="font-size: 11px; color: #059669; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;"><i class="fa-solid fa-circle-check"></i> Image loaded successfully</span>`;
+    } else if (type === 'error') {
+      statusEl.innerHTML = `
+        <div style="font-size: 11px; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 10px; margin-top: 6px; line-height: 1.4;">
+          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i>
+          ${message || 'Unable to load preview. If using Google Drive, make sure sharing is set to "Anyone with the link can view". Or click "Upload Image" to upload directly.'}
+        </div>
+      `;
+    }
+  }
+
+  clearImageStatus(previewImgId) {
+    const statusEl = document.getElementById(previewImgId + '-status');
+    if (statusEl) statusEl.innerHTML = '';
+  }
+
   previewImage(inputId, previewImgId) {
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewImgId);
     if (!input || !preview) return;
-    const val = input.value.trim();
-    if (val) {
-      preview.src = val;
-      preview.style.display = 'block';
-      preview.onerror = () => { preview.style.display = 'none'; };
-    } else {
+    let val = input.value.trim();
+    if (!val) {
       preview.src = '';
       preview.style.display = 'none';
+      this.clearImageStatus(previewImgId);
+      return;
     }
+
+    // Auto-normalize Google Drive links if detected
+    const normalized = this.normalizeImageUrl(val);
+    if (normalized !== val) {
+      val = normalized;
+      input.value = normalized;
+    }
+
+    this.setImageStatus(previewImgId, 'loading');
+    preview.style.display = 'block';
+
+    preview.onload = () => {
+      preview.style.display = 'block';
+      this.setImageStatus(previewImgId, 'success');
+    };
+
+    preview.onerror = () => {
+      preview.style.display = 'none';
+      this.setImageStatus(previewImgId, 'error');
+    };
+
+    preview.src = val;
   }
 
   async handleFileUpload(fileInput, targetUrlInputId, previewImgId) {
@@ -962,11 +1036,7 @@ class AdminCMSApp {
         targetInput.value = publicUrl;
       }
       if (previewImgId) {
-        const preview = document.getElementById(previewImgId);
-        if (preview) {
-          preview.src = publicUrl;
-          preview.style.display = 'block';
-        }
+        this.previewImage(targetUrlInputId, previewImgId);
       }
 
       try {
@@ -1000,6 +1070,7 @@ class AdminCMSApp {
     document.getElementById('edit-svc-image-url').value = '';
     const preview = document.getElementById('edit-svc-image-preview');
     if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    this.clearImageStatus('edit-svc-image-preview');
     document.getElementById('edit-svc-desc').value = '';
     document.getElementById('edit-svc-source').value = 'AUTO';
     document.getElementById('edit-svc-price').value = '100';
@@ -1023,16 +1094,7 @@ class AdminCMSApp {
     document.getElementById('edit-svc-name').value = svc.service_name || '';
     document.getElementById('edit-svc-icon').value = svc.icon_reference || 'fa-solid fa-bicycle';
     document.getElementById('edit-svc-image-url').value = svc.image_url || '';
-    const preview = document.getElementById('edit-svc-image-preview');
-    if (preview) {
-      if (svc.image_url) {
-        preview.src = svc.image_url;
-        preview.style.display = 'block';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    }
+    this.previewImage('edit-svc-image-url', 'edit-svc-image-preview');
     document.getElementById('edit-svc-desc').value = svc.short_description || '';
     document.getElementById('edit-svc-source').value = svc.price_source || 'AUTO';
     document.getElementById('edit-svc-price').value = svc.manual_price || 100;
@@ -1046,7 +1108,7 @@ class AdminCMSApp {
     const id = document.getElementById('edit-svc-id').value;
     const service_name = document.getElementById('edit-svc-name').value.trim();
     const icon_reference = document.getElementById('edit-svc-icon').value.trim() || 'fa-solid fa-bicycle';
-    const image_url = document.getElementById('edit-svc-image-url').value.trim();
+    const image_url = this.normalizeImageUrl(document.getElementById('edit-svc-image-url').value.trim());
     const short_description = document.getElementById('edit-svc-desc').value.trim();
     const price_source = document.getElementById('edit-svc-source').value;
     const manual_price = parseFloat(document.getElementById('edit-svc-price').value) || 0;
@@ -1751,7 +1813,7 @@ class AdminCMSApp {
 
   openAddBlogModal() {
     const modalTitle = document.getElementById('blog-modal-title');
-    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-pen-nib"></i> Publish New Travel Guide Article';
+    if (modalTitle) modalTitle.innerHTML = '<i class="fa-solid fa-plus"></i> Write New Travel Guide';
 
     document.getElementById('blog-id-hidden').value = '';
     document.getElementById('blog-title').value = '';
@@ -1761,6 +1823,7 @@ class AdminCMSApp {
     document.getElementById('blog-image-url').value = '';
     const preview = document.getElementById('blog-image-preview');
     if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    this.clearImageStatus('blog-image-preview');
     document.getElementById('blog-summary').value = '';
     document.getElementById('blog-content').value = '';
 
@@ -1783,17 +1846,7 @@ class AdminCMSApp {
     document.getElementById('blog-author').value = blog.author_name || 'Mannar Green Ride Team';
     document.getElementById('blog-status').value = blog.status || 'published';
     document.getElementById('blog-image-url').value = blog.featured_image_url || '';
-
-    const preview = document.getElementById('blog-image-preview');
-    if (preview) {
-      if (blog.featured_image_url) {
-        preview.src = blog.featured_image_url;
-        preview.style.display = 'block';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    }
+    this.previewImage('blog-image-url', 'blog-image-preview');
 
     document.getElementById('blog-summary').value = blog.summary || '';
     document.getElementById('blog-content').value = blog.content || '';
@@ -1813,7 +1866,7 @@ class AdminCMSApp {
     const category_id = document.getElementById('blog-category').value;
     const author_name = document.getElementById('blog-author').value.trim() || 'Mannar Green Ride Team';
     const status = document.getElementById('blog-status').value || 'published';
-    const featured_image_url = document.getElementById('blog-image-url').value.trim() || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600';
+    const featured_image_url = this.normalizeImageUrl(document.getElementById('blog-image-url').value.trim()) || 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800';
 
     if (!title) {
       this.showToast("Article headline is required!", "error");
@@ -2009,9 +2062,11 @@ class AdminCMSApp {
     const box = document.getElementById('media-url-preview-box');
     const img = document.getElementById('media-url-preview-img');
     if (!box || !img) return;
-    if (url && url.trim().startsWith('http')) {
-      img.src = url.trim();
+    const normalized = this.normalizeImageUrl(url);
+    if (normalized && normalized.trim().startsWith('http')) {
+      img.src = normalized.trim();
       box.style.display = 'block';
+      img.onerror = () => { box.style.display = 'none'; };
     } else {
       box.style.display = 'none';
     }
@@ -2019,7 +2074,7 @@ class AdminCMSApp {
 
   async handleSaveMediaUrl() {
     const name = document.getElementById('media-url-name')?.value.trim();
-    const url = document.getElementById('media-url-input')?.value.trim();
+    const url = this.normalizeImageUrl(document.getElementById('media-url-input')?.value.trim());
     const category = document.getElementById('media-url-category')?.value || 'general';
 
     if (!url || !url.startsWith('http')) {
@@ -3115,7 +3170,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
   bindCategoriesEvents() {}
 
   openAddCategoryModal() {
-    document.getElementById('category-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Add Transport Category';
+    document.getElementById('category-modal-title').innerHTML = '<i class="fa-solid fa-shapes"></i> Add Transport Category';
     document.getElementById('edit-cat-id-hidden').value = '';
     document.getElementById('edit-cat-name-input').value = '';
     document.getElementById('edit-cat-subtext-input').value = '';
@@ -3123,6 +3178,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('edit-cat-image-input').value = '';
     const preview = document.getElementById('edit-cat-image-preview');
     if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    this.clearImageStatus('edit-cat-image-preview');
     document.getElementById('edit-cat-badge-input').value = '';
     document.getElementById('edit-cat-color-input').value = 'emerald';
     document.getElementById('edit-cat-status-input').value = 'active';
@@ -3142,16 +3198,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('edit-cat-subtext-input').value = cat.subtext || '';
     document.getElementById('edit-cat-icon-input').value = cat.icon || '';
     document.getElementById('edit-cat-image-input').value = cat.image || '';
-    const preview = document.getElementById('edit-cat-image-preview');
-    if (preview) {
-      if (cat.image) {
-        preview.src = cat.image;
-        preview.style.display = 'block';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    }
+    this.previewImage('edit-cat-image-input', 'edit-cat-image-preview');
     document.getElementById('edit-cat-badge-input').value = cat.badge || '';
     document.getElementById('edit-cat-color-input').value = cat.color || 'emerald';
     document.getElementById('edit-cat-status-input').value = cat.status || 'active';
@@ -3166,7 +3213,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     const name = document.getElementById('edit-cat-name-input')?.value.trim();
     const subtext = document.getElementById('edit-cat-subtext-input')?.value.trim();
     const icon = document.getElementById('edit-cat-icon-input')?.value.trim() || 'fa-solid fa-car';
-    const image = document.getElementById('edit-cat-image-input')?.value.trim() || '';
+    const image = this.normalizeImageUrl(document.getElementById('edit-cat-image-input')?.value.trim() || '');
     const badge = document.getElementById('edit-cat-badge-input')?.value.trim();
     const color = document.getElementById('edit-cat-color-input')?.value || 'emerald';
     const status = document.getElementById('edit-cat-status-input')?.value || 'active';
@@ -3394,12 +3441,13 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('counter-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Add Statistics Counter';
     document.getElementById('edit-counter-id-hidden').value = '';
     document.getElementById('edit-counter-title-input').value = '';
-    document.getElementById('edit-counter-target-input').value = '100';
+    document.getElementById('edit-counter-target-input').value = 100;
     document.getElementById('edit-counter-suffix-input').value = '+';
     document.getElementById('edit-counter-icon-input').value = 'fa-solid fa-chart-line';
     document.getElementById('edit-counter-image-input').value = '';
     const preview = document.getElementById('edit-counter-image-preview');
     if (preview) { preview.src = ''; preview.style.display = 'none'; }
+    this.clearImageStatus('edit-counter-image-preview');
     document.getElementById('edit-counter-datasource-input').value = 'manual';
     document.getElementById('edit-counter-status-input').value = 'active';
     this.openModal('counter-modal');
@@ -3417,16 +3465,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('edit-counter-suffix-input').value = c.suffix || '';
     document.getElementById('edit-counter-icon-input').value = c.icon || '';
     document.getElementById('edit-counter-image-input').value = c.image || '';
-    const preview = document.getElementById('edit-counter-image-preview');
-    if (preview) {
-      if (c.image) {
-        preview.src = c.image;
-        preview.style.display = 'block';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    }
+    this.previewImage('edit-counter-image-input', 'edit-counter-image-preview');
     document.getElementById('edit-counter-datasource-input').value = c.dataSource || 'manual';
     document.getElementById('edit-counter-status-input').value = c.status || 'active';
 
@@ -3439,7 +3478,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     const target = parseInt(document.getElementById('edit-counter-target-input')?.value) || 0;
     const suffix = document.getElementById('edit-counter-suffix-input')?.value.trim();
     const icon = document.getElementById('edit-counter-icon-input')?.value.trim();
-    const image = document.getElementById('edit-counter-image-input')?.value.trim();
+    const image = this.normalizeImageUrl(document.getElementById('edit-counter-image-input')?.value.trim());
     const dataSource = document.getElementById('edit-counter-datasource-input')?.value.trim() || 'manual';
     const status = document.getElementById('edit-counter-status-input')?.value || 'active';
 
@@ -4274,10 +4313,89 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           </table>
         </div>
       </div>
+
+      <!-- Section Visuals (2 Display Images in Website) -->
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title"><i class="fa-solid fa-images"></i> Section Visuals & Display Photos</h3>
+            <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+              Manage the two showcase photos displayed next to the feature cards on the website ("Ride for Health, Ride for the Planet").
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="window.adminCMS.handleSaveFitnessImages()">
+            <i class="fa-solid fa-floppy-disk"></i> Save Fitness Images
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 14px;">
+          <!-- Image 1: Cycling Fitness in Mannar -->
+          <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+            <label class="form-label" style="font-weight: 700;">Image 1: Cycling Fitness in Mannar</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="url" class="form-input" id="fitness-img1-input" value="${this.escapeHtml(this.getFitnessImages().img1 || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img1-input', 'fitness-img1-preview')">
+              <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+                <i class="fa-solid fa-upload"></i> Upload
+                <input type="file" id="fitness-img1-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'fitness-img1-input', 'fitness-img1-preview')">
+              </label>
+            </div>
+            <div id="fitness-img1-preview-wrapper" style="margin-top: 8px;">
+              <img id="fitness-img1-preview" src="${this.escapeHtml(this.getFitnessImages().img1 || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800')}" alt="Fitness Preview 1" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
+            </div>
+          </div>
+
+          <!-- Image 2: Tourist Adventure -->
+          <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+            <label class="form-label" style="font-weight: 700;">Image 2: Tourist Adventure</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="url" class="form-input" id="fitness-img2-input" value="${this.escapeHtml(this.getFitnessImages().img2 || 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img2-input', 'fitness-img2-preview')">
+              <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+                <i class="fa-solid fa-upload"></i> Upload
+                <input type="file" id="fitness-img2-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'fitness-img2-input', 'fitness-img2-preview')">
+              </label>
+            </div>
+            <div id="fitness-img2-preview-wrapper" style="margin-top: 8px;">
+              <img id="fitness-img2-preview" src="${this.escapeHtml(this.getFitnessImages().img2 || 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800')}" alt="Fitness Preview 2" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
+            </div>
+          </div>
+        </div>
+      </div>
     `;
   }
 
-  bindFitnessCardsEvents() {}
+  bindFitnessCardsEvents() {
+    this.previewImage('fitness-img1-input', 'fitness-img1-preview');
+    this.previewImage('fitness-img2-input', 'fitness-img2-preview');
+  }
+
+  getFitnessImages() {
+    const raw = this.settings && this.settings.fitness_section_images;
+    let imgs = {
+      img1: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
+      img2: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800'
+    };
+    if (raw) {
+      try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        imgs = { ...imgs, ...parsed };
+      } catch (e) {}
+    }
+    return imgs;
+  }
+
+  async handleSaveFitnessImages() {
+    const img1 = this.normalizeImageUrl(document.getElementById('fitness-img1-input')?.value?.trim() || '');
+    const img2 = this.normalizeImageUrl(document.getElementById('fitness-img2-input')?.value?.trim() || '');
+    const payload = { img1, img2 };
+
+    try {
+      this.showToast("Saving fitness images...", "info");
+      await this.saveSettingsItem('fitness_section_images', payload, 'FITNESS');
+      this.showToast("Fitness section images updated successfully!", "success");
+    } catch (err) {
+      this.showToast(err.message || "Failed to save fitness images", "error");
+    }
+  }
 
   openAddFitnessCardModal() {
     document.getElementById('fitness-card-modal-title').innerHTML = '<i class="fa-solid fa-heart-pulse"></i> Add Fitness Feature Card';
@@ -4619,6 +4737,263 @@ ${safetyTips.map(t => "• " + t).join('\n')}
       toast.style.transition = 'all 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }, 3500);
+  }
+
+  /* ----------------- 17. MANNAR GA LAUNCH CEREMONY ----------------- */
+  getLaunchCeremonyConfig() {
+    const raw = this.settings && this.settings.launch_ceremony_config;
+    let cfg = {
+      active: false,
+      countdown_seconds: 5,
+      front_image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
+      title: 'Official Website Launch Ceremony',
+      subtitle: 'Mannar Green Ride Eco-Mobility & Tourism Network',
+      guest_name: 'Inaugurated by Hon. Government Agent / District Secretary of Mannar',
+      button_text: 'START LAUNCH',
+      enable_sound: true
+    };
+    if (raw) {
+      try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        cfg = { ...cfg, ...parsed };
+      } catch (e) {}
+    }
+    return cfg;
+  }
+
+  renderLaunchCeremonyView() {
+    const cfg = this.getLaunchCeremonyConfig();
+    const isActive = !!cfg.active;
+    const activeBadge = isActive 
+      ? `<span class="badge badge-published" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-circle-dot fa-fade"></i> ACTIVE - Ceremony Screen Live on Website</span>`
+      : `<span class="badge badge-draft" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-ban"></i> DEACTIVATED - Website Loads Normally</span>`;
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Banner Card -->
+        <div class="card" style="background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%); color: #fff; border: 1px solid #059669; padding: 24px; position: relative; overflow: hidden;">
+          <div style="position: absolute; right: -20px; bottom: -20px; opacity: 0.1; font-size: 180px; pointer-events: none;">
+            <i class="fa-solid fa-rocket"></i>
+          </div>
+          <div style="position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2);">
+                <i class="fa-solid fa-award"></i> VIP INAUGURATION CONTROLS
+              </div>
+              <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px;">
+                Mannar Government Agent (GA) Official Launch Ceremony
+              </h2>
+              <p style="font-size: 13px; color: #a7f3d0; max-width: 680px; line-height: 1.5;">
+                When active, any screen visiting the website displays a high-tech digital inauguration stage.
+                When the Government Agent touches <strong>START</strong>, it triggers a digital countdown with audio beeps, confetti fireworks, and unveils the live website.
+              </p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); text-decoration: none;">
+                <i class="fa-solid fa-eye"></i> Rehearse Launch Screen (Live)
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Switch & Countdown Configuration Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Launch Ceremony Activation & Timing</h3>
+            ${activeBadge}
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 10px;">
+            <!-- Active / Deactivate Toggle -->
+            <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+              <label class="form-label" style="font-weight: 700; font-size: 14px; margin-bottom: 6px;">Ceremony Mode Status</label>
+              <select class="form-select" id="ceremony-status-input" style="font-weight: 600;">
+                <option value="active" ${isActive ? 'selected' : ''}>🟢 ACTIVE (Show Launch Screen to Visitors)</option>
+                <option value="inactive" ${!isActive ? 'selected' : ''}>⚪ DEACTIVATED (Normal Website Mode)</option>
+              </select>
+              <p style="font-size: 12px; color: var(--slate-500); margin-top: 6px;">
+                Turn ON right before the stage ceremony begins. Turn OFF after the launch is complete to restore normal direct site browsing.
+              </p>
+            </div>
+
+            <!-- Countdown Number -->
+            <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+              <label class="form-label" style="font-weight: 700; font-size: 14px; margin-bottom: 6px;">Countdown Duration (Seconds)</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="number" class="form-input" id="ceremony-countdown-input" min="3" max="30" value="${cfg.countdown_seconds || 5}" style="max-width: 120px; font-weight: 800; font-size: 18px; text-align: center;">
+                <span style="font-size: 14px; font-weight: 600; color: var(--slate-600);">Seconds</span>
+                <div style="display: flex; gap: 6px; margin-left: auto;">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ceremony-countdown-input').value = 3">3s</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ceremony-countdown-input').value = 5">5s</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('ceremony-countdown-input').value = 10">10s</button>
+                </div>
+              </div>
+              <p style="font-size: 12px; color: var(--slate-500); margin-top: 6px;">
+                Duration of the giant digital countdown once the GA taps "START". Recommended: 5 or 10 seconds.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Front Image / Ceremony Poster Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-image"></i> Ceremony Front Image / Poster</h3>
+            <span style="font-size: 12px; color: var(--slate-500);">Featured on the ceremony screen in a glowing holographic frame</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 10px;">
+            <div>
+              <div class="form-group">
+                <label class="form-label">Front Image URL</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <input type="url" class="form-input" id="ceremony-front-image" value="${this.escapeHtml(cfg.front_image || '')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('ceremony-front-image', 'ceremony-image-preview')">
+                  <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
+                    <i class="fa-solid fa-upload"></i> Upload Image
+                    <input type="file" id="ceremony-image-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'ceremony-front-image', 'ceremony-image-preview')">
+                  </label>
+                </div>
+                <div id="ceremony-image-preview-wrapper" style="margin-top: 8px;">
+                  <img id="ceremony-image-preview" src="${this.escapeHtml(cfg.front_image || '')}" alt="Ceremony Front Preview" style="max-height: 180px; width: 100%; max-width: 380px; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover; ${cfg.front_image ? 'display: block;' : 'display: none;'}">
+                </div>
+              </div>
+
+              <!-- Quick Presets -->
+              <div style="margin-top: 12px;">
+                <label class="form-label" style="font-size: 11px; text-transform: uppercase; color: var(--slate-500); font-weight: 700;">Quick Image Presets</label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setCeremonyImagePreset('https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800')">
+                    🚲 Eco Cycling Flagship
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setCeremonyImagePreset('https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800')">
+                    🌅 Scenic Tourist Landmark
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.setCeremonyImagePreset('mannar Green Ride logo.png')">
+                    🛡️ Official Mannar Green Ride Logo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Card Box -->
+            <div style="background: #022c22; border: 1px solid #059669; border-radius: var(--radius-md); padding: 16px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #34d399; margin-bottom: 8px;">Stage Appearance</span>
+              <div style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.5); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #34d399; margin-bottom: 8px; animation: pulse 2s infinite;">
+                <i class="fa-solid fa-power-off"></i>
+              </div>
+              <div style="font-size: 13px; font-weight: 800; color: #fff;">START BUTTON</div>
+              <div style="font-size: 11px; color: #a7f3d0; margin-top: 4px;">Surrounded by high-tech pulsing digital energy ring</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ceremony Dedication & Titles Card -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-pen-nib"></i> Ceremony Titles & Dignitary Dedication</h3>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label">Ceremony Main Heading</label>
+              <input type="text" class="form-input" id="ceremony-title-input" value="${this.escapeHtml(cfg.title || 'Official Website Launch Ceremony')}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Project / Organization Subtitle</label>
+              <input type="text" class="form-input" id="ceremony-subtitle-input" value="${this.escapeHtml(cfg.subtitle || 'Mannar Green Ride Eco-Mobility & Tourism Network')}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Dignitary Inauguration Dedication</label>
+              <input type="text" class="form-input" id="ceremony-guest-input" value="${this.escapeHtml(cfg.guest_name || 'Inaugurated by Hon. Government Agent / District Secretary of Mannar')}">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Central Stage Button Label</label>
+              <input type="text" class="form-input" id="ceremony-button-input" value="${this.escapeHtml(cfg.button_text || 'START LAUNCH')}">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="ceremony-sound-input" ${cfg.enable_sound !== false ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+            <label for="ceremony-sound-input" style="font-size: 13px; font-weight: 600; cursor: pointer;">
+              Enable Digital Countdown Audio Beeps & Launch Fanfare (Synthesized Web Audio API - no external file lag)
+            </label>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+          <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="text-decoration: none;">
+            <i class="fa-solid fa-play"></i> Test Full Ceremony Screen
+          </a>
+          <button class="btn btn-primary" id="btn-save-ceremony-settings" onclick="window.adminCMS.saveLaunchCeremonySettings()">
+            <i class="fa-solid fa-floppy-disk"></i> Save Ceremony Settings
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  bindLaunchCeremonyEvents() {
+    this.previewImage('ceremony-front-image', 'ceremony-image-preview');
+  }
+
+  setCeremonyImagePreset(url) {
+    const input = document.getElementById('ceremony-front-image');
+    if (input) {
+      input.value = url;
+      this.previewImage('ceremony-front-image', 'ceremony-image-preview');
+    }
+  }
+
+  async saveLaunchCeremonySettings() {
+    const active = document.getElementById('ceremony-status-input')?.value === 'active';
+    const countdown_seconds = parseInt(document.getElementById('ceremony-countdown-input')?.value, 10) || 5;
+    const front_image = this.normalizeImageUrl(document.getElementById('ceremony-front-image')?.value?.trim() || '');
+    const title = document.getElementById('ceremony-title-input')?.value?.trim() || 'Official Website Launch Ceremony';
+    const subtitle = document.getElementById('ceremony-subtitle-input')?.value?.trim() || 'Mannar Green Ride Eco-Mobility & Tourism Network';
+    const guest_name = document.getElementById('ceremony-guest-input')?.value?.trim() || 'Inaugurated by Hon. Government Agent / District Secretary of Mannar';
+    const button_text = document.getElementById('ceremony-button-input')?.value?.trim() || 'START LAUNCH';
+    const enable_sound = document.getElementById('ceremony-sound-input')?.checked ?? true;
+
+    const payload = {
+      active,
+      countdown_seconds,
+      front_image,
+      title,
+      subtitle,
+      guest_name,
+      button_text,
+      enable_sound
+    };
+
+    try {
+      this.showToast("Saving ceremony settings...", "info");
+      await this.saveSettingsItem('launch_ceremony_config', payload, 'CEREMONY');
+      await this.logAudit(active ? "ACTIVATE" : "DEACTIVATE", "CEREMONY", "launch_ceremony_config", payload);
+      this.updateLaunchCeremonyBadge();
+      this.showToast(active ? "Launch Ceremony Screen is now ACTIVE on website!" : "Launch Ceremony saved (Deactivated).", "success");
+      this.render();
+    } catch (err) {
+      this.showToast(err.message || "Failed to save ceremony settings", "error");
+    }
+  }
+
+  updateLaunchCeremonyBadge() {
+    const badge = document.getElementById('launch-ceremony-nav-badge');
+    if (!badge) return;
+    const cfg = this.getLaunchCeremonyConfig();
+    if (cfg && cfg.active) {
+      badge.textContent = 'LIVE';
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#15803d';
+    } else {
+      badge.textContent = 'OFF';
+      badge.style.background = '#fee2e2';
+      badge.style.color = '#dc2626';
+    }
   }
 
   escapeHtml(str) {

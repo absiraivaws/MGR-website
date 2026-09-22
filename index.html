@@ -206,6 +206,88 @@
 
 <body class="bg-brand-surface text-brand-textdark font-sans flex flex-col min-h-screen">
 
+  <!-- ================= GA OFFICIAL DIGITAL GRAND LAUNCH SCREEN ================= -->
+  <div id="ga-launch-screen" class="ga-launch-container hidden">
+    <div class="ga-grid-bg"></div>
+    <div class="ga-ambient-orb orb-1"></div>
+    <div class="ga-ambient-orb orb-2"></div>
+
+    <div class="ga-stage-content">
+      <!-- Ceremonial Top Emblem & Branding -->
+      <div class="ga-header">
+        <div class="ga-emblem-badge">
+          <i class="fa-solid fa-award"></i>
+          <span>DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA • DISTRICT SECRETARIAT MANNAR</span>
+        </div>
+        <div class="ga-brand-row">
+          <div class="ga-brand-logo-wrap">
+            <img src="mannar Green Ride logo.png" onerror="this.src='assets/logo.svg'" alt="Mannar Green Ride">
+          </div>
+          <div class="ga-brand-text">
+            <h2>Mannar <span>Green Ride</span></h2>
+            <p>Eco-Mobility, Smart Tourism & Passenger Network</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Stage Centerpiece -->
+      <div class="ga-stage-card">
+        <div class="ga-ceremony-tag" id="ga-ceremony-badge">
+          <i class="fa-solid fa-sparkles"></i> OFFICIAL WEBSITE LAUNCH CEREMONY
+        </div>
+
+        <h1 class="ga-ceremony-title" id="ga-ceremony-title">Mannar Green Ride Eco-Mobility & Tourism Network</h1>
+        <p class="ga-ceremony-subtitle" id="ga-ceremony-subtitle">Inaugurated by Hon. Government Agent / District Secretary of Mannar</p>
+
+        <!-- Front Ceremony Image with Hologram Glowing Border -->
+        <div class="ga-hologram-frame" id="ga-front-image-wrap">
+          <img id="ga-front-image" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800" alt="Launch Ceremony">
+          <div class="ga-hologram-scanline"></div>
+        </div>
+
+        <!-- Central Start Button Section -->
+        <div class="ga-button-zone" id="ga-button-zone">
+          <button id="btn-ga-launch-start" class="ga-start-button" aria-label="Start Launch">
+            <div class="ga-btn-pulse-ring"></div>
+            <div class="ga-btn-pulse-ring delay"></div>
+            <div class="ga-btn-inner">
+              <i class="fa-solid fa-power-off"></i>
+              <span id="ga-btn-text">START</span>
+            </div>
+          </button>
+          <p class="ga-touch-hint" id="ga-touch-hint">Touch or click <strong>START</strong> to officially inaugurate the website</p>
+        </div>
+
+        <!-- Giant Digital Countdown Display (Appears when Start is clicked) -->
+        <div id="ga-countdown-zone" class="ga-countdown-zone hidden">
+          <div class="ga-countdown-circle">
+            <svg class="ga-progress-svg" viewBox="0 0 200 200">
+              <circle class="ga-circle-bg" cx="100" cy="100" r="90"></circle>
+              <circle class="ga-circle-bar" id="ga-progress-bar" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="ga-countdown-num" id="ga-countdown-number">5</div>
+          </div>
+          <p class="ga-countdown-status" id="ga-countdown-status">SYSTEM INITIALIZING • COMMENCING LAUNCH</p>
+        </div>
+
+        <!-- Grand Celebration Reveal Overlay -->
+        <div id="ga-celebration-zone" class="ga-celebration-zone hidden">
+          <div class="ga-celebration-title">🌟 WEBSITE OFFICIALLY LAUNCHED! 🌟</div>
+          <div class="ga-celebration-sub">Welcome to Mannar Green Ride • Northern Sri Lanka</div>
+          <button id="btn-enter-site" class="ga-enter-button">Enter Website Now &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Footer Dignitary Dedication -->
+      <div class="ga-footer">
+        <span id="ga-guest-name">Inaugurated by Hon. Government Agent / District Secretary of Mannar</span>
+      </div>
+    </div>
+
+    <!-- Fireworks & Confetti Canvas -->
+    <canvas id="ga-fireworks-canvas" class="ga-fireworks-canvas"></canvas>
+  </div>
+
   <!-- MAIN NAVIGATION -->
   <header class="sticky top-0 z-40 glass-nav shadow-sm">
     <div class="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -730,10 +812,12 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <img src="https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&q=80&w=600"
-            alt="Cycling Fitness in Mannar" class="rounded-2xl shadow-md object-cover h-64 w-full">
-          <img src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=600"
-            alt="Tourist Adventure" class="rounded-2xl shadow-md object-cover h-64 w-full mt-8">
+          <img id="fitness-img-1" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600"
+            alt="Cycling Fitness in Mannar" class="rounded-2xl shadow-md object-cover h-64 w-full"
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600';">
+          <img id="fitness-img-2" src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=600"
+            alt="Tourist Adventure" class="rounded-2xl shadow-md object-cover h-64 w-full mt-8"
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=600';">
         </div>
       </div>
     </div>
@@ -944,7 +1028,7 @@
         <!-- Blog 1 -->
         <article
           class="bg-white rounded-2xl overflow-hidden border border-gray-200 flex flex-col hover:shadow-md transition card-hover">
-          <img src="https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600"
+          <img src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=600"
             alt="Birding & Cycling in Mannar" class="h-44 w-full object-cover">
           <div class="p-6 flex-1 flex flex-col justify-between">
             <div>

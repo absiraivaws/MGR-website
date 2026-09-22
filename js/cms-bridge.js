@@ -15,6 +15,15 @@
   let supabaseClient = null;
 
   function initCMS() {
+    // Fast initial check for Launch Ceremony (cached in localStorage or URL query param)
+    try {
+      const cachedCeremony = localStorage.getItem('mgr_setting_launch_ceremony_config');
+      const isUrlCeremony = window.location.search.includes('ceremony=true') || window.location.search.includes('launch=true');
+      if (cachedCeremony || isUrlCeremony) {
+        initLaunchCeremony(cachedCeremony || { active: true });
+      }
+    } catch (e) {}
+
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
       supabaseClient = window.supabase.createClient(CMS_CONFIG.url, CMS_CONFIG.anonKey);
       syncWebsiteContent();
@@ -236,6 +245,31 @@
     if (map.tiktok_url) {
       const linkTt = document.getElementById('link-tt');
       if (linkTt) linkTt.href = map.tiktok_url;
+    }
+
+    // Launch Ceremony Configuration
+    if (map.launch_ceremony_config) {
+      try {
+        localStorage.setItem('mgr_setting_launch_ceremony_config', typeof map.launch_ceremony_config === 'string' ? map.launch_ceremony_config : JSON.stringify(map.launch_ceremony_config));
+      } catch (e) {}
+      initLaunchCeremony(map.launch_ceremony_config);
+    }
+
+    // Fitness Section Images
+    if (map.fitness_section_images) {
+      try {
+        const fitImgs = typeof map.fitness_section_images === 'string' ? JSON.parse(map.fitness_section_images) : map.fitness_section_images;
+        if (fitImgs) {
+          if (fitImgs.img1) {
+            const el1 = document.getElementById('fitness-img-1');
+            if (el1) el1.src = normalizeImageUrl(fitImgs.img1);
+          }
+          if (fitImgs.img2) {
+            const el2 = document.getElementById('fitness-img-2');
+            if (el2) el2.src = normalizeImageUrl(fitImgs.img2);
+          }
+        }
+      } catch (e) {}
     }
 
     // Duration Pricing Matrix (Hourly, Half-Day, Full-Day)
@@ -606,12 +640,25 @@
 
         const badgeLabel = svc.icon_reference || (isBicycle ? 'Eco & Cardio' : (isMotorcycle ? 'Fast Island Travel' : (isPassenger ? 'Groups & Families' : 'Island Transport')));
         const rateText = svc.manual_price ? `From Rs. ${Number(svc.manual_price).toLocaleString()}/${escapeHtml(svc.price_unit || 'hr')}` : 'Inquire for Rates';
-        const imgUrl = svc.image_url || 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800';
+        
+        // Category-specific high-resolution fallbacks
+        const defaultImg = isBicycle 
+          ? 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800'
+          : (isMotorcycle 
+              ? 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=800' 
+              : 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=800');
+
+        const rawImgUrl = (svc.image_url && svc.image_url.trim()) ? svc.image_url.trim() : defaultImg;
+        const imgUrl = normalizeImageUrl(rawImgUrl) || defaultImg;
 
         return `
           <div id="service-card-${escapeHtml(svc.id)}"
             class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between card-hover">
-            <div class="h-48 bg-cover bg-center" style="background-image: url('${escapeHtml(imgUrl)}');"></div>
+            <div class="h-48 overflow-hidden relative bg-gray-100">
+              <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(svc.service_name)}" 
+                class="w-full h-full object-cover transition duration-300 hover:scale-105"
+                onerror="this.onerror=null; this.src='${defaultImg}';">
+            </div>
             <div class="p-6 flex-1 flex flex-col justify-between">
               <div>
                 <div class="flex justify-between items-center mb-2">
@@ -762,19 +809,277 @@
     const blogContainer = document.querySelector('#blogs .grid');
     if (!blogContainer || !blogs.length) return;
 
-    blogContainer.innerHTML = blogs.map(blog => `
-      <article class="bg-white rounded-2xl overflow-hidden border border-gray-200 flex flex-col hover:shadow-md transition card-hover">
-        <img src="${escapeHtml(blog.featured_image_url || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600')}" alt="${escapeHtml(blog.title)}" class="h-44 w-full object-cover">
-        <div class="p-6 flex-1 flex flex-col justify-between">
-          <div>
-            <span class="text-xs text-brand-primary font-bold uppercase">${escapeHtml(blog.category_id || 'Route Guide')}</span>
-            <h3 class="text-base font-bold text-gray-900 mt-1">${escapeHtml(blog.title)}</h3>
-            <p class="text-gray-600 text-xs mt-2 leading-relaxed">${escapeHtml(blog.summary || '')}</p>
+    const defaultBlogImg = 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800';
+
+    blogContainer.innerHTML = blogs.map(blog => {
+      const rawImg = (blog.featured_image_url && blog.featured_image_url.trim()) ? blog.featured_image_url.trim() : defaultBlogImg;
+      const imgUrl = normalizeImageUrl(rawImg) || defaultBlogImg;
+
+      return `
+        <article class="bg-white rounded-2xl overflow-hidden border border-gray-200 flex flex-col hover:shadow-md transition card-hover">
+          <div class="h-44 w-full overflow-hidden relative bg-gray-100">
+            <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(blog.title)}" 
+              class="w-full h-full object-cover transition duration-300 hover:scale-105"
+              onerror="this.onerror=null; this.src='${defaultBlogImg}';">
           </div>
-          <a href="#contact" class="mt-4 text-brand-primary font-semibold text-xs hover:underline">Read Article &rarr;</a>
-        </div>
-      </article>
-    `).join('');
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <span class="text-xs text-brand-primary font-bold uppercase">${escapeHtml(blog.category_id || 'Route Guide')}</span>
+              <h3 class="text-base font-bold text-gray-900 mt-1">${escapeHtml(blog.title)}</h3>
+              <p class="text-gray-600 text-xs mt-2 leading-relaxed">${escapeHtml(blog.summary || '')}</p>
+            </div>
+            <a href="#contact" class="mt-4 text-brand-primary font-semibold text-xs hover:underline">Read Article &rarr;</a>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  /* ----------------- URL Normalization ----------------- */
+  function normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    url = url.trim();
+    if (!url) return '';
+
+    // Convert Google Drive view or open links to direct thumbnail CDN
+    const driveMatch1 = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+    const driveMatch2 = url.match(/drive\.google\.com\/(?:open|uc)\?(?:.*&)?id=([a-zA-Z0-9_-]+)/i);
+    const driveId = (driveMatch1 && driveMatch1[1]) || (driveMatch2 && driveMatch2[1]);
+
+    if (driveId) {
+      return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1600`;
+    }
+
+    return url;
+  }
+
+  /* ----------------- Mannar GA Grand Launch Ceremony ----------------- */
+  function initLaunchCeremony(config) {
+    let cfg = {
+      active: false,
+      countdown_seconds: 5,
+      front_image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
+      title: 'Official Website Launch Ceremony',
+      subtitle: 'Mannar Green Ride Eco-Mobility & Tourism Network',
+      guest_name: 'Inaugurated by Hon. Government Agent / District Secretary of Mannar',
+      button_text: 'START',
+      enable_sound: true
+    };
+
+    if (config) {
+      if (typeof config === 'string') {
+        try { cfg = { ...cfg, ...JSON.parse(config) }; } catch (e) {}
+      } else if (typeof config === 'object') {
+        cfg = { ...cfg, ...config };
+      }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const isRehearsal = urlParams.get('ceremony') === 'true' || urlParams.get('launch') === 'true' || urlParams.get('rehearse') === '1';
+
+    // If rehearsal requested, clear any previous launched flag
+    if (isRehearsal) {
+      sessionStorage.removeItem('mgr_ceremony_launched');
+    }
+
+    const alreadyLaunched = sessionStorage.getItem('mgr_ceremony_launched') === 'true';
+
+    // Determine whether to display the ceremony screen
+    const shouldShow = (cfg.active || isRehearsal) && !alreadyLaunched;
+
+    const screen = document.getElementById('ga-launch-screen');
+    if (!screen) return;
+
+    if (!shouldShow) {
+      screen.classList.add('hidden');
+      screen.style.display = 'none';
+      document.body.style.overflow = '';
+      return;
+    }
+
+    // Populate ceremony elements
+    screen.classList.remove('hidden');
+    screen.classList.remove('launch-unveil');
+    screen.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    const titleEl = document.getElementById('ga-ceremony-title');
+    if (titleEl && cfg.title) titleEl.textContent = cfg.title;
+
+    const subtitleEl = document.getElementById('ga-ceremony-subtitle');
+    if (subtitleEl && cfg.subtitle) subtitleEl.textContent = cfg.subtitle;
+
+    const guestEl = document.getElementById('ga-guest-name');
+    if (guestEl && cfg.guest_name) guestEl.textContent = cfg.guest_name;
+
+    const btnTextEl = document.getElementById('ga-btn-text');
+    if (btnTextEl && cfg.button_text) btnTextEl.textContent = cfg.button_text;
+
+    const frontImg = document.getElementById('ga-front-image');
+    if (frontImg) {
+      const defaultImg = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800';
+      const resolved = normalizeImageUrl(cfg.front_image) || defaultImg;
+      frontImg.src = resolved;
+      frontImg.onerror = () => { frontImg.src = defaultImg; };
+    }
+
+    const btnStart = document.getElementById('btn-ga-launch-start');
+    const buttonZone = document.getElementById('ga-button-zone');
+    const countdownZone = document.getElementById('ga-countdown-zone');
+    const countdownNum = document.getElementById('ga-countdown-number');
+    const progressBar = document.getElementById('ga-progress-bar');
+    const celebrationZone = document.getElementById('ga-celebration-zone');
+    const btnEnter = document.getElementById('btn-enter-site');
+
+    // Reset view states
+    if (buttonZone) buttonZone.classList.remove('hidden');
+    if (countdownZone) countdownZone.classList.add('hidden');
+    if (celebrationZone) celebrationZone.classList.add('hidden');
+
+    // Audio synthesizer context (initialized on user gesture)
+    let audioCtx = null;
+    function playBeep(freq = 880, duration = 0.12, type = 'sine') {
+      if (cfg.enable_sound === false) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playFanfare() {
+      if (cfg.enable_sound === false) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.8);
+          }, idx * 140);
+        });
+      } catch (e) {}
+    }
+
+    // Canvas Confetti / Fireworks
+    function launchCelebrationFireworks() {
+      const canvas = document.getElementById('ga-fireworks-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#10b981', '#34d399', '#fef08a', '#38bdf8', '#fbbf24', '#ffffff'];
+
+      for (let i = 0; i < 200; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 26,
+          vy: (Math.random() - 0.5) * 26 - 4,
+          radius: Math.random() * 4 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          alpha: 1,
+          decay: Math.random() * 0.012 + 0.006
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeCount = 0;
+        particles.forEach(p => {
+          if (p.alpha > 0) {
+            activeCount++;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.25; // gravity
+            p.alpha -= p.decay;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        });
+        if (activeCount > 0) {
+          requestAnimationFrame(animate);
+        }
+      }
+      animate();
+    }
+
+    // Finish Launch and Reveal Live Website
+    function completeLaunch() {
+      sessionStorage.setItem('mgr_ceremony_launched', 'true');
+      screen.classList.add('launch-unveil');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        screen.classList.add('hidden');
+        screen.style.display = 'none';
+      }, 1200);
+    }
+
+    if (btnEnter) {
+      btnEnter.onclick = completeLaunch;
+    }
+
+    // Start Button Action
+    if (btnStart) {
+      btnStart.onclick = () => {
+        if (buttonZone) buttonZone.classList.add('hidden');
+        if (countdownZone) countdownZone.classList.remove('hidden');
+
+        let duration = parseInt(cfg.countdown_seconds, 10) || 5;
+        if (duration < 3) duration = 3;
+        const total = duration;
+        const circumference = 565.48; // 2 * PI * 90
+
+        if (countdownNum) countdownNum.textContent = duration;
+        playBeep(880, 0.15);
+
+        const timer = setInterval(() => {
+          duration--;
+          if (countdownNum) countdownNum.textContent = duration;
+
+          if (progressBar) {
+            const fraction = (total - duration) / total;
+            progressBar.style.strokeDashoffset = (circumference * fraction).toFixed(2);
+          }
+
+          if (duration > 0) {
+            playBeep(880 + (total - duration) * 120, 0.15);
+          } else {
+            clearInterval(timer);
+            if (countdownZone) countdownZone.classList.add('hidden');
+            if (celebrationZone) celebrationZone.classList.remove('hidden');
+            playFanfare();
+            launchCelebrationFireworks();
+            setTimeout(completeLaunch, 3200);
+          }
+        }, 1000);
+      };
+    }
   }
 
   function escapeHtml(str) {
