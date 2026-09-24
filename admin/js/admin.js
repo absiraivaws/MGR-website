@@ -562,22 +562,27 @@ class AdminCMSApp {
       enabled: true,
       auto_slide: true,
       interval: 4000,
+      fit_mode: 'contain', // 'contain' displays full original image with 100% clarity; 'cover' fills edge-to-edge
+      slider_height: 480,
+      slider_width: '1280px',
+      ambient_bg: true,
+      bg_style: 'blur', // 'blur' | 'dark' | 'emerald' | 'transparent'
       slides: [
         {
           id: "slide_1",
-          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920",
           title: "Eco-Friendly Cycling Across Mannar Causeway",
           subtitle: "Bicycles from Rs. 100/hr with free helmet & lock"
         },
         {
           id: "slide_2",
-          url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200",
+          url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=95&w=1920",
           title: "Scenic Coastal Exploration & Flamingo Dunes",
           subtitle: "Comfortable rides designed for health and eco-tourism"
         },
         {
           id: "slide_3",
-          url: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=1200",
+          url: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=95&w=1920",
           title: "Island-Wide Passenger Transport Fleet",
           subtitle: "Cars, KDH vans, and tourist buses with trusted local drivers"
         }
@@ -609,7 +614,7 @@ class AdminCMSApp {
       cfg.slides = [
         {
           id: "slide_1",
-          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920",
           title: "Eco-Friendly Cycling Across Mannar Causeway",
           subtitle: "Bicycles from Rs. 100/hr with free helmet & lock"
         }
@@ -733,9 +738,15 @@ class AdminCMSApp {
   renderHeroSliderControls(sliderCfg) {
     const s = sliderCfg || this.getHeroSliderConfig();
     const slides = s.slides || [];
+    const fitMode = s.fit_mode || 'contain';
+    const sliderHeight = s.slider_height || 480;
+    const sliderWidth = s.slider_width || '1280px';
+    const ambientBg = s.ambient_bg !== false;
+    const bgStyle = s.bg_style || 'blur';
 
     return `
       <div class="card" id="hero-slider-manager-card" style="border: 2px solid #0073aa; background: #f8fafc; border-radius: 12px; padding: 18px; margin-top: 10px;">
+        <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 12px;">
           <div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -747,7 +758,7 @@ class AdminCMSApp {
               </span>
             </div>
             <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">
-              Add multiple slide images, move slides up or down to reorder, replace images, and customize captions.
+              Manage high-resolution images, aspect ratios, fit mode (100% full view vs crop), and ambient backgrounds.
             </p>
           </div>
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -771,7 +782,135 @@ class AdminCMSApp {
           </div>
         </div>
 
-        <!-- Slides List Container -->
+        <!-- 1. Hero Image Dimensions & Clarity Guidance Banner -->
+        <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #93c5fd; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="background: #0073aa; color: #fff; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 2px;">
+              <i class="fa-solid fa-ruler-combined"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h5 style="margin: 0; font-size: 13.5px; font-weight: 800; color: #1e3a8a;">
+                  Hero Section Image Size &amp; Clarity Guidelines
+                </h5>
+                <span style="background: #2563eb; color: #fff; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 10px;">
+                  100% ORIGINAL DISPLAY (NOT 80%)
+                </span>
+              </div>
+              <p style="font-size: 12px; color: #1e40af; margin: 4px 0 8px 0; line-height: 1.45;">
+                To guarantee crisp high-definition visuals across all desktops and mobile screens, upload or link images formatted to these recommended specifications:
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+                <div style="background: rgba(255,255,255,0.85); border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Standard 16:9 HD (Recommended)</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px;">1920 × 1080 px</div>
+                  <div style="font-size: 11px; color: #475569;">Perfect for graphic banners, text &amp; multi-vehicle photos</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.85); border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Panoramic Ultra-Wide</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px;">1920 × 800 px <span style="font-weight: 500; font-size: 11px; color: #64748b;">(21:9)</span></div>
+                  <div style="font-size: 11px; color: #475569;">Ideal for panoramic scenery across Mannar causeway</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.85); border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Original Clarity Guarantee</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #059669; margin-top: 2px;">Zero Forced Cropping</div>
+                  <div style="font-size: 11px; color: #475569;">"Contain" mode renders full uncropped image with ambient backdrop</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Image Fit Mode, Height, Width & Ambient Backdrop Settings -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sliders" style="color: #0073aa;"></i>
+            Slider Dimensions, Image Fit Mode &amp; Ambient Background
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+            <!-- Fit Mode -->
+            <div>
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                Image Display Fit Mode
+              </label>
+              <select id="hero-slider-fit-mode" class="form-input" style="font-size: 12.5px; font-weight: 600;">
+                <option value="contain" ${fitMode === 'contain' ? 'selected' : ''}>
+                  🔍 Contain (100% Original Clarity - Uncropped, Full Image) [Recommended]
+                </option>
+                <option value="cover" ${fitMode === 'cover' ? 'selected' : ''}>
+                  🖼️ Cover (Edge-to-Edge Fill - Crops edges to fill box)
+                </option>
+              </select>
+              <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">
+                <strong>Contain</strong> prevents any part of your photo or text from getting cut off.
+              </p>
+            </div>
+
+            <!-- Slider Height -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; margin: 0;">
+                  Slider Height: <span id="hero-slider-height-val" style="color: #0073aa; font-weight: 800;">${sliderHeight}px</span>
+                </label>
+              </div>
+              <input type="range" id="hero-slider-height-range" min="300" max="650" step="10" value="${sliderHeight}" style="width: 100%; accent-color: #0073aa; cursor: pointer;">
+              <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline btn-sm btn-height-preset" data-height="380" style="padding: 2px 7px; font-size: 11px;">380px</button>
+                <button type="button" class="btn btn-outline btn-sm btn-height-preset" data-height="440" style="padding: 2px 7px; font-size: 11px;">440px</button>
+                <button type="button" class="btn btn-outline btn-sm btn-height-preset" data-height="480" style="padding: 2px 7px; font-size: 11px; font-weight: 700; border-color: #0073aa; color: #0073aa;">480px (Std)</button>
+                <button type="button" class="btn btn-outline btn-sm btn-height-preset" data-height="540" style="padding: 2px 7px; font-size: 11px;">540px</button>
+                <button type="button" class="btn btn-outline btn-sm btn-height-preset" data-height="600" style="padding: 2px 7px; font-size: 11px;">600px</button>
+              </div>
+            </div>
+
+            <!-- Slider Width Container -->
+            <div>
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                Container Width Max
+              </label>
+              <select id="hero-slider-width-select" class="form-input" style="font-size: 12.5px; font-weight: 600;">
+                <option value="1280px" ${sliderWidth === '1280px' ? 'selected' : ''}>1280px (Standard Centered - Recommended)</option>
+                <option value="100%" ${sliderWidth === '100%' ? 'selected' : ''}>100% (Full Edge-to-Edge Browser Width)</option>
+                <option value="1440px" ${sliderWidth === '1440px' ? 'selected' : ''}>1440px (Wide Desktop)</option>
+                <option value="1024px" ${sliderWidth === '1024px' ? 'selected' : ''}>1024px (Compact Layout)</option>
+              </select>
+              <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">
+                Defines the maximum container width for the hero carousel on large desktop monitors.
+              </p>
+            </div>
+
+            <!-- Ambient Background Style -->
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; margin: 0;">
+                  Ambient Backdrop Style
+                </label>
+                <label style="font-size: 11px; color: #0073aa; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="checkbox" id="hero-slider-ambient-toggle" ${ambientBg ? 'checked' : ''} style="width: 14px; height: 14px; accent-color: #0073aa;">
+                  Active
+                </label>
+              </div>
+              <select id="hero-slider-bg-style" class="form-input" style="font-size: 12.5px; font-weight: 600;">
+                <option value="blur" ${bgStyle === 'blur' ? 'selected' : ''}>✨ Dynamic Ambient Glow (Blurred reflection of image)</option>
+                <option value="dark" ${bgStyle === 'dark' ? 'selected' : ''}>🌑 Sleek Deep Dark (#0f172a)</option>
+                <option value="emerald" ${bgStyle === 'emerald' ? 'selected' : ''}>🌲 Mannar Deep Emerald (#022c22)</option>
+                <option value="transparent" ${bgStyle === 'transparent' ? 'selected' : ''}>⚪ Transparent / Neutral</option>
+              </select>
+              <p style="font-size: 11px; color: #64748b; margin: 4px 0 0 0;">
+                Fills any letterbox boundaries smoothly when the photo does not match the screen ratio.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Slides List Container -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h5 style="margin: 0; font-size: 13.5px; font-weight: 800; color: #0f172a;">
+            Slide Images &amp; Captions (${slides.length})
+          </h5>
+          <span style="font-size: 11.5px; color: #64748b;">Click <strong>Preview Slide</strong> to view immediately on canvas</span>
+        </div>
         <div id="hero-slides-items-container" style="display: flex; flex-direction: column; gap: 14px;">
           ${this.renderHeroSlideRows(slides)}
         </div>
@@ -1275,8 +1414,17 @@ class AdminCMSApp {
             <div>
               <div id="wp-hero-preview-title" style="${finalTitleStyle}">${this.escapeHtml(defaultTitle)}</div>
             </div>
-            <div style="margin-top: 14px; position: relative; border-radius: ${t.imgRadius !== undefined ? t.imgRadius : 16}px; overflow: hidden; background: #0f172a; max-height: 240px; box-shadow: 0 16px 30px rgba(0,0,0,0.25);" id="wp-hero-preview-container">
-              <img id="wp-hero-preview-img" src="${this.normalizeImageUrl(activeSlide.url)}" alt="Preview" style="${imgStyle}">
+            <div style="margin-top: 14px; position: relative; border-radius: ${t.imgRadius !== undefined ? t.imgRadius : 16}px; overflow: hidden; background: ${sliderCfg.bg_style === 'emerald' ? '#022c22' : '#0f172a'}; height: 230px; box-shadow: 0 16px 30px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center;" id="wp-hero-preview-container">
+              <!-- Ambient Blurred Backdrop -->
+              <img id="wp-hero-preview-blur" src="${this.normalizeImageUrl(activeSlide.url)}" alt="" aria-hidden="true" style="position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); object-fit: cover; filter: blur(28px) brightness(0.55); transform: scale(1.15); pointer-events: none; opacity: ${sliderCfg.ambient_bg !== false ? '0.85' : '0'}; transition: opacity 0.3s ease;">
+
+              <!-- Foreground High-Clarity Image -->
+              <img id="wp-hero-preview-img" src="${this.normalizeImageUrl(activeSlide.url)}" alt="Preview" style="position: relative; z-index: 2; width: 100%; height: 100%; object-fit: ${sliderCfg.fit_mode === 'cover' ? 'cover' : 'contain'}; display: block; border-radius: ${t.imgRadius !== undefined ? t.imgRadius : 12}px; transition: all 0.2s ease;">
+
+              <!-- Fit Mode Badge -->
+              <span id="wp-hero-preview-fit-badge" style="position: absolute; top: 10px; left: 12px; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); color: #34d399; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.3px; border: 1px solid rgba(255,255,255,0.2);">
+                <i class="fa-solid fa-sparkles"></i> ${sliderCfg.fit_mode === 'cover' ? 'Cover (Edge-to-Edge)' : '100% Original Clarity'}
+              </span>
               
               <!-- Prev / Next Arrows -->
               <button type="button" id="wp-hero-preview-prev-btn" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;" title="Previous Slide">
@@ -1927,6 +2075,10 @@ class AdminCMSApp {
       if (previewImg && cur.url) {
         previewImg.src = this.normalizeImageUrl(cur.url);
       }
+      const previewBlur = document.getElementById('wp-hero-preview-blur');
+      if (previewBlur && cur.url) {
+        previewBlur.src = this.normalizeImageUrl(cur.url);
+      }
 
       const counter = document.getElementById('wp-hero-preview-counter');
       if (counter) {
@@ -1994,6 +2146,8 @@ class AdminCMSApp {
           if (idx === (this.activeHeroPreviewSlideIdx || 0)) {
             const previewImg = document.getElementById('wp-hero-preview-img');
             if (previewImg && val) previewImg.src = this.normalizeImageUrl(val);
+            const previewBlur = document.getElementById('wp-hero-preview-blur');
+            if (previewBlur && val) previewBlur.src = this.normalizeImageUrl(val);
           }
         };
       });
@@ -2129,6 +2283,73 @@ class AdminCMSApp {
       };
     }
 
+    // Image Fit Mode selector
+    const fitModeSelect = document.getElementById('hero-slider-fit-mode');
+    if (fitModeSelect) {
+      fitModeSelect.onchange = () => {
+        this.heroSliderData.fit_mode = fitModeSelect.value;
+        const previewImg = document.getElementById('wp-hero-preview-img');
+        if (previewImg) {
+          previewImg.style.objectFit = fitModeSelect.value;
+        }
+        const fitBadge = document.getElementById('wp-hero-preview-fit-badge');
+        if (fitBadge) {
+          fitBadge.innerHTML = `<i class="fa-solid fa-sparkles"></i> ${fitModeSelect.value === 'cover' ? 'Cover (Edge-to-Edge)' : '100% Original Clarity'}`;
+        }
+      };
+    }
+
+    // Slider Height Range & Preset chips
+    const heightRange = document.getElementById('hero-slider-height-range');
+    const heightVal = document.getElementById('hero-slider-height-val');
+    if (heightRange) {
+      heightRange.oninput = () => {
+        const h = parseInt(heightRange.value, 10);
+        this.heroSliderData.slider_height = h;
+        if (heightVal) heightVal.textContent = h + 'px';
+      };
+    }
+    document.querySelectorAll('.btn-height-preset').forEach(btn => {
+      btn.onclick = () => {
+        const h = parseInt(btn.dataset.height, 10);
+        this.heroSliderData.slider_height = h;
+        if (heightRange) heightRange.value = h;
+        if (heightVal) heightVal.textContent = h + 'px';
+      };
+    });
+
+    // Slider Width selector
+    const widthSelect = document.getElementById('hero-slider-width-select');
+    if (widthSelect) {
+      widthSelect.onchange = () => {
+        this.heroSliderData.slider_width = widthSelect.value;
+      };
+    }
+
+    // Ambient Background toggle & style
+    const ambientToggle = document.getElementById('hero-slider-ambient-toggle');
+    const bgStyleSelect = document.getElementById('hero-slider-bg-style');
+    if (ambientToggle) {
+      ambientToggle.onchange = () => {
+        this.heroSliderData.ambient_bg = ambientToggle.checked;
+        const blurImg = document.getElementById('wp-hero-preview-blur');
+        if (blurImg) {
+          blurImg.style.opacity = ambientToggle.checked ? '0.85' : '0';
+        }
+      };
+    }
+    if (bgStyleSelect) {
+      bgStyleSelect.onchange = () => {
+        this.heroSliderData.bg_style = bgStyleSelect.value;
+        const previewBox = document.getElementById('wp-hero-preview-container');
+        if (previewBox) {
+          if (bgStyleSelect.value === 'emerald') previewBox.style.backgroundColor = '#022c22';
+          else if (bgStyleSelect.value === 'dark') previewBox.style.backgroundColor = '#0f172a';
+          else previewBox.style.backgroundColor = '#0f172a';
+        }
+      };
+    }
+
     // Save buttons
     const saveBtn = document.getElementById('btn-save-hero-slider-only');
     if (saveBtn) {
@@ -2167,11 +2388,21 @@ class AdminCMSApp {
 
       const autoSlide = document.getElementById('hero-slider-auto-toggle')?.checked ?? true;
       const interval = parseInt(document.getElementById('hero-slider-interval-select')?.value || '4000', 10);
+      const fitMode = document.getElementById('hero-slider-fit-mode')?.value || this.heroSliderData.fit_mode || 'contain';
+      const sliderHeight = parseInt(document.getElementById('hero-slider-height-range')?.value || this.heroSliderData.slider_height || '480', 10);
+      const sliderWidth = document.getElementById('hero-slider-width-select')?.value || this.heroSliderData.slider_width || '1280px';
+      const ambientBg = document.getElementById('hero-slider-ambient-toggle') ? document.getElementById('hero-slider-ambient-toggle').checked : (this.heroSliderData.ambient_bg !== false);
+      const bgStyle = document.getElementById('hero-slider-bg-style')?.value || this.heroSliderData.bg_style || 'blur';
 
       const sliderCfg = {
         enabled: true,
         auto_slide: autoSlide,
         interval: interval,
+        fit_mode: fitMode,
+        slider_height: sliderHeight,
+        slider_width: sliderWidth,
+        ambient_bg: ambientBg,
+        bg_style: bgStyle,
         slides: slides.length > 0 ? slides : this.heroSliderData.slides
       };
 
@@ -7383,16 +7614,35 @@ ${safetyTips.map(t => "• " + t).join('\n')}
       active: false,
       countdown_seconds: 5,
       front_image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
-      title: 'Official Website Launch Ceremony',
-      subtitle: 'Mannar Green Ride Eco-Mobility & Tourism Network',
-      guest_name: 'Inaugurated by Hon. Government Agent / District Secretary of Mannar',
-      button_text: 'START LAUNCH',
+      govt_badge: 'Govt. Approved Tourist Transport Service',
+      brand_title: 'MANNAR GREEN RIDE',
+      brand_subtitle: 'Official Inauguration & Public Rollout',
+      ceremony_badge: 'STATE INAUGURAL CEREMONY • MANNAR DISTRICT',
+      title: 'Empowering Mannar with Eco-Friendly Transport',
+      subtitle: 'Proudly serving pilgrims, local commuters, and global tourists across the historic island of Mannar.',
+      guest_name: 'Inaugurated by Hon. District Secretary & Distinguished Dignitaries',
+      button_text: 'TOUCH TO INAUGURATE',
+      touch_hint: 'Press and hold for 2.5 seconds to unlock',
+      countdown_status: 'OFFICIAL PUBLIC DEPLOYMENT COMMENCING',
+      celebration_title: 'MANNAR GREEN RIDE IS NOW OFFICIALLY LAUNCHED!',
+      celebration_sub: 'Leading sustainable tourism, green mobility, and dependable transport for Mannar Island.',
+      enter_button_text: 'ENTER OFFICIAL PORTAL',
       enable_sound: true
     };
     if (raw) {
       try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         cfg = { ...cfg, ...parsed };
+      } catch (e) {}
+    } else {
+      try {
+        const local = localStorage.getItem('mgr_setting_launch_ceremony_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object') {
+            cfg = { ...cfg, ...parsed };
+          }
+        }
       } catch (e) {}
     }
     return cfg;
@@ -7408,7 +7658,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     return `
       <div style="display: flex; flex-direction: column; gap: 20px;">
         <!-- Banner Card -->
-        <div class="card" style="background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%); color: #fff; border: 1px solid #059669; padding: 24px; position: relative; overflow: hidden;">
+        <div class="card" style="background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%); color: #fff; border: 1px solid #059669; padding: 24px; position: relative; overflow: hidden; border-radius: 12px;">
           <div style="position: absolute; right: -20px; bottom: -20px; opacity: 0.1; font-size: 180px; pointer-events: none;">
             <i class="fa-solid fa-rocket"></i>
           </div>
@@ -7420,15 +7670,17 @@ ${safetyTips.map(t => "• " + t).join('\n')}
               <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px;">
                 Mannar Government Agent (GA) Official Launch Ceremony
               </h2>
-              <p style="font-size: 13px; color: #a7f3d0; max-width: 680px; line-height: 1.5;">
-                When active, any screen visiting the website displays a high-tech digital inauguration stage.
-                When the Government Agent touches <strong>START</strong>, it triggers a digital countdown with audio beeps, confetti fireworks, and unveils the live website.
+              <p style="font-size: 13px; color: #a7f3d0; max-width: 680px; line-height: 1.5; margin: 0;">
+                Configure every single text element, dignitary dedication, touch trigger, countdown and celebration screen seen during the live stage inauguration.
               </p>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); text-decoration: none;">
+              <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); text-decoration: none; font-weight: 700;">
                 <i class="fa-solid fa-eye"></i> Rehearse Launch Screen (Live)
               </a>
+              <button class="btn btn-primary" onclick="window.adminCMS.saveLaunchCeremonySettings()" style="background: #10b981; border-color: #10b981; font-weight: 700;">
+                <i class="fa-solid fa-floppy-disk"></i> Save All Ceremony Settings
+              </button>
             </div>
           </div>
         </div>
@@ -7436,7 +7688,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         <!-- Master Switch & Countdown Configuration Card -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-sliders"></i> Launch Ceremony Activation & Timing</h3>
+            <h3 class="card-title"><i class="fa-solid fa-sliders"></i> 1. Launch Ceremony Activation &amp; Timing</h3>
             ${activeBadge}
           </div>
 
@@ -7466,23 +7718,30 @@ ${safetyTips.map(t => "• " + t).join('\n')}
                 </div>
               </div>
               <p style="font-size: 12px; color: var(--slate-500); margin-top: 6px;">
-                Duration of the giant digital countdown once the GA taps "START". Recommended: 5 or 10 seconds.
+                Duration of the giant digital countdown once the dignitary touches START. Recommended: 5 or 10 seconds.
               </p>
             </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--slate-200); display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="ceremony-sound-input" ${cfg.enable_sound !== false ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; accent-color: #059669;">
+            <label for="ceremony-sound-input" style="font-size: 13px; font-weight: 600; cursor: pointer;">
+              Enable Digital Countdown Audio Beeps &amp; Launch Fanfare (Synthesized Web Audio API - zero network latency)
+            </label>
           </div>
         </div>
 
         <!-- Front Image / Ceremony Poster Card -->
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-image"></i> Ceremony Front Image / Poster</h3>
+            <h3 class="card-title"><i class="fa-solid fa-image"></i> 2. Ceremony Front Image / Stage Poster</h3>
             <span style="font-size: 12px; color: var(--slate-500);">Featured on the ceremony screen in a glowing holographic frame</span>
           </div>
 
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 10px;">
             <div>
               <div class="form-group">
-                <label class="form-label">Front Image URL</label>
+                <label class="form-label" style="font-weight: 700;">Front Image URL</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
                   <input type="url" class="form-input" id="ceremony-front-image" value="${this.escapeHtml(cfg.front_image || '')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('ceremony-front-image', 'ceremony-image-preview')">
                   <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
@@ -7514,59 +7773,141 @@ ${safetyTips.map(t => "• " + t).join('\n')}
 
             <!-- Preview Card Box -->
             <div style="background: #022c22; border: 1px solid #059669; border-radius: var(--radius-md); padding: 16px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #34d399; margin-bottom: 8px;">Stage Appearance</span>
-              <div style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.5); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #34d399; margin-bottom: 8px; animation: pulse 2s infinite;">
+              <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #34d399; margin-bottom: 8px;">Interactive Stage Button</span>
+              <div style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #10b981; box-shadow: 0 0 20px rgba(16,185,129,0.5); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #34d399; margin-bottom: 8px;">
                 <i class="fa-solid fa-power-off"></i>
               </div>
-              <div style="font-size: 13px; font-weight: 800; color: #fff;">START BUTTON</div>
-              <div style="font-size: 11px; color: #a7f3d0; margin-top: 4px;">Surrounded by high-tech pulsing digital energy ring</div>
+              <div style="font-size: 13px; font-weight: 800; color: #fff;">${this.escapeHtml(cfg.button_text || 'TOUCH TO INAUGURATE')}</div>
+              <div style="font-size: 10.5px; color: #a7f3d0; margin-top: 4px;">Pulsing energy rings &amp; touch sensor</div>
             </div>
           </div>
         </div>
 
-        <!-- Ceremony Dedication & Titles Card -->
-        <div class="card">
+        <!-- 3. Stage Header & Brand Emblem Identity -->
+        <div class="card" style="border-left: 4px solid #0073aa;">
           <div class="card-header">
-            <h3 class="card-title"><i class="fa-solid fa-pen-nib"></i> Ceremony Titles & Dignitary Dedication</h3>
+            <h3 class="card-title"><i class="fa-solid fa-shield-halved" style="color: #0073aa;"></i> 3. Stage Header &amp; Brand Emblem Identity</h3>
+            <span style="font-size: 12px; color: var(--slate-500);">Appears at the very top of the ceremony screen</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 10px;">
             <div class="form-group">
-              <label class="form-label">Ceremony Main Heading</label>
-              <input type="text" class="form-input" id="ceremony-title-input" value="${this.escapeHtml(cfg.title || 'Official Website Launch Ceremony')}">
+              <label class="form-label" style="font-weight: 700;">Government / Official Approval Pill</label>
+              <input type="text" class="form-input" id="ceremony-govt-badge-input" value="${this.escapeHtml(cfg.govt_badge || 'Govt. Approved Tourist Transport Service')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Upper pill badge next to the Sri Lankan emblem shield.</p>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Project / Organization Subtitle</label>
-              <input type="text" class="form-input" id="ceremony-subtitle-input" value="${this.escapeHtml(cfg.subtitle || 'Mannar Green Ride Eco-Mobility & Tourism Network')}">
+              <label class="form-label" style="font-weight: 700;">Brand Title (Golden Text)</label>
+              <input type="text" class="form-input" id="ceremony-brand-title-input" value="${this.escapeHtml(cfg.brand_title || 'MANNAR GREEN RIDE')}" style="font-weight: 800; letter-spacing: 0.5px;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Main golden gradient brand title.</p>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Dignitary Inauguration Dedication</label>
-              <input type="text" class="form-input" id="ceremony-guest-input" value="${this.escapeHtml(cfg.guest_name || 'Inaugurated by Hon. Government Agent / District Secretary of Mannar')}">
+              <label class="form-label" style="font-weight: 700;">Brand Subtitle / Rollout Tag</label>
+              <input type="text" class="form-input" id="ceremony-brand-subtitle-input" value="${this.escapeHtml(cfg.brand_subtitle || 'Official Inauguration & Public Rollout')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Green sub-badge underneath the brand title.</p>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Central Stage Button Label</label>
-              <input type="text" class="form-input" id="ceremony-button-input" value="${this.escapeHtml(cfg.button_text || 'START LAUNCH')}">
+              <label class="form-label" style="font-weight: 700;">Stage Inaugural Badge Tag</label>
+              <input type="text" class="form-input" id="ceremony-stage-badge-input" value="${this.escapeHtml(cfg.ceremony_badge || 'STATE INAUGURAL CEREMONY • MANNAR DISTRICT')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Tag positioned directly above the main ceremony heading.</p>
             </div>
           </div>
+        </div>
 
-          <div class="form-group" style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
-            <input type="checkbox" id="ceremony-sound-input" ${cfg.enable_sound !== false ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
-            <label for="ceremony-sound-input" style="font-size: 13px; font-weight: 600; cursor: pointer;">
-              Enable Digital Countdown Audio Beeps & Launch Fanfare (Synthesized Web Audio API - no external file lag)
-            </label>
+        <!-- 4. Main Announcement & Dignitary Dedication -->
+        <div class="card" style="border-left: 4px solid #059669;">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-pen-nib" style="color: #059669;"></i> 4. Ceremony Announcement &amp; Dignitary Dedication</h3>
+            <span style="font-size: 12px; color: var(--slate-500);">Featured text in center stage</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Ceremony Main Heading</label>
+              <input type="text" class="form-input" id="ceremony-title-input" value="${this.escapeHtml(cfg.title || 'Empowering Mannar with Eco-Friendly Transport')}" style="font-size: 15px; font-weight: 700;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">The primary headline displayed in large typography on the ceremony screen.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Project Mission &amp; Purpose Subtitle</label>
+              <textarea class="form-input" id="ceremony-subtitle-input" rows="2" style="font-size: 13.5px; line-height: 1.45;">${this.escapeHtml(cfg.subtitle || 'Proudly serving pilgrims, local commuters, and global tourists across the historic island of Mannar.')}</textarea>
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Paragraph describing the rollout significance for Mannar.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Dignitary Inauguration Dedication</label>
+              <input type="text" class="form-input" id="ceremony-guest-input" value="${this.escapeHtml(cfg.guest_name || 'Inaugurated by Hon. District Secretary & Distinguished Dignitaries')}" style="font-weight: 600;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Golden plaque text recognizing the Government Agent &amp; guest of honor.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Interactive Launch Button & Action Hints -->
+        <div class="card" style="border-left: 4px solid #f59e0b;">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-hand-pointer" style="color: #f59e0b;"></i> 5. Central Launch Button &amp; Countdown State</h3>
+            <span style="font-size: 12px; color: var(--slate-500);">Interactive touch controls</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 10px;">
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Central Launch Button Text</label>
+              <input type="text" class="form-input" id="ceremony-button-input" value="${this.escapeHtml(cfg.button_text || 'TOUCH TO INAUGURATE')}" style="font-weight: 800;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Main text inside the central circular touch sensor button.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Touch Action Instruction Hint</label>
+              <input type="text" class="form-input" id="ceremony-touch-hint-input" value="${this.escapeHtml(cfg.touch_hint || 'Press and hold for 2.5 seconds to unlock')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Helper hint text positioned directly under the launch button.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Countdown Progress Banner Text</label>
+              <input type="text" class="form-input" id="ceremony-countdown-status-input" value="${this.escapeHtml(cfg.countdown_status || 'OFFICIAL PUBLIC DEPLOYMENT COMMENCING')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Banner displayed while the giant digital countdown is ticking down.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Celebration Unveil & Portal Entry -->
+        <div class="card" style="border-left: 4px solid #8b5cf6;">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fa-solid fa-trophy" style="color: #8b5cf6;"></i> 6. Celebration Unveil &amp; Portal Entry</h3>
+            <span style="font-size: 12px; color: var(--slate-500);">Displays when countdown reaches ZERO with confetti fireworks</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 10px;">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label" style="font-weight: 700;">Celebration Victory Headline</label>
+              <input type="text" class="form-input" id="ceremony-celebration-title-input" value="${this.escapeHtml(cfg.celebration_title || 'MANNAR GREEN RIDE IS NOW OFFICIALLY LAUNCHED!')}" style="font-weight: 800; font-size: 15px; color: #047857;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Giant congratulatory headline after the countdown completes.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Celebration Subtitle / Impact Message</label>
+              <input type="text" class="form-input" id="ceremony-celebration-sub-input" value="${this.escapeHtml(cfg.celebration_sub || 'Leading sustainable tourism, green mobility, and dependable transport for Mannar Island.')}">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">Support message beneath the celebration title.</p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 700;">Website Enter Button Label</label>
+              <input type="text" class="form-input" id="ceremony-enter-btn-input" value="${this.escapeHtml(cfg.enter_button_text || 'ENTER OFFICIAL PORTAL')}" style="font-weight: 800;">
+              <p style="font-size: 11px; color: var(--slate-500); margin-top: 4px;">The glowing button that brings the dignitary directly into the live website.</p>
+            </div>
           </div>
         </div>
 
         <!-- Actions -->
-        <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
-          <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="text-decoration: none;">
-            <i class="fa-solid fa-play"></i> Test Full Ceremony Screen
+        <div style="display: flex; gap: 12px; justify-content: flex-end; align-items: center; margin-top: 8px; margin-bottom: 24px;">
+          <a href="../index.html?ceremony=true&rehearse=1" target="_blank" class="btn btn-outline" style="text-decoration: none; font-weight: 700; padding: 10px 20px;">
+            <i class="fa-solid fa-play"></i> Rehearse Launch Screen Live
           </a>
-          <button class="btn btn-primary" id="btn-save-ceremony-settings" onclick="window.adminCMS.saveLaunchCeremonySettings()">
-            <i class="fa-solid fa-floppy-disk"></i> Save Ceremony Settings
+          <button class="btn btn-primary" id="btn-save-ceremony-settings" onclick="window.adminCMS.saveLaunchCeremonySettings()" style="font-weight: 800; padding: 10px 24px; font-size: 14px; background: #059669; border-color: #059669;">
+            <i class="fa-solid fa-floppy-disk"></i> Save All Ceremony Settings
           </button>
         </div>
       </div>
@@ -7589,29 +7930,57 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     const active = document.getElementById('ceremony-status-input')?.value === 'active';
     const countdown_seconds = parseInt(document.getElementById('ceremony-countdown-input')?.value, 10) || 5;
     const front_image = this.normalizeImageUrl(document.getElementById('ceremony-front-image')?.value?.trim() || '');
-    const title = document.getElementById('ceremony-title-input')?.value?.trim() || 'Official Website Launch Ceremony';
-    const subtitle = document.getElementById('ceremony-subtitle-input')?.value?.trim() || 'Mannar Green Ride Eco-Mobility & Tourism Network';
-    const guest_name = document.getElementById('ceremony-guest-input')?.value?.trim() || 'Inaugurated by Hon. Government Agent / District Secretary of Mannar';
-    const button_text = document.getElementById('ceremony-button-input')?.value?.trim() || 'START LAUNCH';
+    
+    // Stage Header & Brand
+    const govt_badge = document.getElementById('ceremony-govt-badge-input')?.value?.trim() || 'Govt. Approved Tourist Transport Service';
+    const brand_title = document.getElementById('ceremony-brand-title-input')?.value?.trim() || 'MANNAR GREEN RIDE';
+    const brand_subtitle = document.getElementById('ceremony-brand-subtitle-input')?.value?.trim() || 'Official Inauguration & Public Rollout';
+    const ceremony_badge = document.getElementById('ceremony-stage-badge-input')?.value?.trim() || 'STATE INAUGURAL CEREMONY • MANNAR DISTRICT';
+
+    // Main Announcement & Dignitary
+    const title = document.getElementById('ceremony-title-input')?.value?.trim() || 'Empowering Mannar with Eco-Friendly Transport';
+    const subtitle = document.getElementById('ceremony-subtitle-input')?.value?.trim() || 'Proudly serving pilgrims, local commuters, and global tourists across the historic island of Mannar.';
+    const guest_name = document.getElementById('ceremony-guest-input')?.value?.trim() || 'Inaugurated by Hon. District Secretary & Distinguished Dignitaries';
+
+    // Action & Hints
+    const button_text = document.getElementById('ceremony-button-input')?.value?.trim() || 'TOUCH TO INAUGURATE';
+    const touch_hint = document.getElementById('ceremony-touch-hint-input')?.value?.trim() || 'Press and hold for 2.5 seconds to unlock';
+    const countdown_status = document.getElementById('ceremony-countdown-status-input')?.value?.trim() || 'OFFICIAL PUBLIC DEPLOYMENT COMMENCING';
+
+    // Celebration Unveil
+    const celebration_title = document.getElementById('ceremony-celebration-title-input')?.value?.trim() || 'MANNAR GREEN RIDE IS NOW OFFICIALLY LAUNCHED!';
+    const celebration_sub = document.getElementById('ceremony-celebration-sub-input')?.value?.trim() || 'Leading sustainable tourism, green mobility, and dependable transport for Mannar Island.';
+    const enter_button_text = document.getElementById('ceremony-enter-btn-input')?.value?.trim() || 'ENTER OFFICIAL PORTAL';
+
     const enable_sound = document.getElementById('ceremony-sound-input')?.checked ?? true;
 
     const payload = {
       active,
       countdown_seconds,
       front_image,
+      govt_badge,
+      brand_title,
+      brand_subtitle,
+      ceremony_badge,
       title,
       subtitle,
       guest_name,
       button_text,
+      touch_hint,
+      countdown_status,
+      celebration_title,
+      celebration_sub,
+      enter_button_text,
       enable_sound
     };
 
     try {
       this.showToast("Saving ceremony settings...", "info");
       await this.saveSettingsItem('launch_ceremony_config', payload, 'CEREMONY');
+      localStorage.setItem('mgr_setting_launch_ceremony_config', JSON.stringify(payload));
       await this.logAudit(active ? "ACTIVATE" : "DEACTIVATE", "CEREMONY", "launch_ceremony_config", payload);
       this.updateLaunchCeremonyBadge();
-      this.showToast(active ? "Launch Ceremony Screen is now ACTIVE on website!" : "Launch Ceremony saved (Deactivated).", "success");
+      this.showToast(active ? "Launch Ceremony Screen is now ACTIVE on website!" : "Launch Ceremony saved successfully!", "success");
       this.render();
     } catch (err) {
       this.showToast(err.message || "Failed to save ceremony settings", "error");

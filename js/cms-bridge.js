@@ -706,7 +706,7 @@
       cfg.slides = [
         {
           id: "slide_default",
-          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920",
           title: "Explore Mannar Sustainably",
           subtitle: "Mannar Green Ride Passenger Transport"
         }
@@ -716,10 +716,48 @@
     heroSlidesData = cfg.slides;
     heroCurrentSlideIdx = 0;
 
-    // Render slides into track
+    // Apply slider height, width, and background options
+    const sliderWrapper = document.getElementById('hero-slider-wrapper');
+    const fitMode = cfg.fit_mode || 'contain'; // 'contain' displays full original image without cropping
+    const sliderHeight = parseInt(cfg.slider_height, 10) || 480;
+    const sliderWidth = cfg.slider_width || '1280px';
+    const showAmbientBg = cfg.ambient_bg !== false && fitMode === 'contain';
+    const bgStyle = cfg.bg_style || 'blur';
+
+    if (sliderBox) {
+      sliderBox.style.height = `${sliderHeight}px`;
+      sliderBox.style.maxHeight = `${sliderHeight + 40}px`;
+      if (bgStyle === 'dark') {
+        sliderBox.style.background = '#0f172a';
+      } else if (bgStyle === 'emerald') {
+        sliderBox.style.background = '#064e3b';
+      } else if (bgStyle === 'transparent') {
+        sliderBox.style.background = 'transparent';
+      } else {
+        sliderBox.style.background = '#0f172a';
+      }
+    }
+
+    if (sliderWrapper) {
+      if (sliderWidth === '100%') {
+        sliderWrapper.style.maxWidth = '100%';
+        sliderWrapper.style.width = '100%';
+      } else if (sliderWidth === '1280px') {
+        sliderWrapper.style.maxWidth = '1280px';
+      } else if (sliderWidth === '1152px') {
+        sliderWrapper.style.maxWidth = '1152px';
+      } else if (sliderWidth === '1024px') {
+        sliderWrapper.style.maxWidth = '1024px';
+      } else {
+        sliderWrapper.style.maxWidth = sliderWidth;
+      }
+    }
+
+    // Render slides into track with ambient blur backdrop + full clarity original foreground image
     track.innerHTML = heroSlidesData.map((s, idx) => `
-      <div class="hero-slide ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
-        <img src="${normalizeImageUrl(s.url)}" alt="${s.title ? escapeHtml(s.title) : 'Mannar Green Ride Hero Slide'}" loading="${idx === 0 ? 'eager' : 'lazy'}">
+      <div class="hero-slide ${idx === 0 ? 'active' : ''} ${fitMode === 'cover' ? 'fit-cover' : 'fit-contain'}" data-idx="${idx}">
+        ${showAmbientBg ? `<img src="${normalizeImageUrl(s.url)}" alt="" class="hero-slide-bg-blur" aria-hidden="true" loading="lazy">` : ''}
+        <img src="${normalizeImageUrl(s.url)}" alt="${s.title ? escapeHtml(s.title) : 'Mannar Green Ride Hero Slide'}" class="hero-slide-main-img" loading="${idx === 0 ? 'eager' : 'lazy'}">
       </div>
     `).join('');
 
@@ -1416,11 +1454,20 @@
     let cfg = {
       active: false,
       countdown_seconds: 5,
-      front_image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
+      front_image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=95&w=1200',
+      govt_badge: 'DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA • DISTRICT SECRETARIAT MANNAR',
+      brand_title: 'Mannar Green Ride',
+      brand_subtitle: 'Eco-Mobility, Smart Tourism & Passenger Network',
+      ceremony_badge: 'OFFICIAL WEBSITE LAUNCH CEREMONY',
       title: 'Official Website Launch Ceremony',
       subtitle: 'Mannar Green Ride Eco-Mobility & Tourism Network',
       guest_name: 'Inaugurated by Hon. Government Agent / District Secretary of Mannar',
       button_text: 'START',
+      touch_hint: 'Touch or click START to officially inaugurate the website',
+      countdown_status: 'SYSTEM INITIALIZING • COMMENCING LAUNCH',
+      celebration_title: '🌟 WEBSITE OFFICIALLY LAUNCHED! 🌟',
+      celebration_sub: 'Welcome to Mannar Green Ride • Northern Sri Lanka',
+      enter_button_text: 'Enter Website Now →',
       enable_sound: true
     };
 
@@ -1455,11 +1502,27 @@
       return;
     }
 
-    // Populate ceremony elements
+    // Populate all ceremony elements
     screen.classList.remove('hidden');
     screen.classList.remove('launch-unveil');
     screen.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // 1. Top Government Banner Pill
+    const govtEl = document.getElementById('ga-govt-tag');
+    if (govtEl && cfg.govt_badge) govtEl.textContent = cfg.govt_badge;
+
+    // 2. Brand Row Header
+    const brandTitleEl = document.getElementById('ga-brand-title');
+    if (brandTitleEl && cfg.brand_title) {
+      brandTitleEl.innerHTML = escapeHtml(cfg.brand_title);
+    }
+    const brandSubEl = document.getElementById('ga-brand-subtitle');
+    if (brandSubEl && cfg.brand_subtitle) brandSubEl.textContent = cfg.brand_subtitle;
+
+    // 3. Stage Badge & Headings
+    const badgeTextEl = document.getElementById('ga-ceremony-badge-text');
+    if (badgeTextEl && cfg.ceremony_badge) badgeTextEl.textContent = cfg.ceremony_badge;
 
     const titleEl = document.getElementById('ga-ceremony-title');
     if (titleEl && cfg.title) titleEl.textContent = cfg.title;
@@ -1470,12 +1533,36 @@
     const guestEl = document.getElementById('ga-guest-name');
     if (guestEl && cfg.guest_name) guestEl.textContent = cfg.guest_name;
 
+    // 4. Central Button & Touch Hint
     const btnTextEl = document.getElementById('ga-btn-text');
     if (btnTextEl && cfg.button_text) btnTextEl.textContent = cfg.button_text;
 
+    const touchHintEl = document.getElementById('ga-touch-hint');
+    if (touchHintEl && cfg.touch_hint) {
+      touchHintEl.innerHTML = escapeHtml(cfg.touch_hint);
+    }
+
+    // 5. Countdown & Celebration Texts
+    const countdownStatusEl = document.getElementById('ga-countdown-status');
+    if (countdownStatusEl && cfg.countdown_status) countdownStatusEl.textContent = cfg.countdown_status;
+
+    const celebrationTitleEl = document.getElementById('ga-celebration-title');
+    if (celebrationTitleEl && cfg.celebration_title) celebrationTitleEl.textContent = cfg.celebration_title;
+
+    const celebrationSubEl = document.getElementById('ga-celebration-sub');
+    if (celebrationSubEl && cfg.celebration_sub) celebrationSubEl.textContent = cfg.celebration_sub;
+
+    const enterBtnEl = document.getElementById('btn-enter-site');
+    if (enterBtnEl && cfg.enter_button_text) {
+      const enterSpan = document.getElementById('ga-enter-btn-text');
+      if (enterSpan) enterSpan.textContent = cfg.enter_button_text;
+      else enterBtnEl.textContent = cfg.enter_button_text;
+    }
+
+    // 6. Ceremony Front Poster Image
     const frontImg = document.getElementById('ga-front-image');
     if (frontImg) {
-      const defaultImg = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800';
+      const defaultImg = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=95&w=1200';
       const resolved = normalizeImageUrl(cfg.front_image) || defaultImg;
       frontImg.src = resolved;
       frontImg.onerror = () => { frontImg.src = defaultImg; };

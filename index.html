@@ -217,15 +217,15 @@
       <div class="ga-header">
         <div class="ga-emblem-badge">
           <i class="fa-solid fa-award"></i>
-          <span>DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA • DISTRICT SECRETARIAT MANNAR</span>
+          <span id="ga-govt-tag">DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA • DISTRICT SECRETARIAT MANNAR</span>
         </div>
         <div class="ga-brand-row">
           <div class="ga-brand-logo-wrap">
             <img src="mannar Green Ride logo.png" onerror="this.src='assets/logo.svg'" alt="Mannar Green Ride">
           </div>
           <div class="ga-brand-text">
-            <h2>Mannar <span>Green Ride</span></h2>
-            <p>Eco-Mobility, Smart Tourism & Passenger Network</p>
+            <h2 id="ga-brand-title">Mannar <span>Green Ride</span></h2>
+            <p id="ga-brand-subtitle">Eco-Mobility, Smart Tourism & Passenger Network</p>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@
       <!-- Main Stage Centerpiece -->
       <div class="ga-stage-card">
         <div class="ga-ceremony-tag" id="ga-ceremony-badge">
-          <i class="fa-solid fa-sparkles"></i> OFFICIAL WEBSITE LAUNCH CEREMONY
+          <i class="fa-solid fa-sparkles"></i> <span id="ga-ceremony-badge-text">OFFICIAL WEBSITE LAUNCH CEREMONY</span>
         </div>
 
         <h1 class="ga-ceremony-title" id="ga-ceremony-title">Mannar Green Ride Eco-Mobility & Tourism Network</h1>
@@ -241,7 +241,7 @@
 
         <!-- Front Ceremony Image with Hologram Glowing Border -->
         <div class="ga-hologram-frame" id="ga-front-image-wrap">
-          <img id="ga-front-image" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800" alt="Launch Ceremony">
+          <img id="ga-front-image" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=95&w=1200" alt="Launch Ceremony">
           <div class="ga-hologram-scanline"></div>
         </div>
 
@@ -272,9 +272,9 @@
 
         <!-- Grand Celebration Reveal Overlay -->
         <div id="ga-celebration-zone" class="ga-celebration-zone hidden">
-          <div class="ga-celebration-title">🌟 WEBSITE OFFICIALLY LAUNCHED! 🌟</div>
-          <div class="ga-celebration-sub">Welcome to Mannar Green Ride • Northern Sri Lanka</div>
-          <button id="btn-enter-site" class="ga-enter-button">Enter Website Now &rarr;</button>
+          <div class="ga-celebration-title" id="ga-celebration-title">🌟 WEBSITE OFFICIALLY LAUNCHED! 🌟</div>
+          <div class="ga-celebration-sub" id="ga-celebration-sub">Welcome to Mannar Green Ride • Northern Sri Lanka</div>
+          <button id="btn-enter-site" class="ga-enter-button"><span id="ga-enter-btn-text">Enter Website Now &rarr;</span></button>
         </div>
       </div>
 
@@ -425,13 +425,14 @@
       </div>
 
       <!-- HERO MULTI-IMAGE CAROUSEL & SLIDER (Positioned directly under headlines) -->
-      <div id="hero-slider-wrapper" class="pt-2 max-w-5xl mx-auto w-full transition-all duration-200">
-        <div id="hero-slider" class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-gray-200/80 bg-gray-950 group aspect-[16/9] sm:aspect-[21/9] max-h-[380px]">
+      <div id="hero-slider-wrapper" class="pt-2 max-w-6xl mx-auto w-full transition-all duration-200">
+        <div id="hero-slider" class="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-gray-200/80 bg-slate-950 group">
           <!-- Slides Track -->
           <div id="hero-slider-track" class="relative w-full h-full overflow-hidden">
             <!-- Populated dynamically by initHeroSlider() -->
-            <div class="hero-slide active" data-idx="0">
-              <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200" alt="Eco-Friendly Cycling Across Mannar" class="w-full h-full object-cover">
+            <div class="hero-slide active fit-contain" data-idx="0">
+              <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920" alt="" class="hero-slide-bg-blur" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920" alt="Eco-Friendly Cycling Across Mannar" class="hero-slide-main-img">
             </div>
           </div>
 

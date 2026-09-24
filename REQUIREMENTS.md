@@ -295,5 +295,46 @@ Full UI and SEO translation dictionary support for:
   - Persisted to Supabase `website_settings.hero_layout_config` and `localStorage.mgr_setting_hero_layout_config`.
   - Automatically applied to the live website by `js/cms-bridge.js`.
 
-### 6.9. Upcoming Roadmap Items
+### 6.9. Hero Image Clarity, Sizing & Ambient Backdrop (Implemented)
+- **1. Image Sizing & Dimensions Specifications Banner in Admin C-Panel:**
+  - Added a dedicated guidance banner in **WP Content & Sliders ➔ Hero Banner & Main Headline ➔ Multi-Image Slider**:
+    - **Recommended Dimensions:** `1920 × 1080 px` (Standard 16:9 Full HD) or `1920 × 800 px` (Panoramic Ultra-Wide).
+    - **Original Display Mode Guarantee:** 100% full uncropped view ("not 80%"), preserving crisp high-resolution photo quality without artificial squishing or top/bottom cropping.
+    - **Ambient Background Technology:** Solves letterbox margins dynamically when photos have different aspect ratios, keeping text, vehicles, and logos 100% visible and sharp.
+- **2. Display & Sizing Controls:**
+  - **Image Fit Mode (`fit_mode`):**
+    - `contain`: Full original image uncropped with ambient backdrop (Recommended - 100% clarity).
+    - `cover`: Edge-to-edge fill with border cropping.
+  - **Slider Height (`slider_height`):** Range slider (300px–650px) with live value display and quick preset chips (`380px`, `440px`, `480px Std`, `540px`, `600px`).
+  - **Container Width (`slider_width`):** Select options (`1280px Standard Centered`, `100% Full Width`, `1440px Wide Desktop`, `1024px Compact`).
+  - **Ambient Backdrop Style (`ambient_bg` & `bg_style`):**
+    - Master toggle for ambient glow.
+    - Style presets: `Dynamic Ambient Glow (Apple/YouTube blurred reflection)`, `Sleek Deep Dark (#0f172a)`, `Mannar Deep Emerald (#022c22)`, and `Transparent / Neutral`.
+- **3. Frontend Website & C-Panel Live Preview Engine:**
+  - Updated `index.html`, `css/styles.css`, and `js/cms-bridge.js` to render `.hero-slide-bg-blur` and `.hero-slide-main-img`.
+  - C-Panel interactive preview canvas matches frontend display in real time with ambient blur and fit mode badge.
+  - Persisted to Supabase `website_settings.hero_slider_config` and `localStorage.mgr_setting_hero_slider_config`.
+
+### 6.10. Complete Launch Ceremony Text Customization (Implemented)
+- **Full Text Editing via Admin C-Panel:**
+  - Added comprehensive form controls under **Configuration & Launch ➔ Launch Ceremony** (`admin/index.html?tab=launch-ceremony`):
+    1. **Government / Official Approval Pill:** Upper badge text next to the Sri Lankan emblem shield (e.g. `Govt. Approved Tourist Transport Service`).
+    2. **Brand Title (Golden Text):** Golden headline title (e.g. `MANNAR GREEN RIDE`).
+    3. **Brand Subtitle / Rollout Tag:** Sub-badge underneath brand title (e.g. `Official Inauguration & Public Rollout`).
+    4. **Stage Inaugural Badge Tag:** Tag above main heading (e.g. `STATE INAUGURAL CEREMONY • MANNAR DISTRICT`).
+    5. **Ceremony Main Heading:** Primary large typography headline (e.g. `Empowering Mannar with Eco-Friendly Transport`).
+    6. **Project Mission & Purpose Subtitle:** Descriptive paragraph highlighting rollout significance.
+    7. **Dignitary Inauguration Dedication:** Golden plaque dedication recognizing the Government Agent & distinguished guests.
+    8. **Central Launch Button Text:** Main label on the central circular touch sensor (e.g. `TOUCH TO INAUGURATE`).
+    9. **Touch Action Instruction Hint:** Helper instruction underneath launch button (e.g. `Press and hold for 2.5 seconds to unlock`).
+    10. **Countdown Progress Banner Text:** Banner displayed while the digital countdown is ticking down (e.g. `OFFICIAL PUBLIC DEPLOYMENT COMMENCING`).
+    11. **Celebration Victory Headline:** Giant congratulatory headline unveiled after countdown (e.g. `MANNAR GREEN RIDE IS NOW OFFICIALLY LAUNCHED!`).
+    12. **Celebration Subtitle / Impact Message:** Mission message accompanying the celebration screen.
+    13. **Website Enter Button Label:** Action button transitioning visitors into the live website (e.g. `ENTER OFFICIAL PORTAL`).
+- **Live Website Hydration & Persistence:**
+  - Added dedicated semantic IDs in `index.html` for all 13 text elements (`#ga-govt-tag`, `#ga-brand-title`, `#ga-brand-subtitle`, `#ga-ceremony-badge-text`, `#ga-ceremony-heading`, `#ga-ceremony-desc`, `#ga-ceremony-guest-badge`, `#ga-launch-btn-text`, `#ga-touch-hint-text`, `#ga-countdown-status`, `#ga-celebration-title`, `#ga-celebration-sub`, `#ga-enter-btn-text`).
+  - Synced dynamically in `js/cms-bridge.js` upon page load.
+  - Persisted to Supabase `website_settings.launch_ceremony_config` and `localStorage.mgr_setting_launch_ceremony_config`.
+
+### 6.11. Upcoming Roadmap Items
 - Reviewing customer booking receipts, currency conversions, and automated WhatsApp notification templates.
