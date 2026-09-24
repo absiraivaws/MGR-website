@@ -218,6 +218,16 @@ class AdminCMSApp {
   }
 
   switchTab(tabName) {
+    if (tabName === 'host-network' || tabName === 'fitness-cards' || tabName === 'about-cards') {
+      this.switchTab('content');
+      setTimeout(() => {
+        const targetId = tabName === 'host-network' ? 'join-editor-card' : (tabName === 'fitness-cards' ? 'fitness-editor-card' : 'about-editor-card');
+        const el = document.getElementById(targetId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+      return;
+    }
+
     this.activeTab = tabName;
     document.querySelectorAll('[data-nav-tab]').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-nav-tab') === tabName);
@@ -231,13 +241,10 @@ class AdminCMSApp {
     const titles = {
       dashboard: { title: "Dashboard Overview", subtitle: "Live operational metrics & CMS summary" },
       'launch-ceremony': { title: "Government Agent (GA) Official Launch Ceremony", subtitle: "Configure the digital full-screen countdown and ceremony launch screen for Mannar GA inauguration" },
-      content: { title: "Website Content Management", subtitle: "Edit Hero banner, About Us, Join Us network, Contact & footer copy" },
+      content: { title: "WordPress Text & Image Content Editor", subtitle: "WordPress Gutenberg-style visual controls for typography (size, weight, style, color, alignment, gradients) and images (size, border radius, padding, style, brightness, blur filters)" },
       categories: { title: "Transport Categories Manager", subtitle: "Add, edit, enable/disable, reorder, and manage vehicle & transport categories" },
       counters: { title: "Statistics & Counter Metrics", subtitle: "Manage count values (100 rides, 100 riders, 50 fleet, 100% eco), data sources, and icons" },
       services: { title: "Services & Rates Management", subtitle: "Manage vehicle types, rates, auto/manual pricing, active status, and card order" },
-      'host-network': { title: "Passenger Host Network & WhatsApp Group", subtitle: "Manage WhatsApp group join link, host community card text, active status, and vehicle sub-cards" },
-      'fitness-cards': { title: "Tourist & Body Fitness Feature Cards", subtitle: "Manage cardio, landmarks, and bike setup cards, icons, active status, and card order" },
-      'about-cards': { title: "About Us Highlight Cards", subtitle: "Manage multilingual support, safety guarantees, active status, and card order" },
       seo: { title: "Dedicated SEO & Keywords Manager", subtitle: "Configure focus keywords, page titles, and meta descriptions" },
       offers: { title: "Promotions & Offers", subtitle: "Schedule discount deals, active status, and campaign card order" },
       blogs: { title: "Blog & Travel Guides", subtitle: "Manage cycling routes, travel tips, active status, and article card order" },
@@ -270,6 +277,9 @@ class AdminCMSApp {
         this.bindLaunchCeremonyEvents();
         break;
       case 'content':
+      case 'host-network':
+      case 'fitness-cards':
+      case 'about-cards':
         container.innerHTML = this.renderContentView();
         this.bindContentEvents();
         break;
@@ -284,18 +294,6 @@ class AdminCMSApp {
       case 'services':
         container.innerHTML = this.renderServicesView();
         this.bindServicesEvents();
-        break;
-      case 'host-network':
-        container.innerHTML = this.renderHostNetworkView();
-        this.bindHostNetworkEvents();
-        break;
-      case 'fitness-cards':
-        container.innerHTML = this.renderFitnessCardsView();
-        this.bindFitnessCardsEvents();
-        break;
-      case 'about-cards':
-        container.innerHTML = this.renderAboutCardsView();
-        this.bindAboutCardsEvents();
         break;
       case 'seo':
         container.innerHTML = this.renderSeoView();
@@ -400,6 +398,29 @@ class AdminCMSApp {
         </div>
       </div>
 
+      <!-- Featured WordPress Content & Image Editor Banner -->
+      <div class="card" style="border: 2px solid #0073aa; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin-bottom: 24px; padding: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: #0073aa; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 12px rgba(0, 115, 170, 0.3);">
+              <i class="fa-brands fa-wordpress"></i>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">WordPress-Style Text & Images Content Editor</h3>
+                <span class="badge" style="background: #0073aa; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px;">WP-STYLE</span>
+              </div>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #334155;">
+                Visual Gutenberg & Elementor style editing controls for website content: Typography, font sizes, weights, colors, gradients (radint), image sizing, border radius, padding, alignment, brightness, and blur filters.
+              </p>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="window.adminCMS.switchTab('content')" style="background: #0073aa; border-color: #0073aa; font-weight: 700; padding: 10px 18px;">
+            <i class="fa-brands fa-wordpress"></i> Open WP Text & Image Editor
+          </button>
+        </div>
+      </div>
+
       <!-- Quick Actions Grid -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
         <div class="card">
@@ -407,8 +428,8 @@ class AdminCMSApp {
             <h3 class="card-title"><i class="fa-solid fa-bolt"></i> Quick Website Actions</h3>
           </div>
           <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button class="btn btn-outline" style="justify-content: flex-start;" onclick="window.adminCMS.switchTab('content')">
-              <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> Edit Hero Banner & Text
+            <button class="btn btn-outline" style="justify-content: flex-start; color: #0073aa; border-color: #93c5fd; font-weight: 700;" onclick="window.adminCMS.switchTab('content')">
+              <i class="fa-brands fa-wordpress" style="color: #0073aa; font-size: 16px;"></i> WordPress Text & Images Content Editor
             </button>
             <button class="btn btn-outline" style="justify-content: flex-start;" onclick="window.adminCMS.switchTab('services')">
               <i class="fa-solid fa-tags" style="color: #0284c7;"></i> Update Rental Rates & Pricing Mode
@@ -442,17 +463,902 @@ class AdminCMSApp {
 
   bindDashboardEvents() {}
 
-  /* ----------------- 2. WEBSITE CONTENT VIEW ----------------- */
+  /* ----------------- 2. WEBSITE CONTENT VIEW (With WordPress-Style Controls) ----------------- */
+  getContentStyleConfig() {
+    let cfg = {
+      hero: {
+        fontSize: 48,
+        fontStyle: 'normal',
+        fontWeight: '900',
+        color: '#111827',
+        alignment: 'center',
+        gradientEnabled: false,
+        gradientStart: '#059669',
+        gradientEnd: '#10b981',
+        imgUrl: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800',
+        imgWidth: 100,
+        imgStyle: 'elevated',
+        imgRadius: 20,
+        imgBorderWidth: 0,
+        imgBorderColor: '#e2e8f0',
+        imgPadding: 0,
+        imgMarginAlign: 'center',
+        imgBrightness: 100,
+        imgBlur: 0
+      },
+      fitness: {
+        fontSize: 32,
+        fontStyle: 'normal',
+        fontWeight: '800',
+        color: '#111827',
+        alignment: 'left',
+        gradientEnabled: false,
+        gradientStart: '#059669',
+        gradientEnd: '#10b981',
+        imgUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600',
+        imgWidth: 100,
+        imgStyle: 'elevated',
+        imgRadius: 16,
+        imgBorderWidth: 0,
+        imgBorderColor: '#e2e8f0',
+        imgPadding: 0,
+        imgMarginAlign: 'center',
+        imgBrightness: 100,
+        imgBlur: 0
+      },
+      about: {
+        fontSize: 32,
+        fontStyle: 'normal',
+        fontWeight: '800',
+        color: '#111827',
+        alignment: 'left',
+        gradientEnabled: false,
+        gradientStart: '#059669',
+        gradientEnd: '#10b981',
+        imgUrl: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800',
+        imgWidth: 100,
+        imgStyle: 'elevated',
+        imgRadius: 24,
+        imgBorderWidth: 0,
+        imgBorderColor: '#e2e8f0',
+        imgPadding: 0,
+        imgMarginAlign: 'center',
+        imgBrightness: 100,
+        imgBlur: 0
+      }
+    };
+
+    if (this.settings && this.settings.content_styling_config) {
+      try {
+        const parsed = typeof this.settings.content_styling_config === 'string'
+          ? JSON.parse(this.settings.content_styling_config)
+          : this.settings.content_styling_config;
+        if (parsed) {
+          cfg = {
+            hero: { ...cfg.hero, ...(parsed.hero || {}) },
+            fitness: { ...cfg.fitness, ...(parsed.fitness || {}) },
+            about: { ...cfg.about, ...(parsed.about || {}) }
+          };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const local = localStorage.getItem('mgr_setting_content_styling_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          cfg = {
+            hero: { ...cfg.hero, ...(parsed.hero || {}) },
+            fitness: { ...cfg.fitness, ...(parsed.fitness || {}) },
+            about: { ...cfg.about, ...(parsed.about || {}) }
+          };
+        }
+      } catch (e) {}
+    }
+    return cfg;
+  }
+
+  getHeroSliderConfig() {
+    let cfg = {
+      enabled: true,
+      auto_slide: true,
+      interval: 4000,
+      slides: [
+        {
+          id: "slide_1",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          title: "Eco-Friendly Cycling Across Mannar Causeway",
+          subtitle: "Bicycles from Rs. 100/hr with free helmet & lock"
+        },
+        {
+          id: "slide_2",
+          url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200",
+          title: "Scenic Coastal Exploration & Flamingo Dunes",
+          subtitle: "Comfortable rides designed for health and eco-tourism"
+        },
+        {
+          id: "slide_3",
+          url: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=1200",
+          title: "Island-Wide Passenger Transport Fleet",
+          subtitle: "Cars, KDH vans, and tourist buses with trusted local drivers"
+        }
+      ]
+    };
+
+    if (this.settings && this.settings.hero_slider_config) {
+      try {
+        const parsed = typeof this.settings.hero_slider_config === 'string'
+          ? JSON.parse(this.settings.hero_slider_config)
+          : this.settings.hero_slider_config;
+        if (parsed && typeof parsed === 'object') {
+          cfg = { ...cfg, ...parsed };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const local = localStorage.getItem('mgr_setting_hero_slider_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object') {
+            cfg = { ...cfg, ...parsed };
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!Array.isArray(cfg.slides) || cfg.slides.length === 0) {
+      cfg.slides = [
+        {
+          id: "slide_1",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          title: "Eco-Friendly Cycling Across Mannar Causeway",
+          subtitle: "Bicycles from Rs. 100/hr with free helmet & lock"
+        }
+      ];
+    }
+
+    return cfg;
+  }
+
+  getHeroLayoutConfig() {
+    let cfg = {
+      bg_type: 'default',
+      bg_color: '#f0fdf4',
+      bg_image_url: '',
+      bg_position: 'center',
+      bg_attachment: 'scroll',
+      overlay_opacity: 0,
+      overlay_color: '#000000',
+      contrast_mode: 'auto',
+      alignment: 'center',
+      padding_top: 80,
+      padding_bottom: 80,
+      padding_x: 24,
+      max_width: '1280px'
+    };
+
+    if (this.settings && this.settings.hero_layout_config) {
+      try {
+        const parsed = typeof this.settings.hero_layout_config === 'string'
+          ? JSON.parse(this.settings.hero_layout_config)
+          : this.settings.hero_layout_config;
+        if (parsed && typeof parsed === 'object') {
+          cfg = { ...cfg, ...parsed };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const local = localStorage.getItem('mgr_setting_hero_layout_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object') {
+            cfg = { ...cfg, ...parsed };
+          }
+        }
+      } catch (e) {}
+    }
+
+    return cfg;
+  }
+
+  isColorDark(hex) {
+    if (!hex || typeof hex !== 'string') return false;
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    if (c.length !== 6) return false;
+    const r = parseInt(c.substr(0, 2), 16);
+    const g = parseInt(c.substr(2, 2), 16);
+    const b = parseInt(c.substr(4, 2), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq < 128;
+  }
+
+  renderHeroSlideRows(slides) {
+    if (!Array.isArray(slides) || slides.length === 0) {
+      return `<p style="font-size: 13px; color: #64748b; padding: 12px;">No slides found. Click "Add Slide Image" to create one.</p>`;
+    }
+
+    return slides.map((s, idx) => `
+      <div class="hero-slide-row" data-idx="${idx}" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.2s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge" style="background: #0f172a; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">
+              Slide ${idx + 1} of ${slides.length}
+            </span>
+            ${idx === 0 ? '<span class="badge badge-published" style="font-size: 10px; padding: 2px 6px;">Primary / Default Slide</span>' : ''}
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="btn btn-outline btn-sm btn-slide-move" data-action="up" data-idx="${idx}" ${idx === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move slide earlier">
+              <i class="fa-solid fa-arrow-up"></i> Move Up
+            </button>
+            <button type="button" class="btn btn-outline btn-sm btn-slide-move" data-action="down" data-idx="${idx}" ${idx === slides.length - 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} title="Move slide later">
+              <i class="fa-solid fa-arrow-down"></i> Move Down
+            </button>
+            <button type="button" class="btn btn-outline btn-sm btn-slide-delete" data-idx="${idx}" ${slides.length <= 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''} style="color: #dc2626; border-color: #fca5a5;" title="Remove this slide">
+              <i class="fa-solid fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: start;">
+          <!-- Thumbnail -->
+          <div style="width: 140px; height: 95px; border-radius: 8px; overflow: hidden; background: #f1f5f9; border: 1px solid #e2e8f0; position: relative;">
+            <img id="hero-slide-thumb-${idx}" src="${this.normalizeImageUrl(s.url)}" alt="Slide ${idx + 1}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800'">
+            <div style="position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 4px;">#${idx + 1}</div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" class="form-input hero-slide-url-input" id="hero-slide-url-${idx}" data-idx="${idx}" value="${this.escapeHtml(s.url || '')}" placeholder="Paste image URL (https://...) to replace this image" style="flex: 1; font-size: 13px; font-weight: 600;">
+              <button type="button" class="btn btn-outline btn-sm wp-btn-pick-media" data-target="hero-slide-url-${idx}" style="color: #0073aa; border-color: #93c5fd; white-space: nowrap; font-weight: 600;">
+                <i class="fa-solid fa-photo-film"></i> Media Library
+              </button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Slide Headline</label>
+                <input type="text" class="form-input hero-slide-title-input" data-idx="${idx}" value="${this.escapeHtml(s.title || '')}" placeholder="Slide Headline..." style="font-size: 12.5px; padding: 5px 8px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 2px;">Slide Subtitle / Offer</label>
+                <input type="text" class="form-input hero-slide-subtitle-input" data-idx="${idx}" value="${this.escapeHtml(s.subtitle || '')}" placeholder="Slide Subtitle..." style="font-size: 12.5px; padding: 5px 8px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderHeroSliderControls(sliderCfg) {
+    const s = sliderCfg || this.getHeroSliderConfig();
+    const slides = s.slides || [];
+
+    return `
+      <div class="card" id="hero-slider-manager-card" style="border: 2px solid #0073aa; background: #f8fafc; border-radius: 12px; padding: 18px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">
+                <i class="fa-solid fa-images" style="color: #0073aa;"></i> Hero Multi-Image Slider &amp; Carousel
+              </h4>
+              <span class="badge" id="hero-slider-badge-count" style="background: #0073aa; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 700;">
+                Total: ${slides.length} Images
+              </span>
+            </div>
+            <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">
+              Add multiple slide images, move slides up or down to reorder, replace images, and customize captions.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer;">
+              <input type="checkbox" id="hero-slider-auto-toggle" ${s.auto_slide ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: #0073aa;">
+              Auto Slide
+            </label>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-size: 12px; color: #475569; font-weight: 600;">Interval:</label>
+              <select id="hero-slider-interval-select" class="form-input" style="padding: 4px 8px; font-size: 12px; width: auto; height: 32px;">
+                <option value="2500" ${s.interval === 2500 ? 'selected' : ''}>2.5 seconds</option>
+                <option value="3500" ${s.interval === 3500 ? 'selected' : ''}>3.5 seconds</option>
+                <option value="4000" ${(!s.interval || s.interval === 4000) ? 'selected' : ''}>4 seconds</option>
+                <option value="5000" ${s.interval === 5000 ? 'selected' : ''}>5 seconds</option>
+                <option value="6000" ${s.interval === 6000 ? 'selected' : ''}>6 seconds</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-add-hero-slide-top" style="background: #0073aa; border-color: #0073aa; font-weight: 700;">
+              <i class="fa-solid fa-plus"></i> Add Slide Image
+            </button>
+          </div>
+        </div>
+
+        <!-- Slides List Container -->
+        <div id="hero-slides-items-container" style="display: flex; flex-direction: column; gap: 14px;">
+          ${this.renderHeroSlideRows(slides)}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 10px;">
+          <button type="button" class="btn btn-outline btn-sm" id="btn-add-hero-slide-bottom" style="font-weight: 700; color: #0073aa; border-color: #93c5fd;">
+            <i class="fa-solid fa-plus"></i> Add Another Slide Image
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-save-hero-slider-only" style="background: #059669; border-color: #059669; font-weight: 700; padding: 6px 18px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Hero Slider &amp; Images
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  renderHeroBackgroundAndLayoutControls(layoutCfg) {
+    const l = layoutCfg || this.getHeroLayoutConfig();
+    const bgType = l.bg_type || 'default';
+    const align = l.alignment || 'center';
+    const contrast = l.contrast_mode || 'auto';
+    const bgPos = l.bg_position || 'center';
+
+    return `
+      <div class="card" id="hero-layout-manager-card" style="border: 2px solid #059669; background: #f8fafc; border-radius: 12px; padding: 18px; margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">
+                <i class="fa-solid fa-layer-group" style="color: #059669;"></i> Hero Background &amp; Layout Positioning
+              </h4>
+              <span class="badge" style="background: #059669; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 700;">
+                LIVE CONTROLS
+              </span>
+            </div>
+            <p style="font-size: 12px; color: #475569; margin: 4px 0 0 0;">
+              Customize Hero background (theme color or background image), overlay tint &amp; opacity, and adjust details position (Top, Bottom, Left, and Right).
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-save-hero-layout-top" style="background: #059669; border-color: #059669; font-weight: 700; padding: 6px 18px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Layout &amp; Background
+          </button>
+        </div>
+
+        <!-- 1. Hero Background (Theme Color or Background Image) -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-palette" style="color: #059669;"></i> 1. Hero Background (Theme Color or Background Image)
+          </div>
+
+          <!-- Radio Type selector -->
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
+            <label style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid ${bgType === 'default' ? '#059669' : '#cbd5e1'}; background: ${bgType === 'default' ? '#ecfdf5' : '#fff'}; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: ${bgType === 'default' ? '#065f46' : '#334155'};">
+              <input type="radio" name="hero-bg-type" value="default" ${bgType === 'default' ? 'checked' : ''} style="accent-color: #059669;">
+              Default Gradient
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid ${bgType === 'color' ? '#059669' : '#cbd5e1'}; background: ${bgType === 'color' ? '#ecfdf5' : '#fff'}; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: ${bgType === 'color' ? '#065f46' : '#334155'};">
+              <input type="radio" name="hero-bg-type" value="color" ${bgType === 'color' ? 'checked' : ''} style="accent-color: #059669;">
+              Theme / Solid Color
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid ${bgType === 'image' ? '#059669' : '#cbd5e1'}; background: ${bgType === 'image' ? '#ecfdf5' : '#fff'}; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; color: ${bgType === 'image' ? '#065f46' : '#334155'};">
+              <input type="radio" name="hero-bg-type" value="image" ${bgType === 'image' ? 'checked' : ''} style="accent-color: #059669;">
+              Background Image
+            </label>
+          </div>
+
+          <!-- Color options panel -->
+          <div id="hero-bg-color-panel" style="display: ${bgType === 'color' ? 'block' : 'none'}; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-weight: 700; font-size: 12px;">Pick Theme Background Color</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="color" id="hero-bg-color-picker" value="${l.bg_color || '#f0fdf4'}" style="width: 44px; height: 38px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; padding: 2px;">
+                <input type="text" class="form-input" id="hero-bg-color-input" value="${this.escapeHtml(l.bg_color || '#f0fdf4')}" style="width: 140px; font-family: monospace; font-weight: 600;">
+              </div>
+            </div>
+            <!-- Color presets chips -->
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748b;">Theme Presets:</span>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#f0fdf4" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534;">Mint Soft Light</button>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#064e3b" style="background:#064e3b; border:1px solid #047857; color:#fff;">Emerald Dark</button>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#0f172a" style="background:#0f172a; border:1px solid #334155; color:#fff;">Slate Midnight</button>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#ffffff" style="background:#ffffff; border:1px solid #cbd5e1; color:#0f172a;">Pure White</button>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#ecfdf5" style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46;">Eco Pale Green</button>
+              <button type="button" class="wp-chip hero-bg-preset" data-color="#1e293b" style="background:#1e293b; border:1px solid #475569; color:#fff;">Charcoal Dark</button>
+            </div>
+          </div>
+
+          <!-- Image options panel -->
+          <div id="hero-bg-image-panel" style="display: ${bgType === 'image' ? 'block' : 'none'}; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-weight: 700; font-size: 12px;">Background Image URL</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-input" id="hero-bg-image-url" value="${this.escapeHtml(l.bg_image_url || '')}" placeholder="https://... or select from Media Library">
+                <button type="button" class="btn btn-outline btn-sm wp-btn-pick-media" data-target="hero-bg-image-url" style="white-space: nowrap; font-weight: 700;">
+                  <i class="fa-solid fa-photo-film"></i> Media Library
+                </button>
+              </div>
+            </div>
+            <!-- Preset scenic Mannar images -->
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+              <span style="font-size: 11px; font-weight: 700; color: #64748b;">Scenic Presets:</span>
+              <button type="button" class="wp-chip hero-bg-img-preset" data-url="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=1600">Coastal Causeway</button>
+              <button type="button" class="wp-chip hero-bg-img-preset" data-url="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1600">Lagoon &amp; Dunes</button>
+              <button type="button" class="wp-chip hero-bg-img-preset" data-url="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600">Eco Flamingo Sanctuary</button>
+              <button type="button" class="wp-chip hero-bg-img-preset" data-url="https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=1600">Mannar Sunset</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 11.5px; font-weight: 700;">Image Position</label>
+                <select id="hero-bg-position" class="form-input" style="font-size: 12px; height: 34px;">
+                  <option value="center" ${bgPos === 'center' ? 'selected' : ''}>Center Center (Recommended)</option>
+                  <option value="top" ${bgPos === 'top' ? 'selected' : ''}>Top Center</option>
+                  <option value="bottom" ${bgPos === 'bottom' ? 'selected' : ''}>Bottom Center</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 11.5px; font-weight: 700;">Scroll Attachment</label>
+                <select id="hero-bg-attachment" class="form-input" style="font-size: 12px; height: 34px;">
+                  <option value="scroll" ${l.bg_attachment !== 'fixed' ? 'selected' : ''}>Normal Scroll</option>
+                  <option value="fixed" ${l.bg_attachment === 'fixed' ? 'selected' : ''}>Fixed / Parallax Effect</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overlay Tint & Opacity for readability -->
+          <div style="display: grid; grid-template-columns: 180px 1fr 180px; gap: 14px; align-items: center; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px; font-weight: 700;">Overlay Tint Color</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <input type="color" id="hero-overlay-color" value="${l.overlay_color || '#000000'}" style="width: 36px; height: 32px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; padding: 2px;">
+                <input type="text" class="form-input" id="hero-overlay-color-input" value="${this.escapeHtml(l.overlay_color || '#000000')}" style="font-size: 11.5px; font-family: monospace; height: 32px;">
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="wp-control-label">
+                Overlay Opacity / Dimmer <span class="val-badge" id="hero-overlay-opacity-badge">${l.overlay_opacity || 0}%</span>
+              </label>
+              <input type="range" class="wp-slider" id="hero-overlay-opacity" min="0" max="90" step="5" value="${l.overlay_opacity || 0}">
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Use 40-70% overlay when using photo backgrounds for high text readability</div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 11px; font-weight: 700;">Text Contrast Mode</label>
+              <select id="hero-contrast-mode" class="form-input" style="font-size: 12px; height: 32px;">
+                <option value="auto" ${contrast === 'auto' ? 'selected' : ''}>Auto Detect</option>
+                <option value="light" ${contrast === 'light' ? 'selected' : ''}>Force Light Text (Dark BG)</option>
+                <option value="dark" ${contrast === 'dark' ? 'selected' : ''}>Force Dark Text (Light BG)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Details Positioning & Spacing (Top, Bottom, Left, Right) -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrows-up-down-left-right" style="color: #059669;"></i> 2. Details Positioning &amp; Spacing (Top, Bottom, Left, Right)
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+            <!-- Alignment Left / Center / Right -->
+            <div class="wp-control-group">
+              <label class="wp-control-label">Details Content Alignment</label>
+              <div class="wp-btn-group" id="hero-details-align-group" style="width: 100%;">
+                <button type="button" class="wp-btn-toggle ${align === 'left' ? 'active' : ''}" data-align="left" style="flex: 1;" title="Align Left">
+                  <i class="fa-solid fa-align-left"></i> Left
+                </button>
+                <button type="button" class="wp-btn-toggle ${align === 'center' ? 'active' : ''}" data-align="center" style="flex: 1;" title="Align Center">
+                  <i class="fa-solid fa-align-center"></i> Center
+                </button>
+                <button type="button" class="wp-btn-toggle ${align === 'right' ? 'active' : ''}" data-align="right" style="flex: 1;" title="Align Right">
+                  <i class="fa-solid fa-align-right"></i> Right
+                </button>
+              </div>
+              <input type="hidden" id="hero-details-alignment" value="${align}">
+            </div>
+
+            <!-- Top Spacing / Padding -->
+            <div class="wp-control-group">
+              <label class="wp-control-label">
+                Top Spacing (Padding Top) <span class="val-badge" id="hero-pad-top-badge">${l.padding_top !== undefined ? l.padding_top : 80}px</span>
+              </label>
+              <input type="range" class="wp-slider" id="hero-padding-top" min="20" max="220" step="5" value="${l.padding_top !== undefined ? l.padding_top : 80}">
+              <div class="wp-chip-group">
+                <button type="button" class="wp-chip hero-pad-top-chip" data-val="40">40px</button>
+                <button type="button" class="wp-chip hero-pad-top-chip" data-val="80">80px (Std)</button>
+                <button type="button" class="wp-chip hero-pad-top-chip" data-val="120">120px</button>
+                <button type="button" class="wp-chip hero-pad-top-chip" data-val="160">160px</button>
+              </div>
+            </div>
+
+            <!-- Bottom Spacing / Padding -->
+            <div class="wp-control-group">
+              <label class="wp-control-label">
+                Bottom Spacing (Padding Bottom) <span class="val-badge" id="hero-pad-bottom-badge">${l.padding_bottom !== undefined ? l.padding_bottom : 80}px</span>
+              </label>
+              <input type="range" class="wp-slider" id="hero-padding-bottom" min="20" max="220" step="5" value="${l.padding_bottom !== undefined ? l.padding_bottom : 80}">
+              <div class="wp-chip-group">
+                <button type="button" class="wp-chip hero-pad-bottom-chip" data-val="40">40px</button>
+                <button type="button" class="wp-chip hero-pad-bottom-chip" data-val="80">80px (Std)</button>
+                <button type="button" class="wp-chip hero-pad-bottom-chip" data-val="120">120px</button>
+                <button type="button" class="wp-chip hero-pad-bottom-chip" data-val="160">160px</button>
+              </div>
+            </div>
+
+            <!-- Left & Right Padding / Inset -->
+            <div class="wp-control-group">
+              <label class="wp-control-label">
+                Left &amp; Right Inset (Padding X) <span class="val-badge" id="hero-pad-x-badge">${l.padding_x !== undefined ? l.padding_x : 24}px</span>
+              </label>
+              <input type="range" class="wp-slider" id="hero-padding-x" min="12" max="80" step="4" value="${l.padding_x !== undefined ? l.padding_x : 24}">
+              <div class="wp-chip-group">
+                <button type="button" class="wp-chip hero-pad-x-chip" data-val="16">16px Compact</button>
+                <button type="button" class="wp-chip hero-pad-x-chip" data-val="24">24px Standard</button>
+                <button type="button" class="wp-chip hero-pad-x-chip" data-val="36">36px Wide</button>
+                <button type="button" class="wp-chip hero-pad-x-chip" data-val="48">48px Relaxed</button>
+              </div>
+            </div>
+
+            <!-- Max Content Width -->
+            <div class="wp-control-group">
+              <label class="wp-control-label">Max Container Width</label>
+              <select id="hero-max-width" class="form-input" style="font-size: 12px; height: 34px;">
+                <option value="1100px" ${l.max_width === '1100px' ? 'selected' : ''}>1100px - Focused</option>
+                <option value="1280px" ${(!l.max_width || l.max_width === '1280px') ? 'selected' : ''}>1280px - Default Standard</option>
+                <option value="1440px" ${l.max_width === '1440px' ? 'selected' : ''}>1440px - Wide Screen</option>
+                <option value="100%" ${l.max_width === '100%' ? 'selected' : ''}>100% - Full Width</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0; gap: 10px;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-save-hero-layout-only" style="background: #059669; border-color: #059669; font-weight: 700; padding: 7px 22px;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Hero Background &amp; Layout
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  renderWpTypographyControls(secKey, tCfg, titleLabel) {
+    const s = tCfg || {};
+    return `
+      <div class="wp-control-grid">
+        <!-- 1. Font Size -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">
+            Font Size <span class="val-badge" id="wp-${secKey}-size-badge">${s.fontSize || 32}px</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-font-size" min="14" max="72" value="${s.fontSize || 32}">
+          <div class="wp-chip-group">
+            <button type="button" class="wp-chip wp-size-chip" data-target="wp-${secKey}-font-size" data-val="16">16px SM</button>
+            <button type="button" class="wp-chip wp-size-chip" data-target="wp-${secKey}-font-size" data-val="24">24px MD</button>
+            <button type="button" class="wp-chip wp-size-chip" data-target="wp-${secKey}-font-size" data-val="32">32px LG</button>
+            <button type="button" class="wp-chip wp-size-chip" data-target="wp-${secKey}-font-size" data-val="48">48px XL</button>
+            <button type="button" class="wp-chip wp-size-chip" data-target="wp-${secKey}-font-size" data-val="60">60px 2XL</button>
+          </div>
+        </div>
+
+        <!-- 2. Font Style & Weight -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">Font Style</label>
+          <div class="wp-btn-group" id="wp-${secKey}-style-group">
+            <button type="button" data-val="normal" class="${s.fontStyle === 'normal' || !s.fontStyle ? 'active' : ''}">Normal</button>
+            <button type="button" data-val="italic" class="${s.fontStyle === 'italic' ? 'active' : ''}"><i>Italic</i></button>
+            <button type="button" data-val="oblique" class="${s.fontStyle === 'oblique' ? 'active' : ''}">Oblique</button>
+          </div>
+          <input type="hidden" id="wp-${secKey}-font-style" value="${s.fontStyle || 'normal'}">
+
+          <label class="wp-control-label" style="margin-top: 10px;">Font Weight</label>
+          <div class="wp-btn-group" id="wp-${secKey}-weight-group">
+            <button type="button" data-val="400" class="${s.fontWeight === '400' ? 'active' : ''}">400 Reg</button>
+            <button type="button" data-val="600" class="${s.fontWeight === '600' ? 'active' : ''}">600 Semi</button>
+            <button type="button" data-val="700" class="${s.fontWeight === '700' ? 'active' : ''}">700 Bold</button>
+            <button type="button" data-val="900" class="${s.fontWeight === '900' || !s.fontWeight ? 'active' : ''}">900 Black</button>
+          </div>
+          <input type="hidden" id="wp-${secKey}-font-weight" value="${s.fontWeight || '700'}">
+        </div>
+
+        <!-- 3. Text Color & Alignment -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">Text Color</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="color" id="wp-${secKey}-color" value="${s.color || '#111827'}" style="width: 38px; height: 32px; border: none; cursor: pointer; border-radius: 6px;">
+            <input type="text" class="form-input" id="wp-${secKey}-color-hex" value="${s.color || '#111827'}" style="width: 95px; font-family: monospace; font-size: 12px; padding: 4px 8px;">
+          </div>
+          <div class="wp-color-palette" style="margin-top: 6px;">
+            <span class="wp-color-swatch" style="background:#059669;" data-target="wp-${secKey}-color" data-val="#059669" title="Emerald"></span>
+            <span class="wp-color-swatch" style="background:#064e3b;" data-target="wp-${secKey}-color" data-val="#064e3b" title="Forest"></span>
+            <span class="wp-color-swatch" style="background:#111827;" data-target="wp-${secKey}-color" data-val="#111827" title="Charcoal"></span>
+            <span class="wp-color-swatch" style="background:#0284c7;" data-target="wp-${secKey}-color" data-val="#0284c7" title="Sky"></span>
+            <span class="wp-color-swatch" style="background:#d97706;" data-target="wp-${secKey}-color" data-val="#d97706" title="Amber"></span>
+            <span class="wp-color-swatch" style="background:#dc2626;" data-target="wp-${secKey}-color" data-val="#dc2626" title="Red"></span>
+          </div>
+
+          <label class="wp-control-label" style="margin-top: 10px;">Text Alignment</label>
+          <div class="wp-btn-group" id="wp-${secKey}-align-group">
+            <button type="button" data-val="left" class="${s.alignment === 'left' ? 'active' : ''}"><i class="fa-solid fa-align-left"></i> Left</button>
+            <button type="button" data-val="center" class="${s.alignment === 'center' || !s.alignment ? 'active' : ''}"><i class="fa-solid fa-align-center"></i> Center</button>
+            <button type="button" data-val="right" class="${s.alignment === 'right' ? 'active' : ''}"><i class="fa-solid fa-align-right"></i> Right</button>
+            <button type="button" data-val="justify" class="${s.alignment === 'justify' ? 'active' : ''}"><i class="fa-solid fa-align-justify"></i></button>
+          </div>
+          <input type="hidden" id="wp-${secKey}-alignment" value="${s.alignment || 'center'}">
+        </div>
+
+        <!-- 4. Text Gradient (radint) -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">Gradient Text (radint)</label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 2px;">
+            <input type="checkbox" id="wp-${secKey}-grad-enable" ${s.gradientEnabled ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: #059669;">
+            <span style="font-size: 12px; font-weight: 600; color: #1e293b;">Enable Gradient Text Effect</span>
+          </label>
+          <div id="wp-${secKey}-grad-options" style="display: ${s.gradientEnabled ? 'flex' : 'none'}; flex-direction: column; gap: 8px; margin-top: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; width: 40px; color: #64748b;">Start:</span>
+              <input type="color" id="wp-${secKey}-grad-start" value="${s.gradientStart || '#059669'}">
+              <span style="font-size: 11px; width: 35px; color: #64748b;">End:</span>
+              <input type="color" id="wp-${secKey}-grad-end" value="${s.gradientEnd || '#10b981'}">
+            </div>
+            <div class="wp-chip-group">
+              <button type="button" class="wp-chip wp-grad-preset" data-sec="${secKey}" data-start="#059669" data-end="#10b981">Emerald</button>
+              <button type="button" class="wp-chip wp-grad-preset" data-sec="${secKey}" data-start="#d97706" data-end="#fbbf24">Sunset Gold</button>
+              <button type="button" class="wp-chip wp-grad-preset" data-sec="${secKey}" data-start="#0284c7" data-end="#38bdf8">Ocean Cyan</button>
+              <button type="button" class="wp-chip wp-grad-preset" data-sec="${secKey}" data-start="#7c3aed" data-end="#c084fc">Royal Purple</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderWpImageControls(secKey, iCfg, imgLabel) {
+    const s = iCfg || {};
+    return `
+      <div class="wp-control-grid">
+        <!-- 0. Image Source / URL & Media Library Picker -->
+        <div class="wp-control-group" style="grid-column: 1 / -1; background: #ffffff; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 6px;">
+          <label class="wp-control-label" style="color: #0f172a; font-size: 11.5px; font-weight: 700; margin-bottom: 6px;">
+            <span><i class="fa-solid fa-image" style="color: #0073aa;"></i> ${this.escapeHtml(imgLabel)} Source URL</span>
+            <span class="val-badge" id="wp-${secKey}-img-src-badge">Image URL</span>
+          </label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" class="form-input wp-img-url-input" id="wp-${secKey}-img-url" value="${this.escapeHtml(s.imgUrl || '')}" placeholder="Paste image URL (https://...) or choose from Media Library" style="flex: 1; font-size: 13px;">
+            <button type="button" class="btn btn-outline btn-sm wp-btn-pick-media" data-target="wp-${secKey}-img-url" style="color: #0073aa; border-color: #93c5fd; white-space: nowrap; font-weight: 600;">
+              <i class="fa-solid fa-photo-film"></i> Media Library
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. Image Size (Width) -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">
+            Image Size (Width) <span class="val-badge" id="wp-${secKey}-img-w-badge">${s.imgWidth || 100}%</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-img-width" min="20" max="100" value="${s.imgWidth || 100}">
+          <div class="wp-chip-group">
+            <button type="button" class="wp-chip wp-img-w-chip" data-target="wp-${secKey}-img-width" data-val="25">25%</button>
+            <button type="button" class="wp-chip wp-img-w-chip" data-target="wp-${secKey}-img-width" data-val="50">50%</button>
+            <button type="button" class="wp-chip wp-img-w-chip" data-target="wp-${secKey}-img-width" data-val="75">75%</button>
+            <button type="button" class="wp-chip wp-img-w-chip" data-target="wp-${secKey}-img-width" data-val="100">100% Full</button>
+          </div>
+        </div>
+
+        <!-- 2. Image Style / Elevation -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">Image Style & Shadow</label>
+          <div class="wp-btn-group" id="wp-${secKey}-img-style-group">
+            <button type="button" data-val="default" class="${s.imgStyle === 'default' ? 'active' : ''}">Default</button>
+            <button type="button" data-val="elevated" class="${s.imgStyle === 'elevated' || !s.imgStyle ? 'active' : ''}">Elevated</button>
+            <button type="button" data-val="glow" class="${s.imgStyle === 'glow' ? 'active' : ''}">Glow</button>
+            <button type="button" data-val="glass" class="${s.imgStyle === 'glass' ? 'active' : ''}">Glass</button>
+          </div>
+          <input type="hidden" id="wp-${secKey}-img-style" value="${s.imgStyle || 'elevated'}">
+
+          <label class="wp-control-label" style="margin-top: 10px;">Margin Alignment</label>
+          <div class="wp-btn-group" id="wp-${secKey}-img-align-group">
+            <button type="button" data-val="left" class="${s.imgMarginAlign === 'left' ? 'active' : ''}">Left</button>
+            <button type="button" data-val="center" class="${s.imgMarginAlign === 'center' || !s.imgMarginAlign ? 'active' : ''}">Center</button>
+            <button type="button" data-val="right" class="${s.imgMarginAlign === 'right' ? 'active' : ''}">Right</button>
+          </div>
+          <input type="hidden" id="wp-${secKey}-img-align" value="${s.imgMarginAlign || 'center'}">
+        </div>
+
+        <!-- 3. Border & Radius -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">
+            Border Radius <span class="val-badge" id="wp-${secKey}-img-rad-badge">${s.imgRadius !== undefined ? s.imgRadius : 16}px</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-img-radius" min="0" max="48" value="${s.imgRadius !== undefined ? s.imgRadius : 16}">
+          <div class="wp-chip-group">
+            <button type="button" class="wp-chip wp-rad-chip" data-target="wp-${secKey}-img-radius" data-val="0">Sharp 0px</button>
+            <button type="button" class="wp-chip wp-rad-chip" data-target="wp-${secKey}-img-radius" data-val="12">Rounded 12px</button>
+            <button type="button" class="wp-chip wp-rad-chip" data-target="wp-${secKey}-img-radius" data-val="24">Curved 24px</button>
+            <button type="button" class="wp-chip wp-rad-chip" data-target="wp-${secKey}-img-radius" data-val="48">Pill 48px</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+            <div>
+              <label class="wp-control-label" style="font-size: 10px;">Border Width</label>
+              <input type="number" class="form-input" id="wp-${secKey}-img-border-w" min="0" max="10" value="${s.imgBorderWidth || 0}" style="padding: 4px 8px; font-size: 12px;">
+            </div>
+            <div>
+              <label class="wp-control-label" style="font-size: 10px;">Border Color</label>
+              <input type="color" id="wp-${secKey}-img-border-c" value="${s.imgBorderColor || '#e2e8f0'}" style="width: 100%; height: 32px; border: none; cursor: pointer; border-radius: 6px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Padding, Brightness & Blur -->
+        <div class="wp-control-group">
+          <label class="wp-control-label">
+            Padding (Spacing) <span class="val-badge" id="wp-${secKey}-img-pad-badge">${s.imgPadding || 0}px</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-img-padding" min="0" max="32" value="${s.imgPadding || 0}">
+
+          <label class="wp-control-label" style="margin-top: 10px;">
+            Brightness <span class="val-badge" id="wp-${secKey}-img-bright-badge">${s.imgBrightness !== undefined ? s.imgBrightness : 100}%</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-img-brightness" min="50" max="150" value="${s.imgBrightness !== undefined ? s.imgBrightness : 100}">
+
+          <label class="wp-control-label" style="margin-top: 10px;">
+            Blur Effect (bler) <span class="val-badge" id="wp-${secKey}-img-blur-badge">${s.imgBlur || 0}px</span>
+          </label>
+          <input type="range" class="wp-slider" id="wp-${secKey}-img-blur" min="0" max="15" value="${s.imgBlur || 0}">
+        </div>
+      </div>
+    `;
+  }
+
+  renderWpPreviewCanvas(secKey, cfg, defaultTitle, defaultImg) {
+    const t = cfg || {};
+    const hasGrad = t.gradientEnabled;
+    const titleStyle = `
+      font-size: ${t.fontSize || 32}px;
+      font-style: ${t.fontStyle || 'normal'};
+      font-weight: ${t.fontWeight || '700'};
+      text-align: ${t.alignment || 'center'};
+      ${hasGrad 
+        ? `background-image: linear-gradient(135deg, ${t.gradientStart || '#059669'}, ${t.gradientEnd || '#10b981'}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent; display: inline-block;` 
+        : `color: ${t.color || '#111827'};`}
+      transition: all 0.2s ease;
+      line-height: 1.25;
+      margin-bottom: 12px;
+    `;
+
+    const imgStyle = `
+      width: ${t.imgWidth || 100}%;
+      border-radius: ${t.imgRadius !== undefined ? t.imgRadius : 16}px;
+      border: ${t.imgBorderWidth > 0 ? `${t.imgBorderWidth}px solid ${t.imgBorderColor || '#e2e8f0'}` : 'none'};
+      padding: ${t.imgPadding || 0}px;
+      filter: brightness(${t.imgBrightness !== undefined ? t.imgBrightness : 100}%) blur(${t.imgBlur || 0}px);
+      box-shadow: ${t.imgStyle === 'elevated' ? '0 16px 30px rgba(0,0,0,0.2)' : (t.imgStyle === 'glow' ? '0 0 20px rgba(16,185,129,0.5)' : (t.imgStyle === 'glass' ? '0 8px 32px rgba(31,38,135,0.2)' : 'none'))};
+      display: block;
+      margin-left: ${t.imgMarginAlign === 'right' ? 'auto' : (t.imgMarginAlign === 'center' ? 'auto' : '0')};
+      margin-right: ${t.imgMarginAlign === 'left' ? 'auto' : (t.imgMarginAlign === 'center' ? 'auto' : '0')};
+      max-height: 220px;
+      object-fit: cover;
+      transition: all 0.2s ease;
+    `;
+
+    if (secKey === 'hero') {
+      const sliderCfg = this.heroSliderData || this.getHeroSliderConfig();
+      const layoutCfg = this.heroLayoutData || this.getHeroLayoutConfig();
+      const slides = (sliderCfg && Array.isArray(sliderCfg.slides) && sliderCfg.slides.length)
+        ? sliderCfg.slides
+        : [{ id: "slide_1", url: defaultImg || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800', title: 'Eco-Friendly Cycling', subtitle: 'Explore Mannar' }];
+      const curIdx = this.activeHeroPreviewSlideIdx || 0;
+      const activeSlide = slides[curIdx] || slides[0];
+
+      const bgType = layoutCfg.bg_type || 'default';
+      let previewBg = '';
+      if (bgType === 'color' && layoutCfg.bg_color) {
+        previewBg = `background-color: ${layoutCfg.bg_color}; background-image: none;`;
+      } else if (bgType === 'image' && layoutCfg.bg_image_url) {
+        previewBg = `background-image: url('${this.normalizeImageUrl(layoutCfg.bg_image_url)}'); background-size: cover; background-position: ${layoutCfg.bg_position || 'center'};`;
+      } else {
+        previewBg = `background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 45%, #ffffff 100%);`;
+      }
+
+      const overlayOpacity = (layoutCfg.overlay_opacity !== undefined) ? (Number(layoutCfg.overlay_opacity) / 100).toFixed(2) : '0';
+      const overlayColor = layoutCfg.overlay_color || '#000000';
+      const isDark = (bgType === 'color' && this.isColorDark(layoutCfg.bg_color)) || (bgType === 'image' && Number(layoutCfg.overlay_opacity || 0) >= 35) || (layoutCfg.contrast_mode === 'light');
+      const finalTitleStyle = titleStyle + (isDark ? '; color: #ffffff !important; text-shadow: 0 2px 8px rgba(0,0,0,0.7);' : '');
+      const align = layoutCfg.alignment || t.alignment || 'center';
+      const padTop = Math.round((layoutCfg.padding_top !== undefined ? layoutCfg.padding_top : 80) * 0.25);
+      const padBottom = Math.round((layoutCfg.padding_bottom !== undefined ? layoutCfg.padding_bottom : 80) * 0.25);
+
+      return `
+        <div class="wp-preview-canvas" id="wp-hero-preview-box" style="position: relative; overflow: hidden; border-radius: 12px; ${previewBg}; padding: ${padTop}px 18px ${padBottom}px; transition: all 0.25s ease; min-height: 280px;">
+          <div id="wp-hero-preview-bg-overlay" style="position: absolute; inset: 0; background-color: ${overlayColor}; opacity: ${overlayOpacity}; pointer-events: none; z-index: 1; transition: opacity 0.2s ease;"></div>
+          <div id="wp-hero-preview-inner" style="position: relative; z-index: 2; text-align: ${align};">
+            <div style="font-size: 11px; font-weight: 700; color: ${isDark ? '#e2e8f0' : '#64748b'}; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-eye" style="color: #10b981;"></i> WordPress Live Interactive Preview
+              </span>
+              <span id="wp-hero-preview-counter" style="background: #0073aa; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 800;">
+                Slide ${curIdx + 1} of ${slides.length}
+              </span>
+            </div>
+            <div>
+              <div id="wp-hero-preview-title" style="${finalTitleStyle}">${this.escapeHtml(defaultTitle)}</div>
+            </div>
+            <div style="margin-top: 14px; position: relative; border-radius: ${t.imgRadius !== undefined ? t.imgRadius : 16}px; overflow: hidden; background: #0f172a; max-height: 240px; box-shadow: 0 16px 30px rgba(0,0,0,0.25);" id="wp-hero-preview-container">
+              <img id="wp-hero-preview-img" src="${this.normalizeImageUrl(activeSlide.url)}" alt="Preview" style="${imgStyle}">
+              
+              <!-- Prev / Next Arrows -->
+              <button type="button" id="wp-hero-preview-prev-btn" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;" title="Previous Slide">
+                <i class="fa-solid fa-chevron-left" style="font-size: 12px;"></i>
+              </button>
+              <button type="button" id="wp-hero-preview-next-btn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;" title="Next Slide">
+                <i class="fa-solid fa-chevron-right" style="font-size: 12px;"></i>
+              </button>
+
+              <!-- Dots -->
+              <div id="wp-hero-preview-dots" style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 12px;">
+                ${slides.map((_, i) => `<span class="wp-preview-dot ${i === curIdx ? 'active' : ''}" data-idx="${i}" style="width: 8px; height: 8px; border-radius: 50%; background: ${i === curIdx ? '#10b981' : 'rgba(255,255,255,0.6)'}; cursor: pointer;"></span>`).join('')}
+              </div>
+
+              <!-- Slide caption overlay -->
+              <div id="wp-hero-preview-caption" style="position: absolute; bottom: 8px; left: 10px; z-index: 10; background: rgba(0,0,0,0.7); color: #fff; padding: 4px 10px; border-radius: 6px; max-width: 65%; pointer-events: none;">
+                <div id="wp-hero-preview-caption-title" style="font-size: 11px; font-weight: 700; color: #fff; line-height: 1.2;">${this.escapeHtml(activeSlide.title || '')}</div>
+                <div id="wp-hero-preview-caption-sub" style="font-size: 9.5px; color: #6ee7b7; line-height: 1.2;">${this.escapeHtml(activeSlide.subtitle || '')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="wp-preview-canvas" id="wp-${secKey}-preview-box">
+        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-eye" style="color: #10b981;"></i> WordPress Live Interactive Preview
+        </div>
+        <div style="text-align: ${t.alignment || 'center'};">
+          <div id="wp-${secKey}-preview-title" style="${titleStyle}">${this.escapeHtml(defaultTitle)}</div>
+        </div>
+        ${defaultImg ? `
+          <div style="margin-top: 14px;">
+            <img id="wp-${secKey}-preview-img" src="${defaultImg}" alt="Preview" style="${imgStyle}">
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
   renderContentView() {
     const hero = this.sections.hero || {};
     const fitness = this.sections.fitness || {};
     const about = this.sections.about || {};
+    const wpStyles = this.getContentStyleConfig();
+    this.heroSliderData = this.getHeroSliderConfig();
+    this.heroLayoutData = this.getHeroLayoutConfig();
+    this.activeHeroPreviewSlideIdx = 0;
 
     return `
+      <!-- WordPress-Style Content Editor Header Banner -->
+      <div class="card" style="border-top: 4px solid #0073aa; margin-bottom: 24px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #0073aa; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 12px rgba(0,115,170,0.3);">
+              <i class="fa-brands fa-wordpress"></i>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; margin: 0;">WordPress-Style Text & Images Content Editor</h2>
+                <span class="badge" style="background: #0073aa; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px;">WP-STYLE</span>
+              </div>
+              <p style="font-size: 13px; color: #475569; margin: 3px 0 0 0;">
+                Visual WordPress Gutenberg & Elementor style editing controls for website content: Typography (size, style, weight, color, alignment, gradients) and Images (source URL, size, border radius, padding, style, brightness, blur filters).
+              </p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="#hero-editor-card" class="btn btn-outline btn-sm" style="font-weight: 600; color: #0073aa; border-color: #93c5fd;"><i class="fa-solid fa-image"></i> Hero Section</a>
+            <a href="#fitness-editor-card" class="btn btn-outline btn-sm" style="font-weight: 600; color: #0073aa; border-color: #93c5fd;"><i class="fa-solid fa-heart-pulse"></i> Fitness Section</a>
+            <a href="#about-editor-card" class="btn btn-outline btn-sm" style="font-weight: 600; color: #0073aa; border-color: #93c5fd;"><i class="fa-solid fa-circle-info"></i> About Story</a>
+            <a href="#join-editor-card" class="btn btn-outline btn-sm" style="font-weight: 600; color: #92400e; border-color: #fde68a;"><i class="fa-solid fa-car-side"></i> Host Network</a>
+          </div>
+        </div>
+      </div>
+
       <!-- Hero Section Editor -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-image"></i> Hero Banner & Main Headline</h3>
+      <div class="card" id="hero-editor-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-brands fa-wordpress" style="color: #0073aa;"></i> Hero Banner &amp; Main Headline</h3>
           <span class="badge badge-published">Published Section</span>
         </div>
         <form id="hero-content-form">
@@ -478,14 +1384,61 @@ class AdminCMSApp {
               <input type="text" class="form-input" id="hero-btn-url" value="${this.escapeHtml(hero.button_url || '#pricing-rates')}">
             </div>
           </div>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save & Publish Hero</button>
+
+          <!-- WordPress Typography & Styling Controls for Hero -->
+          <div class="wp-inspector-panel">
+            <div class="wp-inspector-header">
+              <div class="wp-inspector-title">
+                <i class="fa-brands fa-wordpress" style="color: #0073aa; font-size: 16px;"></i>
+                WordPress Content Controls (Hero Headline &amp; Images)
+              </div>
+              <div class="wp-tab-pills">
+                <button type="button" class="wp-tab-pill active" data-tab="wp-tab-hero-text"><i class="fa-solid fa-font"></i> Typography</button>
+                <button type="button" class="wp-tab-pill" data-tab="wp-tab-hero-img"><i class="fa-solid fa-image"></i> Images &amp; Blur</button>
+                <button type="button" class="wp-tab-pill" data-tab="wp-tab-hero-slider"><i class="fa-solid fa-images"></i> Multi-Image Slider (<span id="pill-hero-slide-count">${this.heroSliderData.slides.length}</span>)</button>
+                <button type="button" class="wp-tab-pill" data-tab="wp-tab-hero-layout"><i class="fa-solid fa-layer-group"></i> Background &amp; Layout</button>
+              </div>
+            </div>
+
+            <div id="wp-tab-hero-text" class="wp-tab-pane">
+              ${this.renderWpTypographyControls('hero', wpStyles.hero, 'Hero Headline')}
+            </div>
+            <div id="wp-tab-hero-img" class="wp-tab-pane" style="display: none;">
+              ${this.renderWpImageControls('hero', wpStyles.hero, 'Hero Banner Image')}
+              <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div style="font-size: 12px; color: #166534;">
+                  <i class="fa-solid fa-circle-info" style="color: #16a34a; margin-right: 6px;"></i>
+                  <strong>Multi-Image Carousel:</strong> Need multiple moving slide images? Add, move, and reorder slides in the <strong>Multi-Image Slider</strong> tab.
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.querySelector('[data-tab=\\'wp-tab-hero-slider\\']').click()" style="color: #166534; border-color: #86efac; font-weight: 700;">
+                  Open Multi-Image Slider <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                </button>
+              </div>
+            </div>
+            <div id="wp-tab-hero-slider" class="wp-tab-pane" style="display: none;">
+              ${this.renderHeroSliderControls(this.heroSliderData)}
+            </div>
+            <div id="wp-tab-hero-layout" class="wp-tab-pane" style="display: none;">
+              ${this.renderHeroBackgroundAndLayoutControls(this.heroLayoutData)}
+            </div>
+
+            ${this.renderWpPreviewCanvas('hero', wpStyles.hero, hero.title || 'Explore Mannar Sustainably & Stay Fit with Mannar Green Ride', wpStyles.hero.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800')}
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save &amp; Publish Hero</button>
+            <button type="button" class="btn btn-outline btn-save-wp-style" data-section="hero"><i class="fa-solid fa-palette"></i> Save Hero Typography &amp; Image Styles</button>
+            <button type="button" class="btn btn-outline" id="btn-save-hero-slider-footer" style="color: #0073aa; border-color: #93c5fd; font-weight: 700;"><i class="fa-solid fa-images"></i> Save Hero Slider &amp; Images</button>
+            <button type="button" class="btn btn-outline" id="btn-save-hero-layout-footer" style="color: #047857; border-color: #a7f3d0; font-weight: 700;"><i class="fa-solid fa-layer-group"></i> Save Hero Background &amp; Layout</button>
+          </div>
         </form>
       </div>
 
       <!-- Fitness & Eco Section -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-heart-pulse"></i> Fitness & Health Section</h3>
+      <div class="card" id="fitness-editor-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-brands fa-wordpress" style="color: #0073aa;"></i> Fitness & Health Section</h3>
+          <span class="badge badge-published">Published Section</span>
         </div>
         <form id="fitness-content-form">
           <div class="form-group">
@@ -500,14 +1453,42 @@ class AdminCMSApp {
             <label class="form-label">Description</label>
             <textarea class="form-textarea" id="fitness-content">${this.escapeHtml(fitness.content || 'Did you know? A 10km cycle ride burns approx 300 calories while producing ZERO carbon emissions. We encourage all visitors to choose pedal power to preserve Mannar’s sensitive migratory bird ecosystems.')}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Fitness Section</button>
+
+          <!-- WordPress Typography & Image Controls for Fitness -->
+          <div class="wp-inspector-panel">
+            <div class="wp-inspector-header">
+              <div class="wp-inspector-title">
+                <i class="fa-brands fa-wordpress" style="color: #0073aa; font-size: 16px;"></i>
+                WordPress Content Controls (Fitness Heading & Images)
+              </div>
+              <div class="wp-tab-pills">
+                <button type="button" class="wp-tab-pill active" data-tab="wp-tab-fitness-text"><i class="fa-solid fa-font"></i> Typography</button>
+                <button type="button" class="wp-tab-pill" data-tab="wp-tab-fitness-img"><i class="fa-solid fa-image"></i> Images & Blur</button>
+              </div>
+            </div>
+
+            <div id="wp-tab-fitness-text" class="wp-tab-pane">
+              ${this.renderWpTypographyControls('fitness', wpStyles.fitness, 'Fitness Heading')}
+            </div>
+            <div id="wp-tab-fitness-img" class="wp-tab-pane" style="display: none;">
+              ${this.renderWpImageControls('fitness', wpStyles.fitness, 'Fitness Section Image')}
+            </div>
+
+            ${this.renderWpPreviewCanvas('fitness', wpStyles.fitness, fitness.title || 'Ride for Health, Ride for the Planet', wpStyles.fitness.imgUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600')}
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 18px;">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Fitness Section</button>
+            <button type="button" class="btn btn-outline btn-save-wp-style" data-section="fitness"><i class="fa-solid fa-palette"></i> Save Fitness Typography & Image Styles</button>
+          </div>
         </form>
       </div>
 
       <!-- About Section -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fa-solid fa-circle-info"></i> About Us Story</h3>
+      <div class="card" id="about-editor-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-brands fa-wordpress" style="color: #0073aa;"></i> About Us Story</h3>
+          <span class="badge badge-published">Published Section</span>
         </div>
         <form id="about-content-form">
           <div class="form-group">
@@ -518,7 +1499,34 @@ class AdminCMSApp {
             <label class="form-label">Our Story / Purpose</label>
             <textarea class="form-textarea" id="about-content">${this.escapeHtml(about.subtitle || 'Mannar Green Ride was founded with a twin purpose: promoting physical health through daily cycling and providing reliable, transparent, community-driven mobility for travelers across the Northern Province.')}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save About Story</button>
+
+          <!-- WordPress Typography & Image Controls for About -->
+          <div class="wp-inspector-panel">
+            <div class="wp-inspector-header">
+              <div class="wp-inspector-title">
+                <i class="fa-brands fa-wordpress" style="color: #0073aa; font-size: 16px;"></i>
+                WordPress Content Controls (About Heading & Image)
+              </div>
+              <div class="wp-tab-pills">
+                <button type="button" class="wp-tab-pill active" data-tab="wp-tab-about-text"><i class="fa-solid fa-font"></i> Typography</button>
+                <button type="button" class="wp-tab-pill" data-tab="wp-tab-about-img"><i class="fa-solid fa-image"></i> Images & Blur</button>
+              </div>
+            </div>
+
+            <div id="wp-tab-about-text" class="wp-tab-pane">
+              ${this.renderWpTypographyControls('about', wpStyles.about, 'About Heading')}
+            </div>
+            <div id="wp-tab-about-img" class="wp-tab-pane" style="display: none;">
+              ${this.renderWpImageControls('about', wpStyles.about, 'About Image')}
+            </div>
+
+            ${this.renderWpPreviewCanvas('about', wpStyles.about, about.title || 'Pioneering Eco-Mobility in Mannar', wpStyles.about.imgUrl || 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800')}
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 18px;">
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save About Story</button>
+            <button type="button" class="btn btn-outline btn-save-wp-style" data-section="about"><i class="fa-solid fa-palette"></i> Save About Typography & Image Styles</button>
+          </div>
         </form>
       </div>
 
@@ -584,7 +1592,7 @@ class AdminCMSApp {
       badge: "Join Our Passenger Host Network",
       description: "Join our official WhatsApp Vehicle Owners Group. We connect your idle cars, passenger vans, and tourist buses with incoming tourists, NGOs, researchers, birdwatchers, and pilgrims visiting Mannar.",
       button_text: "Join Host WhatsApp Group",
-      whatsapp_url: this.settings.host_whatsapp_group_url || "https://chat.whatsapp.com/ExampleMannarGreenRideGroup"
+      whatsapp_url: (this.settings && this.settings.host_whatsapp_group_url) || "https://chat.whatsapp.com/ExampleMannarGreenRideGroup"
     };
   }
 
@@ -602,6 +1610,9 @@ class AdminCMSApp {
           updated_at: new Date().toISOString()
         };
         await this.saveSection('hero', payload, 'HERO');
+        await this.saveWpSectionStyle('hero');
+        await this.saveHeroSliderConfig();
+        await this.saveHeroLayoutConfig();
       });
     }
 
@@ -616,6 +1627,7 @@ class AdminCMSApp {
           updated_at: new Date().toISOString()
         };
         await this.saveSection('fitness', payload, 'FITNESS');
+        await this.saveWpSectionStyle('fitness');
       });
     }
 
@@ -629,6 +1641,7 @@ class AdminCMSApp {
           updated_at: new Date().toISOString()
         };
         await this.saveSection('about', payload, 'ABOUT');
+        await this.saveWpSectionStyle('about');
       });
     }
 
@@ -657,6 +1670,902 @@ class AdminCMSApp {
         }
       });
     }
+
+    // WordPress-Style Inspector Events
+    this.bindWpInspectorEvents();
+    this.bindHeroSliderEvents();
+    this.bindHeroLayoutEvents();
+  }
+
+  bindWpInspectorEvents() {
+    const sections = ['hero', 'fitness', 'about'];
+
+    // Tab pills (Typography vs Image)
+    document.querySelectorAll('.wp-tab-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        const parent = pill.closest('.wp-inspector-panel');
+        if (!parent) return;
+        parent.querySelectorAll('.wp-tab-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const targetTabId = pill.dataset.tab;
+        parent.querySelectorAll('.wp-tab-pane').forEach(pane => {
+          pane.style.display = (pane.id === targetTabId) ? 'block' : 'none';
+        });
+      });
+    });
+
+    sections.forEach(secKey => {
+      const updatePreview = () => {
+        const previewTitle = document.getElementById(`wp-${secKey}-preview-title`);
+        const previewImg = document.getElementById(`wp-${secKey}-preview-img`);
+
+        // Text values
+        const fontSize = document.getElementById(`wp-${secKey}-font-size`)?.value || '32';
+        const fontStyle = document.getElementById(`wp-${secKey}-font-style`)?.value || 'normal';
+        const fontWeight = document.getElementById(`wp-${secKey}-font-weight`)?.value || '700';
+        const color = document.getElementById(`wp-${secKey}-color`)?.value || '#111827';
+        const alignment = document.getElementById(`wp-${secKey}-alignment`)?.value || 'center';
+        const gradEnabled = document.getElementById(`wp-${secKey}-grad-enable`)?.checked;
+        const gradStart = document.getElementById(`wp-${secKey}-grad-start`)?.value || '#059669';
+        const gradEnd = document.getElementById(`wp-${secKey}-grad-end`)?.value || '#10b981';
+
+        // Update live badges
+        const sizeBadge = document.getElementById(`wp-${secKey}-size-badge`);
+        if (sizeBadge) sizeBadge.textContent = `${fontSize}px`;
+
+        if (previewTitle) {
+          previewTitle.style.fontSize = `${fontSize}px`;
+          previewTitle.style.fontStyle = fontStyle;
+          previewTitle.style.fontWeight = fontWeight;
+          previewTitle.style.textAlign = alignment;
+          if (previewTitle.parentElement) previewTitle.parentElement.style.textAlign = alignment;
+
+          if (gradEnabled) {
+            previewTitle.style.backgroundImage = `linear-gradient(135deg, ${gradStart}, ${gradEnd})`;
+            previewTitle.style.webkitBackgroundClip = 'text';
+            previewTitle.style.webkitTextFillColor = 'transparent';
+            previewTitle.style.color = 'transparent';
+            previewTitle.style.display = 'inline-block';
+          } else {
+            previewTitle.style.backgroundImage = 'none';
+            previewTitle.style.webkitBackgroundClip = '';
+            previewTitle.style.webkitTextFillColor = '';
+            previewTitle.style.color = color;
+            previewTitle.style.display = '';
+          }
+        }
+
+        // Image values
+        if (previewImg) {
+          const imgWidth = document.getElementById(`wp-${secKey}-img-width`)?.value || '100';
+          const imgStyle = document.getElementById(`wp-${secKey}-img-style`)?.value || 'elevated';
+          const imgRadius = document.getElementById(`wp-${secKey}-img-radius`)?.value || '16';
+          const imgBorderW = document.getElementById(`wp-${secKey}-img-border-w`)?.value || '0';
+          const imgBorderC = document.getElementById(`wp-${secKey}-img-border-c`)?.value || '#e2e8f0';
+          const imgPadding = document.getElementById(`wp-${secKey}-img-padding`)?.value || '0';
+          const imgAlign = document.getElementById(`wp-${secKey}-img-align`)?.value || 'center';
+          const imgBrightness = document.getElementById(`wp-${secKey}-img-brightness`)?.value || '100';
+          const imgBlur = document.getElementById(`wp-${secKey}-img-blur`)?.value || '0';
+
+          // Update image badges
+          const wBadge = document.getElementById(`wp-${secKey}-img-w-badge`);
+          if (wBadge) wBadge.textContent = `${imgWidth}%`;
+          const radBadge = document.getElementById(`wp-${secKey}-img-rad-badge`);
+          if (radBadge) radBadge.textContent = `${imgRadius}px`;
+          const padBadge = document.getElementById(`wp-${secKey}-img-pad-badge`);
+          if (padBadge) padBadge.textContent = `${imgPadding}px`;
+          const brBadge = document.getElementById(`wp-${secKey}-img-bright-badge`);
+          if (brBadge) brBadge.textContent = `${imgBrightness}%`;
+          const blBadge = document.getElementById(`wp-${secKey}-img-blur-badge`);
+          if (blBadge) blBadge.textContent = `${imgBlur}px`;
+
+          previewImg.style.width = `${imgWidth}%`;
+          previewImg.style.borderRadius = `${imgRadius}px`;
+          previewImg.style.border = (parseInt(imgBorderW) > 0) ? `${imgBorderW}px solid ${imgBorderC}` : 'none';
+          previewImg.style.padding = `${imgPadding}px`;
+          previewImg.style.filter = `brightness(${imgBrightness}%) blur(${imgBlur}px)`;
+          previewImg.style.marginLeft = imgAlign === 'right' ? 'auto' : (imgAlign === 'center' ? 'auto' : '0');
+          previewImg.style.marginRight = imgAlign === 'left' ? 'auto' : (imgAlign === 'center' ? 'auto' : '0');
+
+          if (imgStyle === 'elevated') {
+            previewImg.style.boxShadow = '0 16px 30px rgba(0,0,0,0.2)';
+          } else if (imgStyle === 'glow') {
+            previewImg.style.boxShadow = '0 0 20px rgba(16,185,129,0.5)';
+          } else if (imgStyle === 'glass') {
+            previewImg.style.boxShadow = '0 8px 32px rgba(31,38,135,0.2)';
+            previewImg.style.border = '2px solid rgba(255,255,255,0.5)';
+          } else {
+            previewImg.style.boxShadow = '';
+          }
+        }
+      };
+
+      // Range sliders
+      const sliderIds = [
+        `wp-${secKey}-font-size`, `wp-${secKey}-color`, `wp-${secKey}-grad-start`, `wp-${secKey}-grad-end`,
+        `wp-${secKey}-img-width`, `wp-${secKey}-img-radius`, `wp-${secKey}-img-border-w`,
+        `wp-${secKey}-img-border-c`, `wp-${secKey}-img-padding`, `wp-${secKey}-img-brightness`, `wp-${secKey}-img-blur`
+      ];
+      sliderIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updatePreview);
+      });
+
+      // Color hex sync
+      const colorHex = document.getElementById(`wp-${secKey}-color-hex`);
+      const colorInput = document.getElementById(`wp-${secKey}-color`);
+      if (colorHex && colorInput) {
+        colorHex.addEventListener('input', () => {
+          if (colorHex.value.startsWith('#') && colorHex.value.length === 7) {
+            colorInput.value = colorHex.value;
+            updatePreview();
+          }
+        });
+        colorInput.addEventListener('input', () => {
+          colorHex.value = colorInput.value;
+          updatePreview();
+        });
+      }
+
+      // Gradient toggle
+      const gradToggle = document.getElementById(`wp-${secKey}-grad-enable`);
+      const gradOptions = document.getElementById(`wp-${secKey}-grad-options`);
+      if (gradToggle) {
+        gradToggle.addEventListener('change', () => {
+          if (gradOptions) gradOptions.style.display = gradToggle.checked ? 'flex' : 'none';
+          updatePreview();
+        });
+      }
+
+      // Button groups (Style, Weight, Alignment, Image Style, Image Align)
+      const setupBtnGroup = (groupId, hiddenInputId) => {
+        const group = document.getElementById(groupId);
+        const hidden = document.getElementById(hiddenInputId);
+        if (group && hidden) {
+          group.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+              group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              hidden.value = btn.dataset.val;
+              updatePreview();
+            });
+          });
+        }
+      };
+
+      setupBtnGroup(`wp-${secKey}-style-group`, `wp-${secKey}-font-style`);
+      setupBtnGroup(`wp-${secKey}-weight-group`, `wp-${secKey}-font-weight`);
+      setupBtnGroup(`wp-${secKey}-align-group`, `wp-${secKey}-alignment`);
+      setupBtnGroup(`wp-${secKey}-img-style-group`, `wp-${secKey}-img-style`);
+      setupBtnGroup(`wp-${secKey}-img-align-group`, `wp-${secKey}-img-align`);
+
+      // Quick Chips (Font size, Radius, Width)
+      document.querySelectorAll(`.wp-chip[data-target^="wp-${secKey}"]`).forEach(chip => {
+        chip.addEventListener('click', () => {
+          const targetEl = document.getElementById(chip.dataset.target);
+          if (targetEl) {
+            targetEl.value = chip.dataset.val;
+            updatePreview();
+          }
+        });
+      });
+
+      // Color Swatches
+      document.querySelectorAll(`.wp-color-swatch[data-target="wp-${secKey}-color"]`).forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          const targetEl = document.getElementById(swatch.dataset.target);
+          if (targetEl) {
+            targetEl.value = swatch.dataset.val;
+            if (colorHex) colorHex.value = swatch.dataset.val;
+            updatePreview();
+          }
+        });
+      });
+
+      // Gradient Presets
+      document.querySelectorAll(`.wp-grad-preset[data-sec="${secKey}"]`).forEach(preset => {
+        preset.addEventListener('click', () => {
+          const gStart = document.getElementById(`wp-${secKey}-grad-start`);
+          const gEnd = document.getElementById(`wp-${secKey}-grad-end`);
+          if (gStart && gEnd) {
+            gStart.value = preset.dataset.start;
+            gEnd.value = preset.dataset.end;
+            updatePreview();
+          }
+        });
+      });
+
+      // Image URL input live sync
+      const imgUrlInput = document.getElementById(`wp-${secKey}-img-url`);
+      if (imgUrlInput) {
+        imgUrlInput.addEventListener('input', () => {
+          const val = imgUrlInput.value.trim();
+          if (previewImg && val) {
+            previewImg.src = val;
+          }
+          if (secKey === 'hero') {
+            if (this.heroSliderData && this.heroSliderData.slides && this.heroSliderData.slides[0]) {
+              this.heroSliderData.slides[0].url = val;
+              const slide0Thumb = document.getElementById('hero-slide-thumb-0');
+              if (slide0Thumb && val) slide0Thumb.src = this.normalizeImageUrl(val);
+              const slide0Input = document.getElementById('hero-slide-url-0');
+              if (slide0Input && slide0Input.value !== val) slide0Input.value = val;
+            }
+          }
+        });
+      }
+    });
+
+    // Media Library picker buttons
+    document.querySelectorAll('.wp-btn-pick-media').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        this.openMediaPickerModal(targetId);
+      });
+    });
+
+    // Standalone Save WordPress Style Buttons
+    document.querySelectorAll('.btn-save-wp-style').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const sec = btn.dataset.section;
+        if (sec) await this.saveWpSectionStyle(sec);
+      });
+    });
+  }
+
+  bindHeroSliderEvents() {
+    const updatePreviewCarousel = () => {
+      const slides = (this.heroSliderData && this.heroSliderData.slides) || [];
+      if (!slides.length) return;
+      
+      const idx = Math.max(0, Math.min(this.activeHeroPreviewSlideIdx || 0, slides.length - 1));
+      this.activeHeroPreviewSlideIdx = idx;
+      const cur = slides[idx];
+      if (!cur) return;
+
+      const previewImg = document.getElementById('wp-hero-preview-img');
+      if (previewImg && cur.url) {
+        previewImg.src = this.normalizeImageUrl(cur.url);
+      }
+
+      const counter = document.getElementById('wp-hero-preview-counter');
+      if (counter) {
+        counter.textContent = `Slide ${idx + 1} of ${slides.length}`;
+      }
+
+      const capTitle = document.getElementById('wp-hero-preview-caption-title');
+      const capSub = document.getElementById('wp-hero-preview-caption-sub');
+      if (capTitle) capTitle.textContent = cur.title || '';
+      if (capSub) capSub.textContent = cur.subtitle || '';
+
+      const dotsBox = document.getElementById('wp-hero-preview-dots');
+      if (dotsBox) {
+        dotsBox.innerHTML = slides.map((_, i) => `
+          <span class="wp-preview-dot ${i === idx ? 'active' : ''}" data-idx="${i}" style="width: 8px; height: 8px; border-radius: 50%; background: ${i === idx ? '#10b981' : 'rgba(255,255,255,0.6)'}; cursor: pointer; transition: all 0.2s;"></span>
+        `).join('');
+
+        dotsBox.querySelectorAll('.wp-preview-dot').forEach(dot => {
+          dot.onclick = () => {
+            this.activeHeroPreviewSlideIdx = parseInt(dot.dataset.idx, 10);
+            updatePreviewCarousel();
+          };
+        });
+      }
+    };
+
+    // Prev / Next button listeners on preview
+    const prevBtn = document.getElementById('wp-hero-preview-prev-btn');
+    const nextBtn = document.getElementById('wp-hero-preview-next-btn');
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        const slides = (this.heroSliderData && this.heroSliderData.slides) || [];
+        if (!slides.length) return;
+        this.activeHeroPreviewSlideIdx = (this.activeHeroPreviewSlideIdx - 1 + slides.length) % slides.length;
+        updatePreviewCarousel();
+      };
+    }
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        const slides = (this.heroSliderData && this.heroSliderData.slides) || [];
+        if (!slides.length) return;
+        this.activeHeroPreviewSlideIdx = (this.activeHeroPreviewSlideIdx + 1) % slides.length;
+        updatePreviewCarousel();
+      };
+    }
+
+    // Attach row events
+    const attachRowListeners = () => {
+      // 1. URL inputs (Live replace image in thumbnail & preview canvas)
+      document.querySelectorAll('.hero-slide-url-input').forEach(input => {
+        input.oninput = () => {
+          const idx = parseInt(input.dataset.idx, 10);
+          const val = input.value.trim();
+          if (this.heroSliderData.slides[idx]) {
+            this.heroSliderData.slides[idx].url = val;
+          }
+          const thumb = document.getElementById(`hero-slide-thumb-${idx}`);
+          if (thumb && val) {
+            thumb.src = this.normalizeImageUrl(val);
+          }
+          if (idx === 0) {
+            const singleInput = document.getElementById('wp-hero-img-url');
+            if (singleInput && singleInput.value !== val) singleInput.value = val;
+          }
+          if (idx === (this.activeHeroPreviewSlideIdx || 0)) {
+            const previewImg = document.getElementById('wp-hero-preview-img');
+            if (previewImg && val) previewImg.src = this.normalizeImageUrl(val);
+          }
+        };
+      });
+
+      // 2. Title inputs
+      document.querySelectorAll('.hero-slide-title-input').forEach(input => {
+        input.oninput = () => {
+          const idx = parseInt(input.dataset.idx, 10);
+          if (this.heroSliderData.slides[idx]) {
+            this.heroSliderData.slides[idx].title = input.value;
+          }
+          if (idx === (this.activeHeroPreviewSlideIdx || 0)) {
+            const capTitle = document.getElementById('wp-hero-preview-caption-title');
+            if (capTitle) capTitle.textContent = input.value;
+          }
+        };
+      });
+
+      // 3. Subtitle inputs
+      document.querySelectorAll('.hero-slide-subtitle-input').forEach(input => {
+        input.oninput = () => {
+          const idx = parseInt(input.dataset.idx, 10);
+          if (this.heroSliderData.slides[idx]) {
+            this.heroSliderData.slides[idx].subtitle = input.value;
+          }
+          if (idx === (this.activeHeroPreviewSlideIdx || 0)) {
+            const capSub = document.getElementById('wp-hero-preview-caption-sub');
+            if (capSub) capSub.textContent = input.value;
+          }
+        };
+      });
+
+      // 4. Move Up / Move Down buttons
+      document.querySelectorAll('.btn-slide-move').forEach(btn => {
+        btn.onclick = () => {
+          const action = btn.dataset.action;
+          const idx = parseInt(btn.dataset.idx, 10);
+          const slides = this.heroSliderData.slides;
+          if (action === 'up' && idx > 0) {
+            const temp = slides[idx];
+            slides[idx] = slides[idx - 1];
+            slides[idx - 1] = temp;
+            this.activeHeroPreviewSlideIdx = idx - 1;
+            refreshSlideRows();
+          } else if (action === 'down' && idx < slides.length - 1) {
+            const temp = slides[idx];
+            slides[idx] = slides[idx + 1];
+            slides[idx + 1] = temp;
+            this.activeHeroPreviewSlideIdx = idx + 1;
+            refreshSlideRows();
+          }
+        };
+      });
+
+      // 5. Delete buttons
+      document.querySelectorAll('.btn-slide-delete').forEach(btn => {
+        btn.onclick = () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          const slides = this.heroSliderData.slides;
+          if (slides.length <= 1) {
+            this.showToast("At least one slide image is required.", "error");
+            return;
+          }
+          slides.splice(idx, 1);
+          if (this.activeHeroPreviewSlideIdx >= slides.length) {
+            this.activeHeroPreviewSlideIdx = slides.length - 1;
+          }
+          refreshSlideRows();
+          this.showToast("Slide removed.", "info");
+        };
+      });
+
+      // 6. Media Library pickers inside slider
+      document.querySelectorAll('#hero-slider-manager-card .wp-btn-pick-media').forEach(btn => {
+        btn.onclick = () => {
+          const targetId = btn.dataset.target;
+          this.openMediaPickerModal(targetId);
+        };
+      });
+    };
+
+    const refreshSlideRows = () => {
+      const container = document.getElementById('hero-slides-items-container');
+      if (container) {
+        container.innerHTML = this.renderHeroSlideRows(this.heroSliderData.slides);
+      }
+      const countBadge = document.getElementById('hero-slider-badge-count');
+      if (countBadge) {
+        countBadge.textContent = `Total: ${this.heroSliderData.slides.length} Images`;
+      }
+      const pillCount = document.getElementById('pill-hero-slide-count');
+      if (pillCount) {
+        pillCount.textContent = this.heroSliderData.slides.length;
+      }
+      attachRowListeners();
+      updatePreviewCarousel();
+    };
+
+    // Hook up row listeners on initial bind
+    attachRowListeners();
+    updatePreviewCarousel();
+
+    // Add Slide buttons (top and bottom)
+    const handleAddSlide = () => {
+      const newSlide = {
+        id: 'slide_' + Date.now(),
+        url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200',
+        title: 'New Slide Headline',
+        subtitle: 'Experience Mannar Green Ride passenger mobility'
+      };
+      this.heroSliderData.slides.push(newSlide);
+      this.activeHeroPreviewSlideIdx = this.heroSliderData.slides.length - 1;
+      refreshSlideRows();
+      this.showToast("New slide image added! Paste URL or choose from Media Library.", "success");
+    };
+
+    const addTopBtn = document.getElementById('btn-add-hero-slide-top');
+    if (addTopBtn) addTopBtn.onclick = handleAddSlide;
+    const addBotBtn = document.getElementById('btn-add-hero-slide-bottom');
+    if (addBotBtn) addBotBtn.onclick = handleAddSlide;
+
+    // Auto-slide toggle & interval
+    const autoToggle = document.getElementById('hero-slider-auto-toggle');
+    if (autoToggle) {
+      autoToggle.onchange = () => {
+        this.heroSliderData.auto_slide = autoToggle.checked;
+      };
+    }
+    const intervalSelect = document.getElementById('hero-slider-interval-select');
+    if (intervalSelect) {
+      intervalSelect.onchange = () => {
+        this.heroSliderData.interval = parseInt(intervalSelect.value, 10);
+      };
+    }
+
+    // Save buttons
+    const saveBtn = document.getElementById('btn-save-hero-slider-only');
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        await this.saveHeroSliderConfig();
+      };
+    }
+    const saveFooterBtn = document.getElementById('btn-save-hero-slider-footer');
+    if (saveFooterBtn) {
+      saveFooterBtn.onclick = async () => {
+        await this.saveHeroSliderConfig();
+      };
+    }
+  }
+
+  async saveHeroSliderConfig() {
+    try {
+      this.showToast("Saving Hero Multi-Image Slider...", "info");
+
+      // Read current form values
+      const slides = [];
+      const rows = document.querySelectorAll('.hero-slide-row');
+      rows.forEach((row, i) => {
+        const urlInput = row.querySelector('.hero-slide-url-input');
+        const titleInput = row.querySelector('.hero-slide-title-input');
+        const subInput = row.querySelector('.hero-slide-subtitle-input');
+        const existingId = (this.heroSliderData.slides[i] && this.heroSliderData.slides[i].id) || ('slide_' + (i + 1));
+
+        slides.push({
+          id: existingId,
+          url: this.normalizeImageUrl(urlInput ? urlInput.value.trim() : ''),
+          title: titleInput ? titleInput.value.trim() : '',
+          subtitle: subInput ? subInput.value.trim() : ''
+        });
+      });
+
+      const autoSlide = document.getElementById('hero-slider-auto-toggle')?.checked ?? true;
+      const interval = parseInt(document.getElementById('hero-slider-interval-select')?.value || '4000', 10);
+
+      const sliderCfg = {
+        enabled: true,
+        auto_slide: autoSlide,
+        interval: interval,
+        slides: slides.length > 0 ? slides : this.heroSliderData.slides
+      };
+
+      this.heroSliderData = sliderCfg;
+
+      // 1. Save hero_slider_config to website_settings
+      await this.saveSettingsItem('hero_slider_config', sliderCfg);
+      localStorage.setItem('mgr_setting_hero_slider_config', JSON.stringify(sliderCfg));
+
+      // 2. Sync Slide 1 URL to content_styling_config.hero.imgUrl for backward compatibility
+      if (slides.length > 0 && slides[0].url) {
+        const styling = this.getContentStyleConfig();
+        styling.hero.imgUrl = slides[0].url;
+        await this.saveSettingsItem('content_styling_config', styling);
+        localStorage.setItem('mgr_setting_content_styling_config', JSON.stringify(styling));
+        const heroWpInput = document.getElementById('wp-hero-img-url');
+        if (heroWpInput) heroWpInput.value = slides[0].url;
+      }
+
+      await this.logAudit("UPDATE", "CONTENT", "hero_slider_config", { total_slides: slides.length, auto_slide: autoSlide });
+      this.showToast("Hero Multi-Image Slider saved and published!", "success");
+
+      // Notify any open preview window
+      this.broadcastPreviewUpdate('hero_slider_config', sliderCfg);
+    } catch (err) {
+      console.error("Failed to save hero slider config:", err);
+      this.showToast(err.message || "Failed to save Hero slider config", "error");
+    }
+  }
+
+  bindHeroLayoutEvents() {
+    const updatePreviewLayout = () => {
+      const box = document.getElementById('wp-hero-preview-box');
+      const overlay = document.getElementById('wp-hero-preview-bg-overlay');
+      const inner = document.getElementById('wp-hero-preview-inner');
+      const title = document.getElementById('wp-hero-preview-title');
+      if (!box) return;
+
+      const bgType = document.querySelector('input[name="hero-bg-type"]:checked')?.value || 'default';
+      const bgColor = document.getElementById('hero-bg-color-input')?.value.trim() || '#f0fdf4';
+      const bgImageUrl = document.getElementById('hero-bg-image-url')?.value.trim() || '';
+      const bgPos = document.getElementById('hero-bg-position')?.value || 'center';
+      const overlayOpacityVal = parseInt(document.getElementById('hero-overlay-opacity')?.value || '0', 10);
+      const overlayColor = document.getElementById('hero-overlay-color-input')?.value.trim() || '#000000';
+      const contrastMode = document.getElementById('hero-contrast-mode')?.value || 'auto';
+      const alignment = document.getElementById('hero-details-alignment')?.value || 'center';
+      const padTop = parseInt(document.getElementById('hero-padding-top')?.value || '80', 10);
+      const padBottom = parseInt(document.getElementById('hero-padding-bottom')?.value || '80', 10);
+
+      // Background
+      if (bgType === 'color' && bgColor) {
+        box.style.backgroundImage = 'none';
+        box.style.backgroundColor = bgColor;
+      } else if (bgType === 'image' && bgImageUrl) {
+        box.style.backgroundImage = `url('${this.normalizeImageUrl(bgImageUrl)}')`;
+        box.style.backgroundSize = 'cover';
+        box.style.backgroundPosition = bgPos;
+      } else {
+        box.style.backgroundImage = 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 45%, #ffffff 100%)';
+        box.style.backgroundColor = '';
+        box.style.backgroundSize = '';
+      }
+
+      // Overlay
+      if (overlay) {
+        overlay.style.backgroundColor = overlayColor;
+        overlay.style.opacity = (overlayOpacityVal / 100).toFixed(2);
+      }
+
+      // Contrast
+      const isDark = (bgType === 'color' && this.isColorDark(bgColor)) ||
+                     (bgType === 'image' && overlayOpacityVal >= 35) ||
+                     (contrastMode === 'light');
+
+      if (title) {
+        if (isDark) {
+          title.style.color = '#ffffff';
+          title.style.textShadow = '0 2px 8px rgba(0,0,0,0.7)';
+        } else {
+          title.style.color = '';
+          title.style.textShadow = '';
+        }
+      }
+
+      // Spacing & Alignment
+      box.style.paddingTop = `${Math.round(padTop * 0.25)}px`;
+      box.style.paddingBottom = `${Math.round(padBottom * 0.25)}px`;
+      if (inner) {
+        inner.style.textAlign = alignment;
+      }
+    };
+
+    // 1. Radio bg type switches
+    document.querySelectorAll('input[name="hero-bg-type"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const val = radio.value;
+        const colorPanel = document.getElementById('hero-bg-color-panel');
+        const imgPanel = document.getElementById('hero-bg-image-panel');
+        if (colorPanel) colorPanel.style.display = (val === 'color') ? 'block' : 'none';
+        if (imgPanel) imgPanel.style.display = (val === 'image') ? 'block' : 'none';
+
+        // Update styling of parent labels
+        document.querySelectorAll('input[name="hero-bg-type"]').forEach(r => {
+          const lbl = r.closest('label');
+          if (lbl) {
+            lbl.style.borderColor = r.checked ? '#059669' : '#cbd5e1';
+            lbl.style.backgroundColor = r.checked ? '#ecfdf5' : '#fff';
+            lbl.style.color = r.checked ? '#065f46' : '#334155';
+          }
+        });
+
+        updatePreviewLayout();
+      });
+    });
+
+    // 2. Color picker & text input sync
+    const colorPicker = document.getElementById('hero-bg-color-picker');
+    const colorInput = document.getElementById('hero-bg-color-input');
+    if (colorPicker && colorInput) {
+      colorPicker.addEventListener('input', () => {
+        colorInput.value = colorPicker.value;
+        updatePreviewLayout();
+      });
+      colorInput.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(colorInput.value)) {
+          colorPicker.value = colorInput.value;
+        }
+        updatePreviewLayout();
+      });
+    }
+
+    // Color presets
+    document.querySelectorAll('.hero-bg-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = btn.dataset.color;
+        if (c && colorInput && colorPicker) {
+          colorInput.value = c;
+          colorPicker.value = c;
+          updatePreviewLayout();
+        }
+      });
+    });
+
+    // 3. Image URL input & presets
+    const imgUrlInput = document.getElementById('hero-bg-image-url');
+    if (imgUrlInput) {
+      imgUrlInput.addEventListener('input', updatePreviewLayout);
+    }
+    document.querySelectorAll('.hero-bg-img-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const u = btn.dataset.url;
+        if (u && imgUrlInput) {
+          imgUrlInput.value = u;
+          updatePreviewLayout();
+        }
+      });
+    });
+
+    const bgPosSelect = document.getElementById('hero-bg-position');
+    if (bgPosSelect) bgPosSelect.addEventListener('change', updatePreviewLayout);
+
+    // 4. Overlay color and opacity
+    const overlayColor = document.getElementById('hero-overlay-color');
+    const overlayColorInput = document.getElementById('hero-overlay-color-input');
+    if (overlayColor && overlayColorInput) {
+      overlayColor.addEventListener('input', () => {
+        overlayColorInput.value = overlayColor.value;
+        updatePreviewLayout();
+      });
+      overlayColorInput.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(overlayColorInput.value)) {
+          overlayColor.value = overlayColorInput.value;
+        }
+        updatePreviewLayout();
+      });
+    }
+
+    const overlayOpacity = document.getElementById('hero-overlay-opacity');
+    const overlayBadge = document.getElementById('hero-overlay-opacity-badge');
+    if (overlayOpacity) {
+      overlayOpacity.addEventListener('input', () => {
+        if (overlayBadge) overlayBadge.textContent = `${overlayOpacity.value}%`;
+        updatePreviewLayout();
+      });
+    }
+
+    const contrastSelect = document.getElementById('hero-contrast-mode');
+    if (contrastSelect) contrastSelect.addEventListener('change', updatePreviewLayout);
+
+    // 5. Alignment Buttons
+    const alignInput = document.getElementById('hero-details-alignment');
+    document.querySelectorAll('#hero-details-align-group .wp-btn-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#hero-details-align-group .wp-btn-toggle').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (alignInput) alignInput.value = btn.dataset.align;
+        updatePreviewLayout();
+      });
+    });
+
+    // 6. Spacing Sliders & Chips
+    const padTop = document.getElementById('hero-padding-top');
+    const padTopBadge = document.getElementById('hero-pad-top-badge');
+    if (padTop) {
+      padTop.addEventListener('input', () => {
+        if (padTopBadge) padTopBadge.textContent = `${padTop.value}px`;
+        updatePreviewLayout();
+      });
+    }
+    document.querySelectorAll('.hero-pad-top-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        if (padTop) {
+          padTop.value = c.dataset.val;
+          if (padTopBadge) padTopBadge.textContent = `${c.dataset.val}px`;
+          updatePreviewLayout();
+        }
+      });
+    });
+
+    const padBottom = document.getElementById('hero-padding-bottom');
+    const padBottomBadge = document.getElementById('hero-pad-bottom-badge');
+    if (padBottom) {
+      padBottom.addEventListener('input', () => {
+        if (padBottomBadge) padBottomBadge.textContent = `${padBottom.value}px`;
+        updatePreviewLayout();
+      });
+    }
+    document.querySelectorAll('.hero-pad-bottom-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        if (padBottom) {
+          padBottom.value = c.dataset.val;
+          if (padBottomBadge) padBottomBadge.textContent = `${c.dataset.val}px`;
+          updatePreviewLayout();
+        }
+      });
+    });
+
+    const padX = document.getElementById('hero-padding-x');
+    const padXBadge = document.getElementById('hero-pad-x-badge');
+    if (padX) {
+      padX.addEventListener('input', () => {
+        if (padXBadge) padXBadge.textContent = `${padX.value}px`;
+      });
+    }
+    document.querySelectorAll('.hero-pad-x-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        if (padX) {
+          padX.value = c.dataset.val;
+          if (padXBadge) padXBadge.textContent = `${c.dataset.val}px`;
+        }
+      });
+    });
+
+    // 7. Save Buttons
+    const saveTop = document.getElementById('btn-save-hero-layout-top');
+    if (saveTop) saveTop.addEventListener('click', () => this.saveHeroLayoutConfig());
+
+    const saveOnly = document.getElementById('btn-save-hero-layout-only');
+    if (saveOnly) saveOnly.addEventListener('click', () => this.saveHeroLayoutConfig());
+
+    const saveFooter = document.getElementById('btn-save-hero-layout-footer');
+    if (saveFooter) saveFooter.addEventListener('click', () => this.saveHeroLayoutConfig());
+  }
+
+  async saveHeroLayoutConfig() {
+    try {
+      const bgType = document.querySelector('input[name="hero-bg-type"]:checked')?.value || 'default';
+      const bgColor = document.getElementById('hero-bg-color-input')?.value.trim() || '#f0fdf4';
+      const bgImageUrl = document.getElementById('hero-bg-image-url')?.value.trim() || '';
+      const bgPos = document.getElementById('hero-bg-position')?.value || 'center';
+      const bgAttachment = document.getElementById('hero-bg-attachment')?.value || 'scroll';
+      const overlayOpacity = parseInt(document.getElementById('hero-overlay-opacity')?.value || '0', 10);
+      const overlayColor = document.getElementById('hero-overlay-color-input')?.value.trim() || '#000000';
+      const contrastMode = document.getElementById('hero-contrast-mode')?.value || 'auto';
+      const alignment = document.getElementById('hero-details-alignment')?.value || 'center';
+      const paddingTop = parseInt(document.getElementById('hero-padding-top')?.value || '80', 10);
+      const paddingBottom = parseInt(document.getElementById('hero-padding-bottom')?.value || '80', 10);
+      const paddingX = parseInt(document.getElementById('hero-padding-x')?.value || '24', 10);
+      const maxWidth = document.getElementById('hero-max-width')?.value || '1280px';
+
+      const layoutCfg = {
+        bg_type: bgType,
+        bg_color: bgColor,
+        bg_image_url: bgImageUrl,
+        bg_position: bgPos,
+        bg_attachment: bgAttachment,
+        overlay_opacity: overlayOpacity,
+        overlay_color: overlayColor,
+        contrast_mode: contrastMode,
+        alignment: alignment,
+        padding_top: paddingTop,
+        padding_bottom: paddingBottom,
+        padding_x: paddingX,
+        max_width: maxWidth,
+        updated_at: new Date().toISOString()
+      };
+
+      this.heroLayoutData = layoutCfg;
+
+      // 1. Save to website_settings
+      await this.saveSettingsItem('hero_layout_config', layoutCfg);
+      localStorage.setItem('mgr_setting_hero_layout_config', JSON.stringify(layoutCfg));
+
+      await this.logAudit("UPDATE", "CONTENT", "hero_layout_config", { bg_type: bgType, alignment: alignment });
+      this.showToast("Hero Background & Layout settings saved and published!", "success");
+
+      // Broadcast update to open customer window
+      this.broadcastPreviewUpdate('hero_layout_config', layoutCfg);
+    } catch (err) {
+      console.error("Failed to save hero layout config:", err);
+      this.showToast(err.message || "Failed to save Hero layout config", "error");
+    }
+  }
+
+  openMediaPickerModal(targetInputId) {
+    const grid = document.getElementById('wp-media-picker-grid');
+    if (!grid) return;
+
+    const fallbackImages = [
+      { name: "Mannar Coastal Causeway", url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800" },
+      { name: "Eco Bicycle Ride", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600" },
+      { name: "Mannar Dunes & Baobab", url: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800" },
+      { name: "Passenger Van Transport", url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=600" },
+      { name: "Scooter & Motorcycle", url: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&q=80&w=600" },
+      { name: "Adam's Bridge Lighthouse", url: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=600" }
+    ];
+
+    const mediaItems = (this.media && this.media.length)
+      ? this.media.map(m => ({ name: m.file_name || 'Media Image', url: m.public_url }))
+      : fallbackImages;
+
+    grid.innerHTML = mediaItems.map(item => `
+      <div style="border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.2s ease; background: #fff;"
+           class="wp-media-card"
+           onclick="window.adminCMS.selectMediaForInput('${this.escapeHtml(item.url)}', '${targetInputId}')">
+        <div style="height: 90px; background: #f8fafc; overflow: hidden;">
+          <img src="${this.escapeHtml(item.url)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=400'">
+        </div>
+        <div style="padding: 6px 8px; font-size: 11px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${this.escapeHtml(item.name)}
+        </div>
+      </div>
+    `).join('');
+
+    this.openModal('wp-media-picker-modal');
+  }
+
+  selectMediaForInput(url, targetInputId) {
+    const input = document.getElementById(targetInputId);
+    if (input) {
+      input.value = url;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      this.showToast("Image selected from library!", "success");
+    }
+    this.closeModal('wp-media-picker-modal');
+  }
+
+  async saveWpSectionStyle(secKey) {
+    const currentAll = this.getContentStyleConfig();
+
+    const tCfg = {
+      fontSize: parseInt(document.getElementById(`wp-${secKey}-font-size`)?.value || '32'),
+      fontStyle: document.getElementById(`wp-${secKey}-font-style`)?.value || 'normal',
+      fontWeight: document.getElementById(`wp-${secKey}-font-weight`)?.value || '700',
+      color: document.getElementById(`wp-${secKey}-color`)?.value || '#111827',
+      alignment: document.getElementById(`wp-${secKey}-alignment`)?.value || 'center',
+      gradientEnabled: document.getElementById(`wp-${secKey}-grad-enable`)?.checked || false,
+      gradientStart: document.getElementById(`wp-${secKey}-grad-start`)?.value || '#059669',
+      gradientEnd: document.getElementById(`wp-${secKey}-grad-end`)?.value || '#10b981',
+      imgUrl: document.getElementById(`wp-${secKey}-img-url`)?.value.trim() || '',
+      imgWidth: parseInt(document.getElementById(`wp-${secKey}-img-width`)?.value || '100'),
+      imgStyle: document.getElementById(`wp-${secKey}-img-style`)?.value || 'elevated',
+      imgRadius: parseInt(document.getElementById(`wp-${secKey}-img-radius`)?.value || '16'),
+      imgBorderWidth: parseInt(document.getElementById(`wp-${secKey}-img-border-w`)?.value || '0'),
+      imgBorderColor: document.getElementById(`wp-${secKey}-img-border-c`)?.value || '#e2e8f0',
+      imgPadding: parseInt(document.getElementById(`wp-${secKey}-img-padding`)?.value || '0'),
+      imgMarginAlign: document.getElementById(`wp-${secKey}-img-align`)?.value || 'center',
+      imgBrightness: parseInt(document.getElementById(`wp-${secKey}-img-brightness`)?.value || '100'),
+      imgBlur: parseInt(document.getElementById(`wp-${secKey}-img-blur`)?.value || '0')
+    };
+
+    currentAll[secKey] = tCfg;
+    const jsonStr = JSON.stringify(currentAll);
+
+    try {
+      this.showToast(`Saving WordPress styles for ${secKey.toUpperCase()}...`, "info");
+      await this.batchSaveSettings([
+        { key: 'content_styling_config', val: jsonStr }
+      ]);
+      await this.logAudit("UPDATE", "WP_STYLES", secKey, tCfg);
+      this.showToast(`WordPress styles for ${secKey.toUpperCase()} applied to website!`, "success");
+    } catch (err) {
+      this.showToast(err.message || "Failed to save WordPress styles", "error");
+    }
   }
 
   async saveSection(sectionKey, payload, moduleName) {
@@ -681,8 +2590,44 @@ class AdminCMSApp {
     }
   }
 
-  /* ----------------- 3. SERVICES & RATES VIEW ----------------- */
+  /* ----------------- 3. SERVICES & RATES VIEW (With Currency Management) ----------------- */
+  getCurrencyConfig() {
+    let cfg = { symbol: 'Rs.', code: 'LKR', position: 'prefix' };
+    if (this.settings && this.settings.currency_config) {
+      try {
+        const parsed = typeof this.settings.currency_config === 'string'
+          ? JSON.parse(this.settings.currency_config)
+          : this.settings.currency_config;
+        if (parsed && typeof parsed === 'object') {
+          cfg = { ...cfg, ...parsed };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const local = localStorage.getItem('mgr_setting_currency_config');
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object') cfg = { ...cfg, ...parsed };
+        }
+      } catch (e) {}
+    }
+    return cfg;
+  }
+
+  formatPrice(amount, isStartingFrom = false) {
+    const cfg = this.getCurrencyConfig();
+    const num = Number(amount || 0);
+    const numStr = isNaN(num) ? String(amount) : num.toLocaleString();
+    const fromPrefix = isStartingFrom ? 'From ' : '';
+    if (cfg.position === 'suffix') {
+      return `${fromPrefix}${numStr} ${cfg.symbol}`;
+    }
+    return `${fromPrefix}${cfg.symbol} ${numStr}`;
+  }
+
   renderServicesView() {
+    const curr = this.getCurrencyConfig();
+    const currSym = curr.symbol || 'Rs.';
     let pricingMatrix = {
       hourly: { bicycle: 100, moto: 500, car: 1500 },
       halfday: { bicycle: 400, moto: 1800, car: 5000 },
@@ -723,7 +2668,7 @@ class AdminCMSApp {
                 <th>Service Name & Description</th>
                 <th>Icon</th>
                 <th>Price Source</th>
-                <th>Display Rate</th>
+                <th>Display Rate (${this.escapeHtml(currSym)})</th>
                 <th>Unit</th>
                 <th>Status</th>
                 <th style="width: 170px;">Actions</th>
@@ -758,7 +2703,7 @@ class AdminCMSApp {
                       ${svc.price_source === 'AUTO' ? 'AUTO (Rental DB)' : 'MANUAL'}
                     </span>
                   </td>
-                  <td><strong>Rs. ${svc.manual_price || 100}</strong></td>
+                  <td><strong>${this.formatPrice(svc.manual_price || 100)}</strong></td>
                   <td>${this.escapeHtml(svc.price_unit || 'per hour')}</td>
                   <td>
                     <span class="badge ${svc.status === 'published' ? 'badge-published' : 'badge-draft'}">
@@ -812,15 +2757,15 @@ class AdminCMSApp {
             </div>
             
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-hourly-bike" value="${pricingMatrix.hourly.bicycle || 100}">
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-hourly-moto" value="${pricingMatrix.hourly.moto || 500}">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From ${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-hourly-car" value="${pricingMatrix.hourly.car || 1500}">
             </div>
           </div>
@@ -838,15 +2783,15 @@ class AdminCMSApp {
             </div>
             
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-halfday-bike" value="${pricingMatrix.halfday.bicycle || 400}">
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-halfday-moto" value="${pricingMatrix.halfday.moto || 1800}">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From ${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-halfday-car" value="${pricingMatrix.halfday.car || 5000}">
             </div>
           </div>
@@ -864,15 +2809,15 @@ class AdminCMSApp {
             </div>
             
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-bicycle" style="color: var(--primary);"></i> Bicycle (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-fullday-bike" value="${pricingMatrix.fullday.bicycle || 800}">
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-motorcycle" style="color: #0284c7;"></i> Motorcycle / Scooter (${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-fullday-moto" value="${pricingMatrix.fullday.moto || 3500}">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From Rs.)</label>
+              <label class="form-label" style="font-size: 12px;"><i class="fa-solid fa-van-shuttle" style="color: #d97706;"></i> Car / Van / Bus (From ${this.escapeHtml(currSym)})</label>
               <input type="number" class="form-input" id="dur-fullday-car" value="${pricingMatrix.fullday.car || 9500}">
             </div>
           </div>
@@ -1514,6 +3459,7 @@ class AdminCMSApp {
   /* ----------------- 5. OFFERS VIEW ----------------- */
   renderOffersView() {
     return `
+      ${this.renderOfferAnimationCard()}
       <div class="card">
         <div class="card-header">
           <h3 class="card-title"><i class="fa-solid fa-gift"></i> Active & Scheduled Promotional Offers</h3>
@@ -1575,7 +3521,364 @@ class AdminCMSApp {
     `;
   }
 
-  bindOffersEvents() {}
+  bindOffersEvents() {
+    this.updateOfferAnimationPreview();
+  }
+
+  /* ----------------- OFFER ANIMATION CONTROLS (Item 3) ----------------- */
+  getOfferAnimationConfig() {
+    let cfg = {
+      enabled: true,
+      style: 'all-combined',
+      speed: 'normal',
+      badge_pulse: true,
+      button_bounce: true
+    };
+    if (this.settings && this.settings.offer_animation_config) {
+      try {
+        const parsed = typeof this.settings.offer_animation_config === 'string'
+          ? JSON.parse(this.settings.offer_animation_config)
+          : this.settings.offer_animation_config;
+        if (parsed && typeof parsed === 'object') {
+          cfg = { ...cfg, ...parsed };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const localVal = localStorage.getItem('mgr_setting_offer_animation_config');
+        if (localVal) {
+          cfg = { ...cfg, ...JSON.parse(localVal) };
+        }
+      } catch (e) {}
+    }
+    return cfg;
+  }
+
+  renderOfferAnimationCard() {
+    const cfg = this.getOfferAnimationConfig();
+    const isEnabled = cfg.enabled !== false;
+    const style = cfg.style || 'all-combined';
+    const speed = cfg.speed || 'normal';
+    const badgePulse = cfg.badge_pulse !== false;
+    const buttonBounce = cfg.button_bounce !== false;
+
+    // Get current top offer details for preview
+    const topOffer = (this.offers && this.offers.length > 0) ? this.offers[0] : {
+      title: "Early Bird Sunrise Cycling Special",
+      discount_value: "20% OFF 2nd Hour",
+      description: "Rent any hybrid or city cycle before 07:00 AM and get 20% discount!",
+      button_text: "Claim Offer"
+    };
+
+    return `
+      <div class="card offer-anim-card" id="offer-anim-control-card">
+        <div class="card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: 16px; margin-bottom: 20px;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-wand-magic-sparkles" style="color: #10b981;"></i> 
+              Promotional Offer Banner Animation & Motion Controls
+            </h3>
+            <p style="font-size: 13px; color: var(--slate-500); margin-top: 4px;">
+              Capture traveler attention with dynamic motion effects: shimmering light sweep, breathing glow, and pulsing CTA buttons.
+            </p>
+          </div>
+          <div class="offer-anim-toggle-wrapper">
+            <span id="offer-anim-status-badge" class="badge ${isEnabled ? 'badge-published' : 'badge-draft'}" style="font-size: 12px; padding: 4px 10px;">
+              ${isEnabled ? '<i class="fa-solid fa-bolt"></i> Animation Active' : '<i class="fa-solid fa-power-off"></i> Animation Disabled'}
+            </span>
+            <label class="offer-toggle-switch" title="Toggle Offer Banner Animation">
+              <input type="checkbox" id="offer-anim-master-toggle" ${isEnabled ? 'checked' : ''} onchange="window.adminCMS.handleOfferAnimToggle(this.checked)">
+              <span class="offer-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div id="offer-anim-settings-body" style="opacity: ${isEnabled ? '1' : '0.5'}; pointer-events: ${isEnabled ? 'auto' : 'none'}; transition: opacity 0.2s ease;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            
+            <!-- Style Mode Selector -->
+            <div>
+              <label class="form-label" style="font-weight: 700; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-layer-group" style="color:#059669;"></i> Animation Style Preset
+              </label>
+              <div class="wp-btn-group" id="offer-anim-style-group" style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn btn-outline ${style === 'all-combined' ? 'active' : ''}" style="justify-content: flex-start; text-align: left; padding: 10px 14px; ${style === 'all-combined' ? 'background:#ecfdf5; border-color:#059669; color:#065f46; font-weight:700;' : ''}" onclick="window.adminCMS.setOfferAnimStyle('all-combined')">
+                  <span style="font-size:16px; margin-right:8px;">🔥</span>
+                  <div>
+                    <div style="font-weight:700;">All-in-One Showcase (Recommended)</div>
+                    <div style="font-size:11px; opacity:0.8;">Liquid light sweep + Breathing emerald-gold glow + Badge & button bounce</div>
+                  </div>
+                </button>
+                <button type="button" class="btn btn-outline ${style === 'shimmer-wave' ? 'active' : ''}" style="justify-content: flex-start; text-align: left; padding: 10px 14px; ${style === 'shimmer-wave' ? 'background:#ecfdf5; border-color:#059669; color:#065f46; font-weight:700;' : ''}" onclick="window.adminCMS.setOfferAnimStyle('shimmer-wave')">
+                  <span style="font-size:16px; margin-right:8px;">✨</span>
+                  <div>
+                    <div style="font-weight:700;">Shimmer Wave Only</div>
+                    <div style="font-size:11px; opacity:0.8;">Reflective light stream continuously sweeping across the banner ribbon</div>
+                  </div>
+                </button>
+                <button type="button" class="btn btn-outline ${style === 'pulse-glow' ? 'active' : ''}" style="justify-content: flex-start; text-align: left; padding: 10px 14px; ${style === 'pulse-glow' ? 'background:#ecfdf5; border-color:#059669; color:#065f46; font-weight:700;' : ''}" onclick="window.adminCMS.setOfferAnimStyle('pulse-glow')">
+                  <span style="font-size:16px; margin-right:8px;">🌟</span>
+                  <div>
+                    <div style="font-weight:700;">Breathing Glow Aura</div>
+                    <div style="font-size:11px; opacity:0.8;">Subtle ambient golden-emerald pulsation along the border and background</div>
+                  </div>
+                </button>
+                <button type="button" class="btn btn-outline ${style === 'bounce-cta' ? 'active' : ''}" style="justify-content: flex-start; text-align: left; padding: 10px 14px; ${style === 'bounce-cta' ? 'background:#ecfdf5; border-color:#059669; color:#065f46; font-weight:700;' : ''}" onclick="window.adminCMS.setOfferAnimStyle('bounce-cta')">
+                  <span style="font-size:16px; margin-right:8px;">🎁</span>
+                  <div>
+                    <div style="font-weight:700;">Vibrant CTA Bounce</div>
+                    <div style="font-size:11px; opacity:0.8;">Gentle micro-bounce and gift icon wobble on the action elements</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Speed & Fine Tuning -->
+            <div>
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 700; display:flex; align-items:center; gap:6px;">
+                  <i class="fa-solid fa-gauge-high" style="color:#059669;"></i> Motion Speed / Cycle Rate
+                </label>
+                <div class="wp-chip-group" id="offer-anim-speed-group">
+                  <button type="button" class="wp-chip ${speed === 'fast' ? 'active' : ''}" onclick="window.adminCMS.setOfferAnimSpeed('fast')">⚡ Fast (1.8s)</button>
+                  <button type="button" class="wp-chip ${speed === 'normal' ? 'active' : ''}" onclick="window.adminCMS.setOfferAnimSpeed('normal')">⏱️ Standard (3.2s)</button>
+                  <button type="button" class="wp-chip ${speed === 'gentle' ? 'active' : ''}" onclick="window.adminCMS.setOfferAnimSpeed('gentle')">🍃 Relaxed (5.0s)</button>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" style="font-weight: 700; display:flex; align-items:center; gap:6px;">
+                  <i class="fa-solid fa-sliders" style="color:#059669;"></i> Target Element Accents
+                </label>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    <input type="checkbox" id="offer-badge-pulse-chk" ${badgePulse ? 'checked' : ''} onchange="window.adminCMS.handleOfferSubToggle()">
+                    <span>Animate Discount Badge (Heartbeat Pulse & Sparkle Halo)</span>
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    <input type="checkbox" id="offer-button-bounce-chk" ${buttonBounce ? 'checked' : ''} onchange="window.adminCMS.handleOfferSubToggle()">
+                    <span>Animate Action Button (Gift Icon Wobble & CTA Nudge)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Quick Status Info -->
+              <div style="background: #f1f5f9; border-radius: 8px; padding: 12px; font-size: 12px; color: var(--slate-600); line-height: 1.5;">
+                <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i>
+                Changes are tested in real time below. Click <strong>Save Offer Animation Settings</strong> to publish immediately to the live website.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Live Interactive Preview Canvas -->
+          <div class="offer-preview-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+              <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--slate-500);">
+                <i class="fa-solid fa-eye"></i> Live Interactive Banner Preview
+              </span>
+              <span id="offer-preview-state-indicator" style="font-size: 11px; font-weight: 700; color: ${isEnabled ? '#059669' : '#dc2626'};">
+                ${isEnabled ? '● Live Animation Playing' : '○ Static Banner (Animation OFF)'}
+              </span>
+            </div>
+            
+            <div id="offer-preview-banner" class="offer-preview-banner-bar ${isEnabled ? 'offer-animated offer-speed-' + speed : ''} ${isEnabled && (style === 'shimmer-wave' || style === 'all-combined') ? 'offer-anim-shimmer' : ''} ${isEnabled && (style === 'pulse-glow' || style === 'all-combined') ? 'offer-anim-glow' : ''}">
+              <span class="offer-preview-badge ${isEnabled && badgePulse ? 'offer-badge-pulse' : ''}" id="offer-preview-badge-el">
+                ${this.escapeHtml(topOffer.discount_value || 'SPECIAL OFFER')}
+              </span>
+              <span style="font-weight: 700;" id="offer-preview-title-el">
+                ${this.escapeHtml(topOffer.title || 'Special Promotion Deal')}
+              </span>
+              <span style="font-weight: 400; opacity: 0.9; display: none; @media(min-width:768px){display:inline;}" class="preview-desc-text">
+                ${this.escapeHtml(topOffer.description || '')}
+              </span>
+              <button class="offer-preview-btn ${isEnabled && buttonBounce ? 'offer-btn-bounce' : ''}" id="offer-preview-btn-el">
+                <i class="fa-solid fa-gift"></i> <span>${this.escapeHtml(topOffer.button_text || 'Claim Offer')}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Save Button Bar -->
+          <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-primary" id="btn-save-offer-anim" onclick="window.adminCMS.saveOfferAnimationSettings()" style="padding: 10px 24px; font-weight: 700; font-size: 14px;">
+              <i class="fa-solid fa-floppy-disk"></i> Save Offer Animation Settings
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
+  handleOfferAnimToggle(isChecked) {
+    const badge = document.getElementById('offer-anim-status-badge');
+    const body = document.getElementById('offer-anim-settings-body');
+    const ind = document.getElementById('offer-preview-state-indicator');
+    if (badge) {
+      badge.className = `badge ${isChecked ? 'badge-published' : 'badge-draft'}`;
+      badge.innerHTML = isChecked ? '<i class="fa-solid fa-bolt"></i> Animation Active' : '<i class="fa-solid fa-power-off"></i> Animation Disabled';
+    }
+    if (body) {
+      body.style.opacity = isChecked ? '1' : '0.5';
+      body.style.pointerEvents = isChecked ? 'auto' : 'none';
+    }
+    if (ind) {
+      ind.textContent = isChecked ? '● Live Animation Playing' : '○ Static Banner (Animation OFF)';
+      ind.style.color = isChecked ? '#059669' : '#dc2626';
+    }
+    this.updateOfferAnimationPreview();
+  }
+
+  setOfferAnimStyle(selectedStyle) {
+    const group = document.getElementById('offer-anim-style-group');
+    if (group) {
+      const btns = group.querySelectorAll('button');
+      btns.forEach(b => {
+        b.classList.remove('active');
+        b.style.background = '';
+        b.style.borderColor = '';
+        b.style.color = '';
+      });
+      const targetBtn = Array.from(btns).find(b => b.getAttribute('onclick')?.includes(selectedStyle));
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.style.background = '#ecfdf5';
+        targetBtn.style.borderColor = '#059669';
+        targetBtn.style.color = '#065f46';
+      }
+    }
+    this.updateOfferAnimationPreview();
+  }
+
+  setOfferAnimSpeed(selectedSpeed) {
+    const group = document.getElementById('offer-anim-speed-group');
+    if (group) {
+      group.querySelectorAll('.wp-chip').forEach(c => c.classList.remove('active'));
+      const targetChip = Array.from(group.querySelectorAll('.wp-chip')).find(c => c.getAttribute('onclick')?.includes(selectedSpeed));
+      if (targetChip) targetChip.classList.add('active');
+    }
+    this.updateOfferAnimationPreview();
+  }
+
+  handleOfferSubToggle() {
+    this.updateOfferAnimationPreview();
+  }
+
+  getCurrentOfferAnimState() {
+    const toggle = document.getElementById('offer-anim-master-toggle');
+    const isEnabled = toggle ? toggle.checked : true;
+
+    let style = 'all-combined';
+    const activeStyleBtn = document.querySelector('#offer-anim-style-group button.active');
+    if (activeStyleBtn) {
+      const onclickAttr = activeStyleBtn.getAttribute('onclick') || '';
+      if (onclickAttr.includes('shimmer-wave')) style = 'shimmer-wave';
+      else if (onclickAttr.includes('pulse-glow')) style = 'pulse-glow';
+      else if (onclickAttr.includes('bounce-cta')) style = 'bounce-cta';
+      else style = 'all-combined';
+    }
+
+    let speed = 'normal';
+    const activeSpeedChip = document.querySelector('#offer-anim-speed-group .wp-chip.active');
+    if (activeSpeedChip) {
+      const onclickAttr = activeSpeedChip.getAttribute('onclick') || '';
+      if (onclickAttr.includes('fast')) speed = 'fast';
+      else if (onclickAttr.includes('gentle')) speed = 'gentle';
+      else speed = 'normal';
+    }
+
+    const badgePulse = document.getElementById('offer-badge-pulse-chk')?.checked !== false;
+    const buttonBounce = document.getElementById('offer-button-bounce-chk')?.checked !== false;
+
+    return {
+      enabled: isEnabled,
+      style,
+      speed,
+      badge_pulse: badgePulse,
+      button_bounce: buttonBounce
+    };
+  }
+
+  updateOfferAnimationPreview() {
+    const state = this.getCurrentOfferAnimState();
+    const banner = document.getElementById('offer-preview-banner');
+    const badge = document.getElementById('offer-preview-badge-el');
+    const btn = document.getElementById('offer-preview-btn-el');
+
+    if (!banner) return;
+
+    banner.className = 'offer-preview-banner-bar';
+    if (badge) badge.className = 'offer-preview-badge';
+    if (btn) btn.className = 'offer-preview-btn';
+
+    if (!state.enabled) {
+      return; // Disabled
+    }
+
+    banner.classList.add('offer-animated');
+    banner.classList.add(`offer-speed-${state.speed}`);
+
+    if (state.style === 'shimmer-wave') {
+      banner.classList.add('offer-anim-shimmer');
+    } else if (state.style === 'pulse-glow') {
+      banner.classList.add('offer-anim-glow');
+    } else if (state.style === 'bounce-cta') {
+      // CTA only
+    } else { // 'all-combined'
+      banner.classList.add('offer-anim-shimmer', 'offer-anim-glow');
+    }
+
+    if (state.badge_pulse && badge) {
+      badge.classList.add('offer-badge-pulse');
+    }
+    if (state.button_bounce && btn) {
+      btn.classList.add('offer-btn-bounce');
+    }
+  }
+
+  async saveOfferAnimationSettings() {
+    const state = this.getCurrentOfferAnimState();
+    const saveBtn = document.getElementById('btn-save-offer-anim');
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving Settings...';
+    }
+
+    try {
+      // 1. Save to Supabase website_settings
+      const { error } = await this.supabase
+        .from('website_settings')
+        .upsert({
+          setting_key: 'offer_animation_config',
+          setting_value: JSON.stringify(state),
+          is_public: true,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // 2. Cache in localStorage for immediate sync
+      localStorage.setItem('mgr_setting_offer_animation_config', JSON.stringify(state));
+
+      // 3. Update local instance state
+      this.settings.offer_animation_config = state;
+
+      await this.logAudit("UPDATE", "SETTINGS", "offer_animation_config", state);
+      this.showToast("Offer banner animation settings saved successfully!", "success");
+    } catch (err) {
+      console.error("Error saving offer animation settings:", err);
+      // Fallback: save to localStorage even if DB fails
+      localStorage.setItem('mgr_setting_offer_animation_config', JSON.stringify(state));
+      this.settings.offer_animation_config = state;
+      this.showToast("Saved to local storage! " + (err.message || ""), "warning");
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Offer Animation Settings';
+      }
+    }
+  }
 
   openAddOfferModal() {
     this.openModal('add-offer-modal');
@@ -3072,17 +5375,25 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           ? JSON.parse(this.settings.transport_categories)
           : this.settings.transport_categories;
         if (Array.isArray(list) && list.length) {
-          return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+          return list.map(c => {
+            const nLower = (c.name || '').toLowerCase();
+            const iLower = (c.id || '').toLowerCase();
+            const isRates = nLower.includes('bike') || nLower.includes('bicycle') || nLower.includes('motorcycle') || nLower.includes('scooter') || iLower.includes('bike') || iLower.includes('moto');
+            return {
+              ...c,
+              target_url: c.target_url || (isRates ? '#pricing-rates' : '#booking')
+            };
+          }).sort((a, b) => (a.order || 0) - (b.order || 0));
         }
       } catch (e) {}
     }
     return [
-      { id: 'cat-bike', name: 'Bicycle', i18n: 'cat_bike', subtext: 'Fitness & City', badge: 'Rs. 100/hr', icon: 'fa-solid fa-bicycle', color: 'emerald', preselect: 'Bicycle (Rs. 100/hr)', package: 'Hourly Rental', status: 'active', order: 1 },
-      { id: 'cat-moto', name: 'Motorcycle', i18n: 'cat_moto', subtext: 'Scooter & Tour', badge: '', icon: 'fa-solid fa-motorcycle', color: 'sky', preselect: 'Motorcycle / Scooter', package: 'Hourly Rental', status: 'active', order: 2 },
-      { id: 'cat-car', name: 'Car', i18n: 'cat_car', subtext: 'Alto, Sedan', badge: '', icon: 'fa-solid fa-car', color: 'blue', preselect: 'Car / Sedan / Hatchback', package: 'Hourly Rental', status: 'active', order: 3 },
-      { id: 'cat-van', name: 'Van', i18n: 'cat_van', subtext: 'KDH, 10-15 Seat', badge: '', icon: 'fa-solid fa-van-shuttle', color: 'amber', preselect: 'Passenger Van (KDH / Caravan)', package: 'Half-Day (4-5 hrs)', status: 'active', order: 4 },
-      { id: 'cat-bus', name: 'Tourist Bus', i18n: 'cat_bus', subtext: '24-42 Coach', badge: '', icon: 'fa-solid fa-bus', color: 'purple', preselect: 'Tourist Bus / Mini-Bus', package: 'Full Day (24 hrs)', status: 'active', order: 5 },
-      { id: 'cat-boat', name: 'Boat', i18n: 'cat_boat', subtext: 'Lagoon & Islands', badge: 'Safari', icon: 'fa-solid fa-ship', color: 'teal', preselect: 'Boat / Lagoon & Island Safari', package: 'Multi-day Passenger Tour', status: 'active', order: 6 }
+      { id: 'cat-bike', name: 'Bicycle', i18n: 'cat_bike', subtext: 'Fitness & City', badge: 'Rs. 100/hr', icon: 'fa-solid fa-bicycle', color: 'emerald', preselect: 'Bicycle (Rs. 100/hr)', package: 'Hourly Rental', target_url: '#pricing-rates', status: 'active', order: 1 },
+      { id: 'cat-moto', name: 'Motorcycle', i18n: 'cat_moto', subtext: 'Scooter & Tour', badge: '', icon: 'fa-solid fa-motorcycle', color: 'sky', preselect: 'Motorcycle / Scooter', package: 'Hourly Rental', target_url: '#pricing-rates', status: 'active', order: 2 },
+      { id: 'cat-car', name: 'Car', i18n: 'cat_car', subtext: 'Alto, Sedan', badge: '', icon: 'fa-solid fa-car', color: 'blue', preselect: 'Car / Sedan / Hatchback', package: 'Hourly Rental', target_url: '#booking', status: 'active', order: 3 },
+      { id: 'cat-van', name: 'Van', i18n: 'cat_van', subtext: 'KDH, 10-15 Seat', badge: '', icon: 'fa-solid fa-van-shuttle', color: 'amber', preselect: 'Passenger Van (KDH / Caravan)', package: 'Half-Day (4-5 hrs)', target_url: '#booking', status: 'active', order: 4 },
+      { id: 'cat-bus', name: 'Tourist Bus', i18n: 'cat_bus', subtext: '24-42 Coach', badge: '', icon: 'fa-solid fa-bus', color: 'purple', preselect: 'Tourist Bus / Mini-Bus', package: 'Full Day (24 hrs)', target_url: '#booking', status: 'active', order: 5 },
+      { id: 'cat-boat', name: 'Boat', i18n: 'cat_boat', subtext: 'Lagoon & Islands', badge: 'Safari', icon: 'fa-solid fa-ship', color: 'teal', preselect: 'Boat / Lagoon & Island Safari', package: 'Multi-day Passenger Tour', target_url: '#booking', status: 'active', order: 6 }
     ];
   }
 
@@ -3113,6 +5424,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
                 <th>Badge / Rate Tag</th>
                 <th>Theme Accent</th>
                 <th>Booking Preselect</th>
+                <th>Target Navigation</th>
                 <th>Status</th>
                 <th style="width: 180px;">Actions</th>
               </tr>
@@ -3142,6 +5454,19 @@ ${safetyTips.map(t => "• " + t).join('\n')}
                     <span class="badge badge-${this.escapeHtml(cat.color || 'emerald')}">${this.escapeHtml((cat.color || 'emerald').toUpperCase())}</span>
                   </td>
                   <td><code style="font-size: 11px;">${this.escapeHtml(cat.preselect || cat.name)}</code></td>
+                  <td>
+                    ${(() => {
+                      const nLower = (cat.name || '').toLowerCase();
+                      const isRates = nLower.includes('bike') || nLower.includes('bicycle') || nLower.includes('motorcycle') || nLower.includes('scooter') || cat.target_url === '#pricing-rates';
+                      const isBooking = !isRates;
+                      return `
+                        <span class="badge ${isBooking ? 'badge-published' : 'badge-draft'}" style="font-size: 11px; white-space: nowrap;">
+                          <i class="fa-solid ${isBooking ? 'fa-calendar-check' : 'fa-tags'}"></i>
+                          ${isBooking ? 'Top Booking (#booking)' : 'Rates Matrix (#pricing-rates)'}
+                        </span>
+                      `;
+                    })()}
+                  </td>
                   <td>
                     <span class="badge ${cat.status === 'active' ? 'badge-published' : 'badge-draft'}">
                       <i class="fa-solid ${cat.status === 'active' ? 'fa-check' : 'fa-ban'}"></i> ${cat.status === 'active' ? 'Active' : 'Disabled'}
@@ -3184,6 +5509,9 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('edit-cat-status-input').value = 'active';
     document.getElementById('edit-cat-preselect-input').value = '';
     document.getElementById('edit-cat-package-input').value = 'Hourly Rental';
+    if (document.getElementById('edit-cat-target-url')) {
+      document.getElementById('edit-cat-target-url').value = '#booking';
+    }
     this.openModal('category-modal');
   }
 
@@ -3204,6 +5532,11 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     document.getElementById('edit-cat-status-input').value = cat.status || 'active';
     document.getElementById('edit-cat-preselect-input').value = cat.preselect || cat.name || '';
     document.getElementById('edit-cat-package-input').value = cat.package || 'Hourly Rental';
+    if (document.getElementById('edit-cat-target-url')) {
+      const nLower = (cat.name || '').toLowerCase();
+      const isRates = nLower.includes('bike') || nLower.includes('bicycle') || nLower.includes('motorcycle') || nLower.includes('scooter');
+      document.getElementById('edit-cat-target-url').value = cat.target_url || (isRates ? '#pricing-rates' : '#booking');
+    }
 
     this.openModal('category-modal');
   }
@@ -3219,6 +5552,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     const status = document.getElementById('edit-cat-status-input')?.value || 'active';
     const preselect = document.getElementById('edit-cat-preselect-input')?.value.trim() || name;
     const pkg = document.getElementById('edit-cat-package-input')?.value || 'Hourly Rental';
+    const target_url = document.getElementById('edit-cat-target-url')?.value || '#booking';
 
     if (!name) {
       this.showToast("Category name is required!", "error");
@@ -3241,6 +5575,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           status,
           preselect,
           package: pkg,
+          target_url,
           updated_at: new Date().toISOString()
         };
       }
@@ -3258,6 +5593,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         status,
         preselect,
         package: pkg,
+        target_url,
         order: maxOrder + 1,
         created_at: new Date().toISOString()
       });
@@ -3596,7 +5932,37 @@ ${safetyTips.map(t => "• " + t).join('\n')}
 
   /* ----------------- 11. SETTINGS & AUDIT LOG VIEW ----------------- */
   renderSettingsView() {
-    const s = this.settings;
+    const s = this.settings || {};
+
+    let floatConfig = {
+      enabled: true,
+      words: ['Book Now', 'Ride Now', 'Explore Mannar'],
+      target_url: 'https://booking.mannargreenride.com/',
+      interval_seconds: 2.6
+    };
+
+    if (s.floating_booking_config) {
+      try {
+        const parsed = typeof s.floating_booking_config === 'string'
+          ? JSON.parse(s.floating_booking_config)
+          : s.floating_booking_config;
+        if (parsed && typeof parsed === 'object') {
+          floatConfig = { ...floatConfig, ...parsed };
+        }
+      } catch (e) {}
+    } else {
+      try {
+        const localCfg = localStorage.getItem('mgr_setting_floating_booking_config');
+        if (localCfg) {
+          floatConfig = { ...floatConfig, ...JSON.parse(localCfg) };
+        }
+      } catch (e) {}
+    }
+
+    const floatWords = Array.isArray(floatConfig.words) && floatConfig.words.length > 0
+      ? floatConfig.words
+      : ['Book Now', 'Ride Now', 'Explore Mannar'];
+
     return `
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <!-- Global Settings Form -->
@@ -3670,8 +6036,150 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         </div>
       </div>
 
+      <!-- Currency Symbol & Pricing Format Settings (Item 6) -->
+      ${(() => {
+        const curr = this.getCurrencyConfig();
+        const isPreset = ['Rs.', 'LKR', '$', '€', '£'].includes(curr.symbol);
+        return `
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 class="card-title"><i class="fa-solid fa-coins" style="color: #f59e0b;"></i> Currency Symbol &amp; Pricing Display</h3>
+              <p style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+                Configure the currency symbol, placement, and ISO code. Synchronizes automatically across the Rates Matrix, Fleet Listings, Category Badges, and Calculator.
+              </p>
+            </div>
+            <span class="badge badge-published" id="currency-badge-preview">Active: ${this.escapeHtml(curr.symbol)} (${this.escapeHtml(curr.code || 'LKR')})</span>
+          </div>
+          <form id="currency-settings-form">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Preset Currency</label>
+                <select class="form-select" id="set-currency-preset">
+                  <option value="Rs.|LKR" ${curr.symbol === 'Rs.' && (curr.code === 'LKR' || !curr.code) ? 'selected' : ''}>Rs. — Sri Lankan Rupee (Default)</option>
+                  <option value="LKR|LKR" ${curr.symbol === 'LKR' ? 'selected' : ''}>LKR — ISO Code (Sri Lankan Rupee)</option>
+                  <option value="$|USD" ${curr.symbol === '$' ? 'selected' : ''}>$ — US Dollar (USD)</option>
+                  <option value="€|EUR" ${curr.symbol === '€' ? 'selected' : ''}>€ — Euro (EUR)</option>
+                  <option value="£|GBP" ${curr.symbol === '£' ? 'selected' : ''}>£ — British Pound (GBP)</option>
+                  <option value="custom" ${!isPreset ? 'selected' : ''}>Custom Symbol / Code</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="group-custom-symbol" style="${isPreset ? 'display: none;' : ''}">
+                <label class="form-label" style="font-weight: 700;">Custom Currency Symbol</label>
+                <input type="text" class="form-input" id="set-currency-symbol" value="${this.escapeHtml(curr.symbol || 'Rs.')}" placeholder="e.g. AUD, CHF, ₹">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Currency ISO Code</label>
+                <input type="text" class="form-input" id="set-currency-code" value="${this.escapeHtml(curr.code || 'LKR')}" placeholder="e.g. LKR, USD, EUR">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Symbol Placement / Position</label>
+                <select class="form-select" id="set-currency-position">
+                  <option value="prefix" ${curr.position !== 'suffix' ? 'selected' : ''}>Prefix (Before Amount: Rs. 100, $100)</option>
+                  <option value="suffix" ${curr.position === 'suffix' ? 'selected' : ''}>Suffix (After Amount: 100 LKR, 100 Rs.)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live Dynamic Preview Canvas -->
+            <div style="background: #f8fafc; border: 1.5px dashed var(--slate-300); border-radius: 10px; padding: 14px 18px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: var(--slate-500); letter-spacing: 0.5px;">Live Pricing Preview:</span>
+                <div id="currency-live-sample" style="font-size: 15px; font-weight: 800; color: var(--primary); margin-top: 4px;">
+                  ${this.formatPrice(100)}/hr &nbsp;|&nbsp; Half-Day: ${this.formatPrice(400)} &nbsp;|&nbsp; Car: ${this.formatPrice(1500, true)}/hr
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-floppy-disk"></i> Save Currency Settings
+              </button>
+            </div>
+          </form>
+        </div>
+        `;
+      })()}
+
+      <!-- Floating Booking & Explorer Button Settings -->
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-compass" style="color: #10b981;"></i> Floating Booking & Explore Button</h3>
+          <span class="badge ${floatConfig.enabled !== false ? 'badge-published' : 'badge-archived'}" id="float-badge-status">
+            ${floatConfig.enabled !== false ? 'Active & Displayed' : 'Disabled'}
+          </span>
+        </div>
+        <form id="floating-btn-settings-form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Rotating Words / Phrases</label>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; width: 60px; color: var(--slate-600);">Word 1:</span>
+                    <input type="text" class="form-input" id="set-float-word-1" placeholder="Book Now" value="${this.escapeHtml(floatWords[0] || 'Book Now')}">
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; width: 60px; color: var(--slate-600);">Word 2:</span>
+                    <input type="text" class="form-input" id="set-float-word-2" placeholder="Ride Now" value="${this.escapeHtml(floatWords[1] || 'Ride Now')}">
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 11px; font-weight: 700; width: 60px; color: var(--slate-600);">Word 3:</span>
+                    <input type="text" class="form-input" id="set-float-word-3" placeholder="Explore Mannar" value="${this.escapeHtml(floatWords[2] || 'Explore Mannar')}">
+                  </div>
+                </div>
+                <small style="color: var(--slate-500); font-size: 11px; margin-top: 4px; display: block;">
+                  These words cycle dynamically on the floating button above the WhatsApp button.
+                </small>
+              </div>
+
+              <div class="form-group" style="margin-top: 12px;">
+                <label class="form-label">Rotation Interval (Seconds)</label>
+                <input type="number" class="form-input" id="set-float-interval" min="1.0" max="10.0" step="0.2" value="${floatConfig.interval_seconds || 2.6}">
+              </div>
+            </div>
+
+            <div>
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Navigation Target Destination URL</label>
+                <input type="url" class="form-input" id="set-float-url" value="${this.escapeHtml(floatConfig.target_url || 'https://booking.mannargreenride.com/')}" placeholder="https://booking.mannargreenride.com/">
+                <small style="color: var(--slate-500); font-size: 11px; margin-top: 4px; display: block;">
+                  When clicked, user navigates directly to this booking portal.
+                </small>
+              </div>
+
+              <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Button Visibility</label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 6px;">
+                  <input type="checkbox" id="set-float-enabled" ${floatConfig.enabled !== false ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: #10b981;">
+                  <span style="font-size: 13px; font-weight: 600; color: var(--slate-800);">Enable and show floating button on website</span>
+                </label>
+              </div>
+
+              <!-- C-Panel Live Preview -->
+              <div style="margin-top: 18px; padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">C-Panel Dynamic Preview</div>
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 9px 18px; border-radius: 9999px; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(5,150,105,0.35);">
+                  <i class="fa-solid fa-calendar-check" style="color: #fef08a;"></i>
+                  <span id="cpanel-float-preview-text">${this.escapeHtml(floatWords[0] || 'Book Now')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;"><i class="fa-solid fa-floppy-disk"></i> Save Floating Button Settings</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Promotional Offer Banner Animation Controls (Item 3) -->
+      <div style="margin-top: 24px;">
+        ${this.renderOfferAnimationCard()}
+      </div>
+
       <!-- Audit Trail Table -->
-      <div class="card">
+      <div class="card" style="margin-top: 24px;">
         <div class="card-header">
           <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent CMS Audit Trail</h3>
           <span class="badge badge-published">Live Audit Log</span>
@@ -3705,6 +6213,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
   }
 
   bindSettingsEvents() {
+    this.updateOfferAnimationPreview();
     const globalForm = document.getElementById('global-settings-form');
     if (globalForm) {
       globalForm.addEventListener('submit', async (e) => {
@@ -3736,6 +6245,131 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         await this.batchSaveSettings(settingsToUpdate);
       });
     }
+
+    // Floating Button Settings Form in C-Panel
+    const floatForm = document.getElementById('floating-btn-settings-form');
+    if (floatForm) {
+      const previewText = document.getElementById('cpanel-float-preview-text');
+      const w1 = document.getElementById('set-float-word-1');
+      const w2 = document.getElementById('set-float-word-2');
+      const w3 = document.getElementById('set-float-word-3');
+
+      // Live cycle preview in C-Panel
+      let previewIdx = 0;
+      if (this._floatPreviewTimer) clearInterval(this._floatPreviewTimer);
+      this._floatPreviewTimer = setInterval(() => {
+        if (!previewText) return;
+        const currentWords = [
+          w1?.value.trim() || 'Book Now',
+          w2?.value.trim() || 'Ride Now',
+          w3?.value.trim() || 'Explore Mannar'
+        ];
+        previewIdx = (previewIdx + 1) % currentWords.length;
+        previewText.textContent = currentWords[previewIdx];
+      }, 1800);
+
+      floatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const words = [
+          w1?.value.trim() || 'Book Now',
+          w2?.value.trim() || 'Ride Now',
+          w3?.value.trim() || 'Explore Mannar'
+        ].filter(Boolean);
+        const url = document.getElementById('set-float-url')?.value.trim() || 'https://booking.mannargreenride.com/';
+        const interval = parseFloat(document.getElementById('set-float-interval')?.value) || 2.6;
+        const enabled = document.getElementById('set-float-enabled')?.checked !== false;
+
+        const configObj = {
+          enabled: enabled,
+          words: words,
+          target_url: url,
+          interval_seconds: interval
+        };
+
+        const configJson = JSON.stringify(configObj);
+        await this.batchSaveSettings([
+          { key: 'floating_booking_config', val: configJson }
+        ]);
+
+        // Update local badge
+        const badge = document.getElementById('float-badge-status');
+        if (badge) {
+          badge.className = `badge ${enabled ? 'badge-published' : 'badge-archived'}`;
+          badge.textContent = enabled ? 'Active & Displayed' : 'Disabled';
+        }
+
+        this.showToast("Floating button words and destination saved successfully!", "success");
+      });
+    }
+
+    // Currency Settings Form in C-Panel (Item 6)
+    const currForm = document.getElementById('currency-settings-form');
+    if (currForm) {
+      const presetSelect = document.getElementById('set-currency-preset');
+      const customGroup = document.getElementById('group-custom-symbol');
+      const symbolInput = document.getElementById('set-currency-symbol');
+      const codeInput = document.getElementById('set-currency-code');
+      const posSelect = document.getElementById('set-currency-position');
+      const liveSample = document.getElementById('currency-live-sample');
+      const badgePreview = document.getElementById('currency-badge-preview');
+
+      const updateLiveCurrencyPreview = () => {
+        const sym = symbolInput?.value.trim() || 'Rs.';
+        const code = codeInput?.value.trim() || 'LKR';
+        const pos = posSelect?.value || 'prefix';
+        if (badgePreview) badgePreview.textContent = `Active: ${sym} (${code})`;
+        if (liveSample) {
+          const fmt = (amt, isFrom = false) => {
+            const num = Number(amt).toLocaleString();
+            const from = isFrom ? 'From ' : '';
+            return pos === 'suffix' ? `${from}${num} ${sym}` : `${from}${sym} ${num}`;
+          };
+          liveSample.innerHTML = `${fmt(100)}/hr &nbsp;|&nbsp; Half-Day: ${fmt(400)} &nbsp;|&nbsp; Car: ${fmt(1500, true)}/hr`;
+        }
+      };
+
+      if (presetSelect) {
+        presetSelect.addEventListener('change', () => {
+          const val = presetSelect.value;
+          if (val === 'custom') {
+            if (customGroup) customGroup.style.display = 'block';
+          } else {
+            if (customGroup) customGroup.style.display = 'none';
+            const [sym, code] = val.split('|');
+            if (symbolInput) symbolInput.value = sym;
+            if (codeInput) codeInput.value = code;
+          }
+          updateLiveCurrencyPreview();
+        });
+      }
+
+      [symbolInput, codeInput, posSelect].forEach(el => {
+        if (el) {
+          el.addEventListener('input', updateLiveCurrencyPreview);
+          el.addEventListener('change', updateLiveCurrencyPreview);
+        }
+      });
+
+      currForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const sym = symbolInput?.value.trim() || 'Rs.';
+        const code = codeInput?.value.trim() || 'LKR';
+        const pos = posSelect?.value || 'prefix';
+
+        const currPayload = {
+          symbol: sym,
+          code: code,
+          position: pos
+        };
+
+        const configJson = JSON.stringify(currPayload);
+        await this.batchSaveSettings([
+          { key: 'currency_config', val: configJson }
+        ]);
+
+        this.showToast(`Currency symbol saved as "${sym}" (${code}) and published to website!`, "success");
+      });
+    }
   }
 
   async batchSaveSettings(list) {
@@ -3754,6 +6388,9 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           }, { onConflict: 'setting_key' });
         if (error) throw error;
         this.settings[item.key] = item.val;
+        try {
+          localStorage.setItem('mgr_setting_' + item.key, item.val);
+        } catch (e) {}
       }
       await this.logAudit("SETTINGS_CHANGE", "SETTINGS", "global", { count: list.length });
       this.showToast("Settings updated successfully!", "success");

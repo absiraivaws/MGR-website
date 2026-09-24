@@ -294,6 +294,110 @@ body {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Floating Action Booking Button (Positioned above WhatsApp Button) */
+.floating-booking-btn {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+  color: #ffffff;
+  padding: 11px 19px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.42), 0 4px 10px rgba(0, 0, 0, 0.12);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.015em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.floating-booking-btn:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 32px rgba(5, 150, 105, 0.55), 0 6px 14px rgba(0, 0, 0, 0.15);
+  color: #ffffff;
+}
+
+.floating-booking-btn .booking-pulse-ring {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 9999px;
+  border: 2px solid rgba(16, 185, 129, 0.7);
+  animation: bookingBtnPulse 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes bookingBtnPulse {
+  0% {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+  60%, 100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+.booking-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+/* Continuously blinking & pulsing icon */
+.booking-icon-pulse {
+  font-size: 1.12rem;
+  display: inline-block;
+  color: #fef08a; /* Warm vibrant gold accent */
+  animation: bookingIconBlinkPulse 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(254, 240, 138, 0.85));
+}
+
+@keyframes bookingIconBlinkPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 4px rgba(254, 240, 138, 0.7));
+  }
+  50% {
+    transform: scale(1.28);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 11px rgba(254, 240, 138, 1));
+  }
+}
+
+/* Rotating text with smooth transitions */
+.floating-booking-text {
+  display: inline-block;
+  min-width: 96px;
+  text-align: left;
+  white-space: nowrap;
+  font-weight: 700;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.floating-booking-text.text-fade-out {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.floating-booking-text.text-fade-in {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
 /* Floating Action WhatsApp Button */
 .floating-wa-btn {
   position: fixed;
@@ -347,6 +451,18 @@ body {
   }
 }
 
+@media (max-width: 640px) {
+  .floating-booking-btn {
+    bottom: 80px;
+    right: 20px;
+    padding: 10px 15px;
+    font-size: 0.82rem;
+  }
+  .floating-booking-text {
+    min-width: 84px;
+  }
+}
+
 /* Card hover animation */
 .card-hover {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -391,7 +507,9 @@ body {
     animation: none;
     overflow-x: auto;
   }
-  .floating-wa-btn .pulse-ring {
+  .floating-wa-btn .pulse-ring,
+  .floating-booking-btn .booking-pulse-ring,
+  .booking-icon-pulse {
     animation: none;
   }
 }
@@ -871,4 +989,366 @@ body {
   .ga-countdown-circle { width: 140px; height: 140px; }
   .ga-countdown-num { font-size: 64px; }
 }
+
+/* ========================================================
+   PROMOTIONAL OFFER BANNER ANIMATIONS (Item 3)
+   ======================================================== */
+#promo-offer-banner {
+  transition: all 0.3s ease;
+}
+
+#promo-offer-banner.offer-animated {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Speed variable presets */
+#promo-offer-banner.offer-speed-fast {
+  --offer-anim-speed: 1.8s;
+}
+
+#promo-offer-banner.offer-speed-normal {
+  --offer-anim-speed: 3.2s;
+}
+
+#promo-offer-banner.offer-speed-gentle {
+  --offer-anim-speed: 5.0s;
+}
+
+/* 1. Shimmer Wave Sweep Effect */
+#promo-offer-banner.offer-anim-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.32) 50%,
+    rgba(254, 240, 138, 0.38) 70%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  z-index: 1;
+  animation: offerShimmerSweep var(--offer-anim-speed, 3.2s) ease-in-out infinite;
+}
+
+@keyframes offerShimmerSweep {
+  0% {
+    left: -80%;
+  }
+  60%, 100% {
+    left: 170%;
+  }
+}
+
+/* 2. Glow Pulse Effect */
+#promo-offer-banner.offer-anim-glow {
+  animation: offerPulseGlow var(--offer-anim-speed, 3.2s) ease-in-out infinite alternate;
+}
+
+@keyframes offerPulseGlow {
+  0% {
+    box-shadow: 0 2px 10px rgba(5, 150, 105, 0.35), inset 0 0 10px rgba(254, 240, 138, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  100% {
+    box-shadow: 0 4px 22px rgba(16, 185, 129, 0.75), inset 0 0 16px rgba(254, 240, 138, 0.35);
+    border-bottom: 1px solid rgba(254, 240, 138, 0.5);
+  }
+}
+
+/* 3. Discount Badge Pulse & Golden Sparkle */
+#promo-discount-badge.offer-badge-pulse {
+  display: inline-block;
+  animation: offerBadgeBeat calc(var(--offer-anim-speed, 3.2s) * 0.75) ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@keyframes offerBadgeBeat {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 12px 3px rgba(254, 240, 138, 0.65);
+    background-color: rgba(254, 240, 138, 0.3);
+    color: #ffffff;
+  }
+}
+
+/* 4. CTA Button Bounce & Floating Nudge */
+#promo-offer-btn.offer-btn-bounce {
+  position: relative;
+  z-index: 2;
+  animation: offerBtnNudge var(--offer-anim-speed, 3.2s) ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#promo-offer-btn.offer-btn-bounce:hover {
+  animation-play-state: paused;
+  transform: translateY(-2px) scale(1.05);
+}
+
+@keyframes offerBtnNudge {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  20% {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18), 0 0 10px rgba(254, 240, 138, 0.5);
+  }
+  35% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  48% {
+    transform: translateY(-1.5px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+  }
+  60% {
+    transform: translateY(0);
+  }
+}
+
+/* Gift icon subtle wobble */
+#promo-offer-btn.offer-btn-bounce i {
+  display: inline-block;
+  animation: offerGiftWobble var(--offer-anim-speed, 3.2s) ease-in-out infinite;
+}
+
+@keyframes offerGiftWobble {
+  0%, 25%, 100% {
+    transform: rotate(0);
+  }
+  5% {
+    transform: rotate(-14deg) scale(1.15);
+  }
+  10% {
+    transform: rotate(14deg) scale(1.15);
+  }
+  15% {
+    transform: rotate(-8deg);
+  }
+  20% {
+    transform: rotate(8deg);
+  }
+}
+
+/* Respect user accessibility motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  #promo-offer-banner.offer-animated,
+  #promo-offer-banner.offer-anim-shimmer::after,
+  #promo-offer-banner.offer-anim-glow,
+  #promo-discount-badge.offer-badge-pulse,
+  #promo-offer-btn.offer-btn-bounce,
+  #promo-offer-btn.offer-btn-bounce i {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   HERO MULTI-IMAGE CAROUSEL & SLIDER (Item 5)
+   ========================================================================== */
+#hero-slider-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1.03);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-slide.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-slider-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  padding: 0;
+  outline: none;
+}
+
+.hero-slider-dot.active {
+  width: 24px;
+  border-radius: 6px;
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+}
+
+.hero-slider-dot:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* ==========================================================================
+   HERO BACKGROUND & DETAIL LAYOUT ALIGNMENTS (Item 7)
+   ========================================================================== */
+#home {
+  transition: background 0.4s ease, padding 0.3s ease;
+  position: relative;
+}
+
+#home #hero-bg-overlay {
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+  z-index: 1;
+}
+
+#hero-content-container {
+  position: relative;
+  z-index: 10;
+  transition: max-width 0.3s ease, text-align 0.25s ease;
+}
+
+/* Details Alignment Classes */
+#hero-content-container.hero-align-left {
+  text-align: left !important;
+}
+#hero-content-container.hero-align-left #hero-badge-container {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+#hero-content-container.hero-align-left #hero-headlines-container {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+#hero-content-container.hero-align-left #hero-desc-container {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+#hero-content-container.hero-align-left #hero-actions-container {
+  justify-content: flex-start !important;
+}
+#hero-content-container.hero-align-left #stats-container {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+#hero-content-container.hero-align-center {
+  text-align: center !important;
+}
+#hero-content-container.hero-align-center #hero-badge-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#hero-content-container.hero-align-center #hero-headlines-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#hero-content-container.hero-align-center #hero-desc-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#hero-content-container.hero-align-center #hero-actions-container {
+  justify-content: center !important;
+}
+#hero-content-container.hero-align-center #stats-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#hero-content-container.hero-align-right {
+  text-align: right !important;
+}
+#hero-content-container.hero-align-right #hero-badge-container {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+#hero-content-container.hero-align-right #hero-headlines-container {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+#hero-content-container.hero-align-right #hero-desc-container {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+#hero-content-container.hero-align-right #hero-actions-container {
+  justify-content: flex-end !important;
+}
+#hero-content-container.hero-align-right #stats-container {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+/* Light Text Contrast Mode (Applied when hero has a dark background image or dark theme color) */
+#home.hero-contrast-light #hero-main-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+}
+
+#home.hero-contrast-light #hero-subtitle {
+  color: #a7f3d0 !important; /* Soft bright emerald */
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+
+#home.hero-contrast-light #hero-desc-p {
+  color: #f1f5f9 !important; /* Slate 100 */
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+#home.hero-contrast-light #hero-cat-label {
+  color: #e2e8f0 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+#home.hero-contrast-light #hero-badge-container {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border-color: rgba(167, 243, 208, 0.5) !important;
+  color: #6ee7b7 !important;
+  backdrop-filter: blur(8px);
+}
+
+#home.hero-contrast-light #stats-container {
+  border-top-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+#home.hero-contrast-light #stats-container .text-brand-dark,
+#home.hero-contrast-light #stats-container .text-3xl {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+#home.hero-contrast-light #stats-container .text-gray-500 {
+  color: #cbd5e1 !important;
+}
+
+#home.hero-contrast-light .category-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+
 

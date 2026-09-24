@@ -182,14 +182,34 @@ function renderTransportCategories(categories) {
 
   container.innerHTML = activeCategories.map(cat => {
     const isPrimary = cat.isPrimary || cat.id === 'cat-bike';
-    const borderClass = isPrimary ? 'border-2 border-brand-primary' : 'border border-gray-200 hover:border-brand-primary';
-    const badgeHtml = cat.badge ? `<span class="absolute -top-2.5 right-2 bg-brand-primary text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">${cat.badge}</span>` : '';
+    let badgeText = cat.badge || '';
+    if (badgeText && window.CURRENT_CURRENCY && window.CURRENT_CURRENCY.symbol && badgeText.includes('Rs.')) {
+      badgeText = badgeText.replace(/Rs\./g, window.CURRENT_CURRENCY.symbol);
+    }
+    const badgeIdAttr = (cat.id === 'cat-bike' || (cat.name || '').toLowerCase().includes('bicycle')) ? 'id="hero-cat-badge-bike"' : '';
+    const badgeHtml = badgeText ? `<span ${badgeIdAttr} class="absolute -top-2.5 right-2 bg-brand-primary text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full">${badgeText}</span>` : '';
     const iconClass = cat.icon || 'fa-solid fa-car';
     const colorBg = cat.color ? `bg-${cat.color}-50 text-${cat.color}-600` : 'bg-emerald-50 text-brand-primary';
-    const preselectCall = `preselectVehicle('${(cat.preselect || cat.name).replace(/'/g, "\\'")}', '${(cat.package || 'Hourly Rental').replace(/'/g, "\\'")}')`;
+    // Determine navigation target: Bicycle & Motorcycle go to #pricing-rates, Car, Van, Bus, Boat navigate to https://booking.mannargreenride.com/bicycle-pos/finance
+    const nameLower = (cat.name || '').toLowerCase();
+    const idLower = (cat.id || '').toLowerCase();
+    const isRates = nameLower.includes('bike') || nameLower.includes('bicycle') || nameLower.includes('motorcycle') || nameLower.includes('scooter') || idLower.includes('bike') || idLower.includes('moto');
+    
+    let targetHref = '#pricing-rates';
+    let targetAttr = '';
+    let onclickCall = '';
+
+    if (isRates || cat.target_url === '#pricing-rates') {
+      targetHref = '#pricing-rates';
+      onclickCall = `onclick="preselectVehicle('${(cat.preselect || cat.name).replace(/'/g, "\\'")}', '${(cat.package || 'Hourly Rental').replace(/'/g, "\\'")}', '#pricing-rates')"`;
+    } else {
+      // Top Booking destination (#booking) maps to online booking finance portal
+      targetHref = 'https://booking.mannargreenride.com/bicycle-pos/finance';
+      targetAttr = 'target="_blank" rel="noopener noreferrer"';
+    }
 
     return `
-      <a href="#pricing-rates" onclick="${preselectCall}" class="category-card bg-white hover:bg-emerald-50 ${borderClass} rounded-2xl p-4 shadow-sm hover:shadow-md transition text-center group card-hover relative">
+      <a href="${targetHref}" ${targetAttr} ${onclickCall} class="category-card bg-white hover:bg-emerald-50 ${borderClass} rounded-2xl p-4 shadow-sm hover:shadow-md transition text-center group card-hover relative">
         ${badgeHtml}
         <div class="w-11 h-11 mx-auto rounded-xl ${colorBg} flex items-center justify-center text-xl group-hover:scale-110 transition">
           <i class="${iconClass}"></i>
@@ -320,6 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof changeLanguage === 'function') {
     changeLanguage(savedLang);
   }
+
+  // Initialize Floating Action Booking Button (Pulsing Icon & Rotating Text)
+  initFloatingBookingButton();
 });
 
 /**
@@ -393,3 +416,76 @@ function initNavigation() {
     setActiveButton(initialHash);
   }
 }
+
+/**
+ * Floating Action Booking Button
+ * - Continuous pulsing icon
+ * - Automatically rotating text: "Book Now" -> "Ride Now" -> "Explore Mannar" (Customizable via C-Panel)
+ * - Navigates directly to https://booking.mannargreenride.com/
+ */
+window.FLOATING_BOOKING_PHRASES = ['Book Now', 'Ride Now', 'Explore Mannar'];
+let floatingBookingIntervalTimer = null;
+
+function initFloatingBookingButton() {
+  const bookingBtn = document.getElementById('floating-booking');
+  const textEl = document.getElementById('floating-booking-text');
+  if (!bookingBtn || !textEl) return;
+
+  // Check localStorage for CMS configured words/URL
+  try {
+    const savedConfigStr = localStorage.getItem('mgr_setting_floating_booking_config');
+    if (savedConfigStr) {
+      const cfg = JSON.parse(savedConfigStr);
+      if (cfg.enabled === false) {
+        bookingBtn.style.display = 'none';
+      }
+      if (cfg.target_url) {
+        bookingBtn.href = cfg.target_url;
+      }
+      if (Array.isArray(cfg.words) && cfg.words.length > 0) {
+        window.FLOATING_BOOKING_PHRASES = cfg.words;
+      }
+    }
+  } catch (e) {}
+
+  // Function to start/restart rotation
+  window.updateFloatingBookingPhrases = function(words, customInterval) {
+    if (Array.isArray(words) && words.length > 0) {
+      window.FLOATING_BOOKING_PHRASES = words;
+    }
+    if (floatingBookingIntervalTimer) clearInterval(floatingBookingIntervalTimer);
+
+    let phraseIndex = 0;
+    const intervalMs = (customInterval && customInterval > 0) ? customInterval * 1000 : 2600;
+
+    // Set initial text if empty
+    if (!textEl.textContent.trim()) {
+      textEl.textContent = window.FLOATING_BOOKING_PHRASES[0] || 'Book Now';
+    }
+
+    floatingBookingIntervalTimer = setInterval(() => {
+      textEl.classList.add('text-fade-out');
+      setTimeout(() => {
+        const phrases = window.FLOATING_BOOKING_PHRASES || ['Book Now', 'Ride Now', 'Explore Mannar'];
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        textEl.textContent = phrases[phraseIndex];
+        textEl.classList.remove('text-fade-out');
+        textEl.classList.add('text-fade-in');
+        void textEl.offsetWidth; // Force reflow
+        textEl.classList.remove('text-fade-in');
+      }, 300);
+    }, intervalMs);
+  };
+
+  // Start rotation
+  window.updateFloatingBookingPhrases(window.FLOATING_BOOKING_PHRASES, 2.6);
+
+  // Ensure native link navigation to https://booking.mannargreenride.com/
+  if (!bookingBtn.getAttribute('href') || bookingBtn.getAttribute('href') === '#booking') {
+    bookingBtn.setAttribute('href', 'https://booking.mannargreenride.com/');
+  }
+  bookingBtn.setAttribute('target', '_blank');
+  bookingBtn.setAttribute('rel', 'noopener noreferrer');
+}
+
+

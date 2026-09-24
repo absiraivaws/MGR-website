@@ -57,7 +57,7 @@
       if (settings && settings.length) {
         settings.forEach(s => { settingsMap[s.setting_key] = s.setting_value; });
       }
-      ['transport_categories', 'statistics_counters_config', 'join_us_config', 'reviews_slider_config', 'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards', 'about_feature_cards'].forEach(k => {
+      ['hero_layout_config', 'currency_config', 'hero_slider_config', 'offer_animation_config', 'content_styling_config', 'floating_booking_config', 'transport_categories', 'statistics_counters_config', 'join_us_config', 'reviews_slider_config', 'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards', 'about_feature_cards'].forEach(k => {
         try {
           const val = localStorage.getItem('mgr_setting_' + k);
           if (val) settingsMap[k] = val;
@@ -247,6 +247,97 @@
       if (linkTt) linkTt.href = map.tiktok_url;
     }
 
+    // Floating Booking & Explorer Button Configuration
+    if (map.floating_booking_config) {
+      try {
+        localStorage.setItem('mgr_setting_floating_booking_config', typeof map.floating_booking_config === 'string' ? map.floating_booking_config : JSON.stringify(map.floating_booking_config));
+        const floatConfig = typeof map.floating_booking_config === 'string'
+          ? JSON.parse(map.floating_booking_config)
+          : map.floating_booking_config;
+        
+        const floatBtn = document.getElementById('floating-booking');
+        if (floatBtn) {
+          if (floatConfig.enabled === false) {
+            floatBtn.style.display = 'none';
+          } else {
+            floatBtn.style.display = 'flex';
+          }
+          if (floatConfig.target_url) {
+            floatBtn.href = floatConfig.target_url;
+          }
+        }
+
+        if (Array.isArray(floatConfig.words) && floatConfig.words.length > 0) {
+          window.FLOATING_BOOKING_PHRASES = floatConfig.words;
+          if (typeof window.updateFloatingBookingPhrases === 'function') {
+            window.updateFloatingBookingPhrases(floatConfig.words, floatConfig.interval_seconds || 2.6);
+          }
+        }
+      } catch (e) {
+        console.warn("Could not apply floating_booking_config:", e);
+      }
+    }
+
+    // Promotional Offer Banner Animation Configuration (Item 3)
+    if (map.offer_animation_config) {
+      try {
+        localStorage.setItem('mgr_setting_offer_animation_config', typeof map.offer_animation_config === 'string' ? map.offer_animation_config : JSON.stringify(map.offer_animation_config));
+        const animConfig = typeof map.offer_animation_config === 'string'
+          ? JSON.parse(map.offer_animation_config)
+          : map.offer_animation_config;
+        window.OFFER_ANIMATION_CONFIG = animConfig;
+        applyOfferAnimation(animConfig);
+      } catch (e) {
+        console.warn("Could not apply offer_animation_config:", e);
+      }
+    }
+
+    // Hero Multi-Image Carousel & Slider Configuration (Item 5)
+    if (map.hero_slider_config) {
+      try {
+        localStorage.setItem('mgr_setting_hero_slider_config', typeof map.hero_slider_config === 'string' ? map.hero_slider_config : JSON.stringify(map.hero_slider_config));
+      } catch (e) {}
+      initHeroSlider(map.hero_slider_config);
+    } else {
+      try {
+        const localSlider = localStorage.getItem('mgr_setting_hero_slider_config');
+        initHeroSlider(localSlider);
+      } catch (e) {
+        initHeroSlider(null);
+      }
+    }
+
+    // WordPress-Style Content Typography & Image Styling Configuration
+    if (map.content_styling_config) {
+      try {
+        localStorage.setItem('mgr_setting_content_styling_config', typeof map.content_styling_config === 'string' ? map.content_styling_config : JSON.stringify(map.content_styling_config));
+        const styleConfig = typeof map.content_styling_config === 'string'
+          ? JSON.parse(map.content_styling_config)
+          : map.content_styling_config;
+        applyContentStyling(styleConfig);
+      } catch (e) {
+        console.warn("Could not apply content_styling_config:", e);
+      }
+    }
+
+    // Hero Background & Layout Configuration (Request 2 & 3)
+    if (map.hero_layout_config) {
+      try {
+        localStorage.setItem('mgr_setting_hero_layout_config', typeof map.hero_layout_config === 'string' ? map.hero_layout_config : JSON.stringify(map.hero_layout_config));
+        const layoutCfg = typeof map.hero_layout_config === 'string'
+          ? JSON.parse(map.hero_layout_config)
+          : map.hero_layout_config;
+        applyHeroLayout(layoutCfg);
+      } catch (e) {
+        console.warn("Could not apply hero_layout_config:", e);
+      }
+    } else {
+      try {
+        const cachedLayout = localStorage.getItem('mgr_setting_hero_layout_config');
+        if (cachedLayout) applyHeroLayout(JSON.parse(cachedLayout));
+      } catch (e) {}
+    }
+
     // Launch Ceremony Configuration
     if (map.launch_ceremony_config) {
       try {
@@ -272,28 +363,48 @@
       } catch (e) {}
     }
 
+    // Currency & Pricing Format Configuration (Item 6)
+    if (map.currency_config) {
+      try {
+        localStorage.setItem('mgr_setting_currency_config', typeof map.currency_config === 'string' ? map.currency_config : JSON.stringify(map.currency_config));
+        const currConfig = typeof map.currency_config === 'string'
+          ? JSON.parse(map.currency_config)
+          : map.currency_config;
+        if (currConfig && typeof window.applyCurrencyToPricing === 'function') {
+          window.applyCurrencyToPricing(currConfig);
+        }
+      } catch (e) {
+        console.warn("Could not apply currency_config:", e);
+      }
+    }
+
     // Duration Pricing Matrix (Hourly, Half-Day, Full-Day)
     if (map.pricing_matrix) {
       try {
         const matrix = typeof map.pricing_matrix === 'string' ? JSON.parse(map.pricing_matrix) : map.pricing_matrix;
-        if (matrix && window.PRICING_CONFIG) {
-          if (matrix.hourly) {
-            if (matrix.hourly.bicycle) window.PRICING_CONFIG.hourly.bicycle = `Rs. ${matrix.hourly.bicycle}`;
-            if (matrix.hourly.moto) window.PRICING_CONFIG.hourly.moto = `Rs. ${matrix.hourly.moto}`;
-            if (matrix.hourly.car) window.PRICING_CONFIG.hourly.car = `From Rs. ${Number(matrix.hourly.car).toLocaleString()}`;
-          }
-          if (matrix.halfday) {
-            if (matrix.halfday.bicycle) window.PRICING_CONFIG.halfday.bicycle = `Rs. ${matrix.halfday.bicycle}`;
-            if (matrix.halfday.moto) window.PRICING_CONFIG.halfday.moto = `Rs. ${matrix.halfday.moto}`;
-            if (matrix.halfday.car) window.PRICING_CONFIG.halfday.car = `From Rs. ${Number(matrix.halfday.car).toLocaleString()}`;
-          }
-          if (matrix.fullday) {
-            if (matrix.fullday.bicycle) window.PRICING_CONFIG.fullday.bicycle = `Rs. ${matrix.fullday.bicycle}`;
-            if (matrix.fullday.moto) window.PRICING_CONFIG.fullday.moto = `Rs. ${matrix.fullday.moto}`;
-            if (matrix.fullday.car) window.PRICING_CONFIG.fullday.car = `From Rs. ${Number(matrix.fullday.car).toLocaleString()}`;
-          }
-          if (typeof window.switchPricingDuration === 'function') {
-            window.switchPricingDuration(window.currentDurationTab || 'hourly');
+        if (matrix) {
+          if (typeof window.applyCurrencyToPricing === 'function') {
+            window.applyCurrencyToPricing(null, matrix);
+          } else if (window.PRICING_CONFIG) {
+            const fmt = (amt, isFrom) => typeof window.formatRentalPrice === 'function' ? window.formatRentalPrice(amt, isFrom) : (isFrom ? 'From Rs. ' : 'Rs. ') + Number(amt).toLocaleString();
+            if (matrix.hourly) {
+              if (matrix.hourly.bicycle) window.PRICING_CONFIG.hourly.bicycle = fmt(matrix.hourly.bicycle, false);
+              if (matrix.hourly.moto) window.PRICING_CONFIG.hourly.moto = fmt(matrix.hourly.moto, false);
+              if (matrix.hourly.car) window.PRICING_CONFIG.hourly.car = fmt(matrix.hourly.car, true);
+            }
+            if (matrix.halfday) {
+              if (matrix.halfday.bicycle) window.PRICING_CONFIG.halfday.bicycle = fmt(matrix.halfday.bicycle, false);
+              if (matrix.halfday.moto) window.PRICING_CONFIG.halfday.moto = fmt(matrix.halfday.moto, false);
+              if (matrix.halfday.car) window.PRICING_CONFIG.halfday.car = fmt(matrix.halfday.car, true);
+            }
+            if (matrix.fullday) {
+              if (matrix.fullday.bicycle) window.PRICING_CONFIG.fullday.bicycle = fmt(matrix.fullday.bicycle, false);
+              if (matrix.fullday.moto) window.PRICING_CONFIG.fullday.moto = fmt(matrix.fullday.moto, false);
+              if (matrix.fullday.car) window.PRICING_CONFIG.fullday.car = fmt(matrix.fullday.car, true);
+            }
+            if (typeof window.switchPricingDuration === 'function') {
+              window.switchPricingDuration(window.currentDurationTab || 'hourly');
+            }
           }
         }
       } catch (err) {
@@ -510,6 +621,387 @@
         console.warn("Could not apply ai_assistant_config:", err);
       }
     }
+
+    // Hero Multi-Image Slider Engine
+    if (map.hero_slider_config) {
+      try {
+        initHeroSlider(map.hero_slider_config);
+      } catch (err) {
+        console.warn("Could not apply hero_slider_config:", err);
+      }
+    } else if (map.content_styling_config) {
+      try {
+        const sc = typeof map.content_styling_config === 'string' ? JSON.parse(map.content_styling_config) : map.content_styling_config;
+        if (sc && sc.hero && sc.hero.imgUrl) {
+          initHeroSlider({
+            enabled: true,
+            slides: [{ id: "slide_1", url: sc.hero.imgUrl, title: "Explore Mannar Sustainably", subtitle: "Eco-Friendly Passenger Transport & Rentals" }]
+          });
+        } else {
+          initHeroSlider(null);
+        }
+      } catch (e) {
+        initHeroSlider(null);
+      }
+    } else {
+      initHeroSlider(null);
+    }
+  }
+
+  /* ----------------- Hero Multi-Image Slider Engine (Item 5) ----------------- */
+  let heroSliderTimer = null;
+  let heroCurrentSlideIdx = 0;
+  let heroSlidesData = [];
+
+  function initHeroSlider(config) {
+    const track = document.getElementById('hero-slider-track');
+    const dotsContainer = document.getElementById('hero-slider-dots');
+    const prevBtn = document.getElementById('hero-slider-prev');
+    const nextBtn = document.getElementById('hero-slider-next');
+    const sliderBox = document.getElementById('hero-slider');
+    const titleEl = document.getElementById('hero-slide-title');
+    const subEl = document.getElementById('hero-slide-subtitle');
+    const captionBox = document.getElementById('hero-slider-caption');
+
+    if (!track) return;
+
+    let cfg = {
+      enabled: true,
+      interval: 4000,
+      auto_slide: true,
+      slides: [
+        {
+          id: "slide_1",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          title: "Eco-Friendly Cycling Across Mannar Causeway",
+          subtitle: "Bicycles from Rs. 100/hr with free helmet & lock"
+        },
+        {
+          id: "slide_2",
+          url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1200",
+          title: "Scenic Coastal Exploration & Flamingo Dunes",
+          subtitle: "Comfortable rides designed for health and eco-tourism"
+        },
+        {
+          id: "slide_3",
+          url: "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=1200",
+          title: "Island-Wide Passenger Transport Fleet",
+          subtitle: "Cars, KDH vans, and tourist buses with trusted local drivers"
+        }
+      ]
+    };
+
+    if (config) {
+      if (typeof config === 'string') {
+        try {
+          const parsed = JSON.parse(config);
+          if (parsed) cfg = { ...cfg, ...parsed };
+        } catch (e) {}
+      } else if (typeof config === 'object') {
+        cfg = { ...cfg, ...config };
+      }
+    }
+
+    if (!Array.isArray(cfg.slides) || cfg.slides.length === 0) {
+      cfg.slides = [
+        {
+          id: "slide_default",
+          url: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=1200",
+          title: "Explore Mannar Sustainably",
+          subtitle: "Mannar Green Ride Passenger Transport"
+        }
+      ];
+    }
+
+    heroSlidesData = cfg.slides;
+    heroCurrentSlideIdx = 0;
+
+    // Render slides into track
+    track.innerHTML = heroSlidesData.map((s, idx) => `
+      <div class="hero-slide ${idx === 0 ? 'active' : ''}" data-idx="${idx}">
+        <img src="${normalizeImageUrl(s.url)}" alt="${s.title ? escapeHtml(s.title) : 'Mannar Green Ride Hero Slide'}" loading="${idx === 0 ? 'eager' : 'lazy'}">
+      </div>
+    `).join('');
+
+    // Render dots
+    if (dotsContainer) {
+      if (heroSlidesData.length > 1) {
+        dotsContainer.style.display = 'flex';
+        dotsContainer.innerHTML = heroSlidesData.map((_, idx) => `
+          <button type="button" class="hero-slider-dot ${idx === 0 ? 'active' : ''}" data-idx="${idx}" aria-label="Go to slide ${idx + 1}"></button>
+        `).join('');
+
+        dotsContainer.querySelectorAll('.hero-slider-dot').forEach(dot => {
+          dot.onclick = () => {
+            goToSlide(parseInt(dot.dataset.idx, 10));
+          };
+        });
+      } else {
+        dotsContainer.style.display = 'none';
+      }
+    }
+
+    // Prev / Next button setup
+    if (prevBtn && nextBtn) {
+      const showControls = heroSlidesData.length > 1;
+      prevBtn.style.display = showControls ? 'flex' : 'none';
+      nextBtn.style.display = showControls ? 'flex' : 'none';
+
+      prevBtn.onclick = () => {
+        const prevIdx = (heroCurrentSlideIdx - 1 + heroSlidesData.length) % heroSlidesData.length;
+        goToSlide(prevIdx);
+      };
+      nextBtn.onclick = () => {
+        const nextIdx = (heroCurrentSlideIdx + 1) % heroSlidesData.length;
+        goToSlide(nextIdx);
+      };
+    }
+
+    function updateCaption(idx) {
+      const cur = heroSlidesData[idx];
+      if (captionBox && cur) {
+        if (cur.title || cur.subtitle) {
+          captionBox.style.display = 'block';
+          if (titleEl) titleEl.textContent = cur.title || '';
+          if (subEl) subEl.textContent = cur.subtitle || '';
+        } else {
+          captionBox.style.display = 'none';
+        }
+      }
+    }
+
+    function goToSlide(idx) {
+      heroCurrentSlideIdx = idx;
+      track.querySelectorAll('.hero-slide').forEach((sl, i) => {
+        sl.classList.toggle('active', i === idx);
+      });
+      if (dotsContainer) {
+        dotsContainer.querySelectorAll('.hero-slider-dot').forEach((dt, i) => {
+          dt.classList.toggle('active', i === idx);
+        });
+      }
+      updateCaption(idx);
+      resetAutoPlay();
+    }
+
+    function resetAutoPlay() {
+      if (heroSliderTimer) clearInterval(heroSliderTimer);
+      if (cfg.auto_slide && heroSlidesData.length > 1) {
+        const intervalMs = Math.max(2000, parseInt(cfg.interval || 4000, 10));
+        heroSliderTimer = setInterval(() => {
+          const next = (heroCurrentSlideIdx + 1) % heroSlidesData.length;
+          goToSlide(next);
+        }, intervalMs);
+      }
+    }
+
+    if (sliderBox) {
+      sliderBox.onmouseenter = () => { if (heroSliderTimer) clearInterval(heroSliderTimer); };
+      sliderBox.onmouseleave = () => { resetAutoPlay(); };
+    }
+
+    updateCaption(0);
+    resetAutoPlay();
+  }
+
+  /**
+   * Apply WordPress-Style Typography and Image Styling to Website
+   */
+  function applyContentStyling(cfg) {
+    if (!cfg || typeof cfg !== 'object') return;
+
+    // Helper: Apply text typography styles
+    const applyTextStyles = (el, tCfg) => {
+      if (!el || !tCfg) return;
+      if (tCfg.fontSize) el.style.fontSize = `${tCfg.fontSize}px`;
+      if (tCfg.fontStyle) el.style.fontStyle = tCfg.fontStyle;
+      if (tCfg.fontWeight) el.style.fontWeight = tCfg.fontWeight;
+      if (tCfg.alignment) el.style.textAlign = tCfg.alignment;
+      
+      if (tCfg.gradientEnabled) {
+        const start = tCfg.gradientStart || '#059669';
+        const end = tCfg.gradientEnd || '#10b981';
+        el.style.backgroundImage = `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
+        el.style.webkitBackgroundClip = 'text';
+        el.style.webkitTextFillColor = 'transparent';
+        el.style.color = 'transparent';
+        el.style.display = 'inline-block';
+      } else if (tCfg.color) {
+        el.style.backgroundImage = 'none';
+        el.style.webkitBackgroundClip = '';
+        el.style.webkitTextFillColor = '';
+        el.style.color = tCfg.color;
+        el.style.display = '';
+      }
+    };
+
+    // Helper: Apply image styles (size, radius, border, padding, margin, brightness, blur)
+    const applyImageStyles = (imgEl, iCfg) => {
+      if (!imgEl || !iCfg) return;
+      if (iCfg.imgWidth) imgEl.style.width = `${iCfg.imgWidth}%`;
+      if (iCfg.imgRadius !== undefined) imgEl.style.borderRadius = `${iCfg.imgRadius}px`;
+      if (iCfg.imgBorderWidth > 0 && iCfg.imgBorderColor) {
+        imgEl.style.border = `${iCfg.imgBorderWidth}px solid ${iCfg.imgBorderColor}`;
+      } else {
+        imgEl.style.border = '';
+      }
+      if (iCfg.imgPadding !== undefined) imgEl.style.padding = `${iCfg.imgPadding}px`;
+
+      // Brightness & Blur filters
+      const bright = iCfg.imgBrightness !== undefined ? iCfg.imgBrightness : 100;
+      const blur = iCfg.imgBlur !== undefined ? iCfg.imgBlur : 0;
+      imgEl.style.filter = `brightness(${bright}%) blur(${blur}px)`;
+
+      // Margin / Alignment
+      if (iCfg.imgMarginAlign === 'left') {
+        imgEl.style.marginLeft = '0';
+        imgEl.style.marginRight = 'auto';
+        imgEl.style.display = 'block';
+      } else if (iCfg.imgMarginAlign === 'right') {
+        imgEl.style.marginLeft = 'auto';
+        imgEl.style.marginRight = '0';
+        imgEl.style.display = 'block';
+      } else if (iCfg.imgMarginAlign === 'center') {
+        imgEl.style.marginLeft = 'auto';
+        imgEl.style.marginRight = 'auto';
+        imgEl.style.display = 'block';
+      }
+
+      // Elevation / Styles
+      if (iCfg.imgStyle === 'elevated') {
+        imgEl.style.boxShadow = '0 20px 35px -10px rgba(0, 0, 0, 0.3)';
+      } else if (iCfg.imgStyle === 'glow') {
+        imgEl.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.55)';
+      } else if (iCfg.imgStyle === 'glass') {
+        imgEl.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.25)';
+        imgEl.style.border = '2px solid rgba(255, 255, 255, 0.6)';
+      }
+    };
+
+    // 1. Hero Section
+    if (cfg.hero) {
+      applyTextStyles(document.getElementById('hero-main-title'), cfg.hero);
+      const sliderBox = document.getElementById('hero-slider');
+      if (sliderBox) {
+        applyImageStyles(sliderBox, cfg.hero);
+      }
+      if (cfg.hero.imgUrl) {
+        // If single image was set in WP Image Editor, replace active slide or first slide
+        const firstSlideImg = document.querySelector('#hero-slider-track .hero-slide img');
+        if (firstSlideImg) {
+          firstSlideImg.src = normalizeImageUrl(cfg.hero.imgUrl);
+        }
+      }
+    }
+
+    // 2. Fitness Section
+    if (cfg.fitness) {
+      applyTextStyles(document.getElementById('fitness-title'), cfg.fitness);
+      if (cfg.fitness.imgUrl) {
+        const fit1 = document.getElementById('fitness-img-1');
+        if (fit1) fit1.src = normalizeImageUrl(cfg.fitness.imgUrl);
+      }
+      applyImageStyles(document.getElementById('fitness-img-1'), cfg.fitness);
+      applyImageStyles(document.getElementById('fitness-img-2'), cfg.fitness);
+    }
+
+    // 3. About Section
+    if (cfg.about) {
+      applyTextStyles(document.getElementById('about-title'), cfg.about);
+      if (cfg.about.imgUrl) {
+        const abImg = document.getElementById('about-img');
+        if (abImg) abImg.src = normalizeImageUrl(cfg.about.imgUrl);
+      }
+      applyImageStyles(document.getElementById('about-img'), cfg.about);
+    }
+  }
+
+  /**
+   * Apply Hero Background Image / Color and Detail Layout Positioning (Top, Bottom, Left, Right)
+   */
+  function applyHeroLayout(cfg) {
+    if (!cfg || typeof cfg !== 'object') return;
+    const heroSection = document.getElementById('home');
+    const heroOverlay = document.getElementById('hero-bg-overlay');
+    const heroContainer = document.getElementById('hero-content-container');
+    if (!heroSection || !heroContainer) return;
+
+    // 1. Background image or theme color
+    const bgType = cfg.bg_type || 'default';
+    if (bgType === 'color' && cfg.bg_color) {
+      heroSection.style.backgroundImage = 'none';
+      heroSection.style.backgroundColor = cfg.bg_color;
+    } else if (bgType === 'image' && cfg.bg_image_url) {
+      const normUrl = normalizeImageUrl(cfg.bg_image_url);
+      heroSection.style.backgroundImage = `url('${normUrl}')`;
+      heroSection.style.backgroundSize = 'cover';
+      heroSection.style.backgroundPosition = cfg.bg_position || 'center';
+      heroSection.style.backgroundRepeat = 'no-repeat';
+      heroSection.style.backgroundAttachment = cfg.bg_attachment === 'fixed' ? 'fixed' : 'scroll';
+    } else if (bgType === 'gradient' && cfg.bg_gradient) {
+      heroSection.style.backgroundImage = cfg.bg_gradient;
+    } else {
+      // Default: clean gradient with subtle pattern
+      heroSection.style.backgroundImage = '';
+      heroSection.style.backgroundColor = '';
+      heroSection.style.backgroundSize = '';
+      heroSection.style.backgroundPosition = '';
+    }
+
+    // 2. Background Overlay
+    if (heroOverlay) {
+      const overlayOpacity = cfg.overlay_opacity !== undefined ? Number(cfg.overlay_opacity) : 0;
+      if (overlayOpacity > 0 && (bgType === 'image' || bgType === 'color')) {
+        const overlayColor = cfg.overlay_color || '#000000';
+        heroOverlay.style.backgroundColor = overlayColor;
+        heroOverlay.style.opacity = (overlayOpacity / 100).toFixed(2);
+      } else {
+        heroOverlay.style.opacity = '0';
+      }
+    }
+
+    // 3. Contrast Mode (Light text on dark backgrounds)
+    const isDarkBg = (bgType === 'color' && isColorDark(cfg.bg_color)) || (bgType === 'image' && Number(cfg.overlay_opacity || 0) >= 35);
+    if (cfg.contrast_mode === 'light' || (cfg.contrast_mode !== 'dark' && isDarkBg)) {
+      heroSection.classList.add('hero-contrast-light');
+    } else {
+      heroSection.classList.remove('hero-contrast-light');
+    }
+
+    // 4. Adjust Hero Section Details: Top, Bottom, Left, Right
+    // Spacing (Top & Bottom padding)
+    if (cfg.padding_top !== undefined && cfg.padding_top !== '') {
+      heroSection.style.paddingTop = `${cfg.padding_top}px`;
+    }
+    if (cfg.padding_bottom !== undefined && cfg.padding_bottom !== '') {
+      heroSection.style.paddingBottom = `${cfg.padding_bottom}px`;
+    }
+
+    // Horizontal bounds & inner padding (Left & Right)
+    if (cfg.max_width) {
+      heroContainer.style.maxWidth = cfg.max_width;
+    }
+    if (cfg.padding_x !== undefined && cfg.padding_x !== '') {
+      heroContainer.style.paddingLeft = `${cfg.padding_x}px`;
+      heroContainer.style.paddingRight = `${cfg.padding_x}px`;
+    }
+
+    // Details Alignment: Left, Center, Right
+    const align = cfg.alignment || 'center';
+    heroContainer.classList.remove('hero-align-left', 'hero-align-center', 'hero-align-right');
+    heroContainer.classList.add(`hero-align-${align}`);
+  }
+
+  function isColorDark(hex) {
+    if (!hex || typeof hex !== 'string') return false;
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    if (c.length !== 6) return false;
+    const r = parseInt(c.substr(0, 2), 16);
+    const g = parseInt(c.substr(2, 2), 16);
+    const b = parseInt(c.substr(4, 2), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq < 128;
   }
 
   // Helper to ensure English details update all active languages
@@ -639,7 +1131,8 @@
         }
 
         const badgeLabel = svc.icon_reference || (isBicycle ? 'Eco & Cardio' : (isMotorcycle ? 'Fast Island Travel' : (isPassenger ? 'Groups & Families' : 'Island Transport')));
-        const rateText = svc.manual_price ? `From Rs. ${Number(svc.manual_price).toLocaleString()}/${escapeHtml(svc.price_unit || 'hr')}` : 'Inquire for Rates';
+        const formattedPrice = typeof window.formatRentalPrice === 'function' ? window.formatRentalPrice(svc.manual_price, true) : `From Rs. ${Number(svc.manual_price).toLocaleString()}`;
+        const rateText = svc.manual_price ? `${formattedPrice}/${escapeHtml(svc.price_unit || 'hr')}` : 'Inquire for Rates';
         
         // Category-specific high-resolution fallbacks
         const defaultImg = isBicycle 
@@ -685,9 +1178,10 @@
       const isPassenger = slugLower.includes('car') || slugLower.includes('passenger') || nameLower.includes('car') || nameLower.includes('van') || nameLower.includes('bus');
 
       if (window.PRICING_CONFIG && window.PRICING_CONFIG.hourly && svc.manual_price) {
-        if (isBicycle) window.PRICING_CONFIG.hourly.bicycle = `Rs. ${svc.manual_price}`;
-        if (isMotorcycle) window.PRICING_CONFIG.hourly.moto = `Rs. ${svc.manual_price}`;
-        if (isPassenger) window.PRICING_CONFIG.hourly.car = `From Rs. ${Number(svc.manual_price).toLocaleString()}`;
+        const fmt = (amt, isFrom) => typeof window.formatRentalPrice === 'function' ? window.formatRentalPrice(amt, isFrom) : (isFrom ? 'From Rs. ' : 'Rs. ') + Number(amt).toLocaleString();
+        if (isBicycle) window.PRICING_CONFIG.hourly.bicycle = fmt(svc.manual_price, false);
+        if (isMotorcycle) window.PRICING_CONFIG.hourly.moto = fmt(svc.manual_price, false);
+        if (isPassenger) window.PRICING_CONFIG.hourly.car = fmt(svc.manual_price, true);
       }
     });
   }
@@ -713,6 +1207,70 @@
     }
 
     banner.classList.remove('hidden');
+
+    // Attach Offer Section Animation (Item 3)
+    let animConfig = window.OFFER_ANIMATION_CONFIG;
+    if (!animConfig) {
+      try {
+        const cached = localStorage.getItem('mgr_setting_offer_animation_config');
+        if (cached) animConfig = JSON.parse(cached);
+      } catch (e) {}
+    }
+    applyOfferAnimation(animConfig || { enabled: true, style: 'all-combined', speed: 'normal', badge_pulse: true, button_bounce: true });
+  }
+
+  /* ----------------- Apply Offer Animation (Item 3) ----------------- */
+  function applyOfferAnimation(config) {
+    const banner = document.getElementById('promo-offer-banner');
+    const badge = document.getElementById('promo-discount-badge');
+    const btn = document.getElementById('promo-offer-btn');
+    if (!banner) return;
+
+    // Reset previous animation classes
+    banner.classList.remove(
+      'offer-animated',
+      'offer-anim-shimmer',
+      'offer-anim-glow',
+      'offer-speed-fast',
+      'offer-speed-normal',
+      'offer-speed-gentle'
+    );
+    if (badge) badge.classList.remove('offer-badge-pulse');
+    if (btn) btn.classList.remove('offer-btn-bounce');
+
+    const cfg = config || { enabled: true, style: 'all-combined', speed: 'normal', badge_pulse: true, button_bounce: true };
+
+    if (cfg.enabled === false) {
+      return; // Disabled: banner remains clean and static
+    }
+
+    banner.classList.add('offer-animated');
+
+    // Speed class
+    const speed = cfg.speed || 'normal';
+    banner.classList.add(`offer-speed-${speed}`);
+
+    // Style class
+    const style = cfg.style || 'all-combined';
+    if (style === 'shimmer-wave') {
+      banner.classList.add('offer-anim-shimmer');
+    } else if (style === 'pulse-glow') {
+      banner.classList.add('offer-anim-glow');
+    } else if (style === 'bounce-cta') {
+      // CTA & Badge bounce only
+    } else { // 'all-combined'
+      banner.classList.add('offer-anim-shimmer', 'offer-anim-glow');
+    }
+
+    // Badge Pulse
+    if (cfg.badge_pulse !== false && badge) {
+      badge.classList.add('offer-badge-pulse');
+    }
+
+    // Button Bounce
+    if (cfg.button_bounce !== false && btn) {
+      btn.classList.add('offer-btn-bounce');
+    }
   }
 
   /* ----------------- Apply Dedicated SEO & Keywords ----------------- */
