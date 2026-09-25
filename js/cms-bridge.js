@@ -1101,7 +1101,11 @@
 
     // 4. Adjust Hero Section Details: Top, Bottom, Left, Right
     // Spacing (Top & Bottom padding)
-    if (cfg.padding_top !== undefined && cfg.padding_top !== '') {
+    if (
+      cfg.padding_top !== undefined &&
+      cfg.padding_top !== '' &&
+      heroSection.style.getPropertyPriority('padding-top') !== 'important'
+    ) {
       heroSection.style.paddingTop = `${cfg.padding_top}px`;
     }
     if (cfg.padding_bottom !== undefined && cfg.padding_bottom !== '') {
