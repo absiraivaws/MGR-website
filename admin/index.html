@@ -249,18 +249,59 @@
             <input type="text" class="form-input" id="offer-btn-url" value="#booking">
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="form-group">
-            <label class="form-label">Offer Image URL (Optional)</label>
-            <input type="url" class="form-input" id="offer-image-url" placeholder="https://...">
+        <div class="form-group">
+          <label class="form-label">Status (Active / Deactive)</label>
+          <select class="form-select" id="offer-status">
+            <option value="active">Active (Visible)</option>
+            <option value="inactive">Deactive (Hidden)</option>
+          </select>
+        </div>
+
+        <!-- Dimension & Capacity Guidance Card -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-top: 14px;">
+          <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i> Recommended Dimensions &amp; Upload Capacities:
           </div>
-          <div class="form-group">
-            <label class="form-label">Status (Active / Deactive)</label>
-            <select class="form-select" id="offer-status">
-              <option value="active">Active (Visible)</option>
-              <option value="inactive">Deactive (Hidden)</option>
-            </select>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; font-size: 11px; color: #334155;">
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>📸 Offer Image:</strong> 1200 × 675 px (16:9)
+            </div>
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>📱 Mobile Image:</strong> 1080 × 1350 px (4:5)
+            </div>
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>🎬 Video Clip:</strong> 1920 × 1080 px (16:9)
+            </div>
           </div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> <strong>Capacity:</strong> Max 10MB for images, Max 50MB for MP4/WebM videos.
+          </div>
+        </div>
+
+        <!-- Offer Media Controls -->
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-photo-film" style="color: #10b981;"></i> Offer Promotional Media (Image or Video)</span>
+            <span id="offer-media-type-badge" class="badge badge-draft" style="font-size: 10px;">Optional Media</span>
+          </label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <label class="btn btn-outline btn-sm" style="cursor: pointer; margin: 0; font-weight: 600;">
+              <i class="fa-solid fa-upload"></i> Upload File
+              <input type="file" id="offer-media-file" accept="image/*,video/*" style="display: none;" onchange="window.adminCMS.handleOfferMediaUpload(this, false)">
+            </label>
+            <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.openMediaPickerForOffer(false)" style="font-weight: 600; color: #0073aa; border-color: #93c5fd;">
+              <i class="fa-solid fa-images"></i> Media Library
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.removeOfferMedia(false)" style="color: #dc2626; border-color: #fca5a5;" title="Remove Attached Media">
+              <i class="fa-solid fa-trash"></i> Remove
+            </button>
+          </div>
+          <input type="url" class="form-input" id="offer-image-url" placeholder="Paste external image or video URL (https://... / MP4 / WebM / YouTube)" oninput="window.adminCMS.previewOfferMedia(this.value, false)">
+        </div>
+
+        <!-- Interactive Live Preview Box -->
+        <div id="offer-media-preview-box" style="margin-top: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; background: #f8fafc; padding: 12px; text-align: center; min-height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          <span style="font-size: 12px; color: #94a3b8;"><i class="fa-solid fa-image"></i> No media attached. Upload an image (1200×675), video (1920×1080), or enter a media URL.</span>
         </div>
       </div>
       <div class="modal-footer">
@@ -473,9 +514,51 @@
             <input type="text" class="form-input" id="edit-offer-btn-url" placeholder="#booking">
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Offer Banner Image URL (Optional)</label>
-          <input type="url" class="form-input" id="edit-offer-image-url" placeholder="https://...">
+        <!-- Dimension & Capacity Guidance Card -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-top: 14px;">
+          <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i> Recommended Dimensions &amp; Upload Capacities:
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; font-size: 11px; color: #334155;">
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>📸 Offer Image:</strong> 1200 × 675 px (16:9)
+            </div>
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>📱 Mobile Image:</strong> 1080 × 1350 px (4:5)
+            </div>
+            <div style="background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+              <strong>🎬 Video Clip:</strong> 1920 × 1080 px (16:9)
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> <strong>Capacity:</strong> Max 10MB for images, Max 50MB for MP4/WebM videos.
+          </div>
+        </div>
+
+        <!-- Offer Media Controls -->
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-photo-film" style="color: #10b981;"></i> Offer Promotional Media (Image or Video)</span>
+            <span id="edit-offer-media-type-badge" class="badge badge-draft" style="font-size: 10px;">Optional Media</span>
+          </label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+            <label class="btn btn-outline btn-sm" style="cursor: pointer; margin: 0; font-weight: 600;">
+              <i class="fa-solid fa-upload"></i> Upload File
+              <input type="file" id="edit-offer-media-file" accept="image/*,video/*" style="display: none;" onchange="window.adminCMS.handleOfferMediaUpload(this, true)">
+            </label>
+            <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.openMediaPickerForOffer(true)" style="font-weight: 600; color: #0073aa; border-color: #93c5fd;">
+              <i class="fa-solid fa-images"></i> Media Library
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.removeOfferMedia(true)" style="color: #dc2626; border-color: #fca5a5;" title="Remove Attached Media">
+              <i class="fa-solid fa-trash"></i> Remove
+            </button>
+          </div>
+          <input type="url" class="form-input" id="edit-offer-image-url" placeholder="Paste external image or video URL (https://... / MP4 / WebM / YouTube)" oninput="window.adminCMS.previewOfferMedia(this.value, true)">
+        </div>
+
+        <!-- Interactive Live Preview Box -->
+        <div id="edit-offer-media-preview-box" style="margin-top: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; background: #f8fafc; padding: 12px; text-align: center; min-height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+          <span style="font-size: 12px; color: #94a3b8;"><i class="fa-solid fa-image"></i> No media attached. Upload an image (1200×675), video (1920×1080), or enter a media URL.</span>
         </div>
       </div>
       <div class="modal-footer">

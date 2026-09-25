@@ -336,5 +336,102 @@ Full UI and SEO translation dictionary support for:
   - Synced dynamically in `js/cms-bridge.js` upon page load.
   - Persisted to Supabase `website_settings.launch_ceremony_config` and `localStorage.mgr_setting_launch_ceremony_config`.
 
-### 6.11. Upcoming Roadmap Items
-- Reviewing customer booking receipts, currency conversions, and automated WhatsApp notification templates.
+### 6.11. System Optimization & Incremental Roadmap Items
+1. **Hero Section Responsive Images** (Completed & Verified on Localhost:8000)
+2. **Browser Forward / Backward Navigation & Refresh Hardcoded Image Override Prevention** (Completed & Verified on Localhost:8000)
+3. **Offer Image / Video Management & Capacity Guidance** (Completed & Verified on Localhost:8000)
+4. **Ride for Health, Ride for the Planet Synchronization** (Completed & Verified on Localhost:8000)
+5. **WordPress Content Controls – Fitness Heading & Dual Images** (Completed & Verified on Localhost:8000)
+6. **Data Persistence & Verified Error Handling** (Completed & Verified on Localhost:8000)
+
+### 6.12. Hero Section Responsive Images & Dynamic Aspect Ratio Scaling (Implemented)
+- **1. Fluid Responsive Height & Dynamic Aspect Ratio Engine:**
+  - Migrated `#hero-slider` from rigid fixed inline heights to a CSS custom variable `--hero-slider-h` combined with dynamic `aspect-ratio: 16 / 9` rules:
+    - **Desktop (min-width: 1025px):** Adopts `--hero-slider-h` (default 480px or CMS configured value) with safe upper bounds (`calc(var(--hero-slider-h) + 40px)`).
+    - **Tablet (641px – 1024px):** Dynamic fluid height calculated via `aspect-ratio: 16 / 9` with clamp bounds (`min-height: 260px`, `max-height: min(460px, 55vh)`), maintaining natural photo proportions across iPad/tablets.
+    - **Mobile (max-width: 640px):** Dynamic fluid height via `aspect-ratio: 16 / 9` with bounds (`min-height: 200px`, `max-height: min(340px, 52vh)`), eliminating severe letterboxing and edge cut-offs.
+    - **Compact Mobile (max-width: 420px):** Sized with `aspect-ratio: 16 / 9.5` (`min-height: 185px`, `max-height: min(290px, 48vh)`).
+    - **Landscape Mode Protection:** Dynamic constraint `max-height: 65vh; aspect-ratio: 16 / 7.5` preventing vertical screen clipping on rotated handheld devices.
+- **2. Full Image Visibility & Centering Guarantee:**
+  - Configured `.hero-slide-main-img` with `object-fit: contain; object-position: center center; max-width: 100%; max-height: 100%;` ensuring 100% of the image is completely visible without cropping on any screen ratio.
+  - In `fit-cover` mode, dynamic 16:9 container aspect ratio matches standard banner dimensions to eliminate artificial vertical or horizontal cropping.
+  - Retained ambient blurred backdrop (`.hero-slide-bg-blur`) to frame photos smoothly.
+- **3. Mobile & Tablet Touch Swipe Navigation:**
+  - Integrated native `touchstart`, `touchmove`, and `touchend` swipe gesture handling in `js/cms-bridge.js`.
+  - Enabled swipe-left for next slide and swipe-right for previous slide with smooth threshold detection.
+  - Styled navigation controls on touch screens with touch targets and persistent opacity (`opacity: 0.85`), eliminating dependency on desktop hover states.
+- **4. Background Image Mobile Compatibility:**
+  - Configured mobile/tablet override (`background-attachment: scroll !important; background-position: center center !important;`) on `#home` to prevent mobile browser fixed-attachment scaling artifacts.
+- **5. Admin Guidance Update:**
+  - Added "Mobile & Tablet Ready (Dynamic 16:9 Scale)" specification card inside the C-Panel Hero Multi-Image Slider guidance banner.
+
+### 6.13. Browser Forward / Backward Navigation & Instant Synchronous Image Pre-Hydration (Implemented)
+- **1. Instant Synchronous Image Pre-Hydration on Refresh:**
+  - Embedded an early execution pre-hydration script in `<head>` of `index.html` to instantly read `localStorage` (`mgr_setting_fitness_section_images`, `mgr_setting_content_styling_config`, `mgr_setting_hero_slider_config`) before the browser finishes rendering HTML.
+  - Completely eliminates the flash or retention of fallback Unsplash placeholder images when users refresh the website.
+  - Added `applySynchronousPreHydration()` into `js/cms-bridge.js` to immediately apply all stored settings in memory with 0ms delay.
+  - Added missing keys (`fitness_section_images`, `launch_ceremony_config`) to the runtime settings overlay map.
+- **2. Public Website Process Flows & Browser History (`js/app.js` & `js/calculator.js`):**
+  - Integrated `history.pushState` on all page section jumps (`#home`, `#services`, `#pricing-rates`, `#about`, `#partner-vehicles`, `#ai-planner`, `#contact`, `#booking`).
+  - Added `popstate` event listener restoring exact scroll target, active nav header buttons, and selected vehicle/package dropdown states when user clicks browser **Back** or **Forward**.
+  - Configured `html { scroll-behavior: smooth; scroll-padding-top: 100px; }` in `css/styles.css` ensuring targets clear the fixed 96px header properly.
+- **3. Admin C-Panel Navigation & Deep-Linking (`admin/js/admin.js`):**
+  - Updated `switchTab(tabName, pushToHistory = true)` to push history state (`history.pushState({ tab: tabName }, '', '#' + tabName)`).
+  - Added `popstate` listener allowing admins to navigate smoothly backward and forward between CMS views (e.g. Dashboard ➔ WP Content ➔ Offers ➔ Services ➔ Dashboard).
+  - Configured modal history tracking in `openModal(modalId)`: pressing the browser Back button cleanly dismisses open modals instead of ejecting the admin from the panel.
+  - Handled initial deep linking in `init()`: refreshing on any URL hash (e.g. `admin/#offers`) or `?tab=...` directly opens and restores that exact view.
+
+### 6.14. Offer Image / Video Management & Capacity Guidance (Implemented)
+- **1. Dimension Guidance & Capacity Rules (Add/Edit Offer Modals):**
+  - Added a dedicated guidance banner inside both `#add-offer-modal` and `#edit-offer-modal`:
+    - **1200 × 675 px (16:9):** Standard horizontal desktop & tablet promotional banner.
+    - **1080 × 1350 px (4:5):** Vertical mobile/Instagram feed format.
+    - **1920 × 1080 px (16:9):** Full HD promotional video (MP4/WebM/YouTube/Vimeo).
+    - **File Capacity Limits:** Maximum 10MB for static imagery, 50MB for video assets.
+- **2. Interactive Media Controller & Live Preview Container:**
+  - Multi-input media management: Direct image/video URL input, direct local file upload with auto-upload to Supabase storage bucket (`website-media`), Media Library asset picker, and instant removal button.
+  - Responsive 16:9 live preview container (`#offer-media-preview-box` & `#edit-offer-media-preview-box`) supporting images, HTML5 video player, and YouTube embed detection.
+- **3. Admin Offers Table Media Preview Column:**
+  - Added a dedicated `Media` column to the Offers table with interactive media preview thumbnails and badge buttons (`previewOfferMediaModal(url, title)`).
+- **4. Website Frontend Offer Media Lightbox:**
+  - Updated `js/cms-bridge.js` to render interactive "Watch Promo Video" or "View Deal Media" pill buttons in the `#promo-offer-banner`.
+  - Added `showOfferMediaModal(offer)`: a full-featured modal lightbox for public visitors with responsive video player and high-res image view.
+
+### 6.15. WordPress Content Controls – Fitness Heading & Dual Images (Implemented)
+- **1. Dual Independent Image Controls (`renderWpFitnessDualImageControls`):**
+  - Added separate, dedicated Gutenberg/Elementor style controls for both **Image 1: Cycling Fitness in Mannar** and **Image 2: Tourist Adventure** under C-Panel *WordPress Content Controls (Fitness Heading & Images)*.
+  - Smooth sub-tab switching between Image 1 and Image 2 without page reload.
+  - For each image:
+    - Source URL input, Media Library picker, local image file uploader with auto-storage integration, and one-click reset to authentic default image.
+    - Alt text input for accessibility and SEO.
+    - Sizing slider (20% – 100% width) with quick preset chips (25%, 50%, 75%, 100% Full).
+    - Image style & elevation button group (Default, Elevated shadow, Glow, Glassmorphism).
+    - Margin alignment button group (Left, Center, Right).
+    - Border radius slider (0 – 48px) with quick chips (Sharp 0px, Rounded 12px, Curved 24px, Pill 48px), border width (0 – 10px), and hex border color picker.
+    - Spacing padding slider (0 – 32px), Brightness slider (50% – 150%), and Blur filter slider (0 – 15px).
+- **2. Real-Time Interactive Dual-Image Preview Canvas (`#wp-fitness-preview-box`):**
+  - Side-by-side interactive preview rendering Image 1 (`#wp-fitness-preview-img1`) and Image 2 (`#wp-fitness-preview-img2`) with live typography headline preview.
+  - Instant visual feedback on every slider movement, button click, or URL change.
+- **3. Dual Persistence & Cross-Tab Synchronization:**
+  - Saving via `saveWpSectionStyle('fitness')` atomically persists both `content_styling_config` (containing full styling attributes for both images) and `fitness_section_images` (`{ img1, img2 }`) in Supabase `website_settings`.
+  - Automatically synchronizes with the `fitness-cards` tab inputs (`#fitness-img1-input`, `#fitness-img2-input`, `#fitness-img1-preview`, `#fitness-img2-preview`).
+  - Saving in the `fitness-cards` tab via `handleSaveFitnessImages()` similarly updates `content_styling_config` and updates the WordPress dual image inputs.
+  - Instantly broadcasts updates to public website tabs via `BroadcastChannel('mgr_cms_updates')` and `localStorage`, updating the live site without page reload.
+- **4. Elimination of Hardcoded Unsplash Refresh Flashes:**
+  - Replaced all Unsplash fallback URLs in `index.html` (#fitness-img-1, #fitness-img-2, #about-img, #hero-slider-track, #ga-front-image) with authentic Google Drive images.
+  - Replaced all C-Panel fallbacks in `admin/js/admin.js` with the authentic Google Drive image URLs.
+  - Synchronous inline pre-hydration script in `<head>` and directly after image tags ensures 0ms delay with zero flash of placeholder imagery on refresh.
+
+### 6.16. Cross-Module Data Persistence & Verified Error Handling (Implemented)
+- **1. Strict Supabase Error Trapping & Reporting:**
+  - Audited and updated `saveSettingsItem`, `batchSaveSettings`, and `saveSection` in `admin/js/admin.js`:
+    - Checks `{ error }` returned from Supabase client operations (`upsert`, `update`, `insert`).
+    - Explicitly throws descriptive errors upon failure rather than silently failing and triggering misleading success toasts.
+    - Logs detailed error context to the developer console and displays error toasts to the administrator.
+- **2. Multi-Tiered Storage Reliability:**
+  - First tier: Supabase PostgreSQL cloud database (`website_settings`, `website_sections`, `website_offers`).
+  - Second tier: Local browser storage (`localStorage.mgr_setting_*`) for instant client-side offline hydration and zero-latency page loads.
+  - Third tier: Real-time broadcast channel (`BroadcastChannel('mgr_cms_updates')`) for immediate cross-tab live synchronization.
+
+
+

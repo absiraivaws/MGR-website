@@ -43,7 +43,21 @@ class AdminCMSApp {
     this.bindGlobalEvents();
     await this.checkAuth();
     await this.loadAllData();
-    this.render();
+
+    // Restore tab from URL hash or query param (?tab=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryTab = urlParams.get('tab');
+    const hashTab = window.location.hash ? window.location.hash.replace('#', '') : null;
+    let initialTab = queryTab || hashTab || 'dashboard';
+    if (initialTab.includes('?')) initialTab = initialTab.split('?')[0];
+    if (initialTab === 'join-editor-card' || initialTab === 'fitness-editor-card' || initialTab === 'about-editor-card') {
+      initialTab = 'content';
+    }
+
+    this.switchTab(initialTab, false);
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({ tab: initialTab }, '', '#' + initialTab);
+    }
   }
 
   /* ----------------- Authentication ----------------- */
@@ -215,11 +229,33 @@ class AdminCMSApp {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
+
+    // Browser Back / Forward Button Navigation Support
+    window.addEventListener('popstate', (e) => {
+      // 1. If any modal is currently open, close the modal cleanly
+      const openModals = document.querySelectorAll('.modal.open');
+      if (openModals.length > 0 && (!e.state || !e.state.modalId)) {
+        openModals.forEach(m => m.classList.remove('open'));
+        return;
+      }
+
+      // 2. Determine target tab from popstate state or URL hash
+      let targetTab = (e.state && e.state.tab) || (window.location.hash ? window.location.hash.replace('#', '') : 'dashboard');
+      if (targetTab.includes('?')) targetTab = targetTab.split('?')[0];
+
+      if (targetTab === 'join-editor-card' || targetTab === 'fitness-editor-card' || targetTab === 'about-editor-card') {
+        targetTab = 'content';
+      }
+
+      if (this.activeTab !== targetTab) {
+        this.switchTab(targetTab, false);
+      }
+    });
   }
 
-  switchTab(tabName) {
+  switchTab(tabName, pushToHistory = true) {
     if (tabName === 'host-network' || tabName === 'fitness-cards' || tabName === 'about-cards') {
-      this.switchTab('content');
+      this.switchTab('content', pushToHistory);
       setTimeout(() => {
         const targetId = tabName === 'host-network' ? 'join-editor-card' : (tabName === 'fitness-cards' ? 'fitness-editor-card' : 'about-editor-card');
         const el = document.getElementById(targetId);
@@ -229,6 +265,14 @@ class AdminCMSApp {
     }
 
     this.activeTab = tabName;
+
+    // Push to browser history so Back/Forward buttons work correctly
+    if (pushToHistory && window.history && window.history.pushState) {
+      const newHash = '#' + tabName;
+      if (window.location.hash !== newHash) {
+        window.history.pushState({ tab: tabName }, '', newHash);
+      }
+    }
     document.querySelectorAll('[data-nav-tab]').forEach(b => {
       b.classList.toggle('active', b.getAttribute('data-nav-tab') === tabName);
     });
@@ -475,7 +519,7 @@ class AdminCMSApp {
         gradientEnabled: false,
         gradientStart: '#059669',
         gradientEnd: '#10b981',
-        imgUrl: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800',
+        imgUrl: 'https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600',
         imgWidth: 100,
         imgStyle: 'elevated',
         imgRadius: 20,
@@ -495,7 +539,29 @@ class AdminCMSApp {
         gradientEnabled: false,
         gradientStart: '#059669',
         gradientEnd: '#10b981',
-        imgUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600',
+        img1: 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600',
+        img1_alt: 'Cycling Fitness in Mannar',
+        img1_width: 100,
+        img1_style: 'elevated',
+        img1_radius: 16,
+        img1_border_w: 0,
+        img1_border_c: '#e2e8f0',
+        img1_padding: 0,
+        img1_align: 'center',
+        img1_brightness: 100,
+        img1_blur: 0,
+        img2: 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600',
+        img2_alt: 'Tourist Adventure',
+        img2_width: 100,
+        img2_style: 'elevated',
+        img2_radius: 16,
+        img2_border_w: 0,
+        img2_border_c: '#e2e8f0',
+        img2_padding: 0,
+        img2_align: 'center',
+        img2_brightness: 100,
+        img2_blur: 0,
+        imgUrl: 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600',
         imgWidth: 100,
         imgStyle: 'elevated',
         imgRadius: 16,
@@ -515,7 +581,7 @@ class AdminCMSApp {
         gradientEnabled: false,
         gradientStart: '#059669',
         gradientEnd: '#10b981',
-        imgUrl: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800',
+        imgUrl: 'https://drive.google.com/thumbnail?id=1bN1Oi1kOZWa9Fh3o12uixVclaPClZ_sr&sz=w1600',
         imgWidth: 100,
         imgStyle: 'elevated',
         imgRadius: 24,
@@ -554,6 +620,21 @@ class AdminCMSApp {
         }
       } catch (e) {}
     }
+
+    // Synchronize fitness_section_images if available
+    try {
+      const rawFit = (this.settings && this.settings.fitness_section_images) || localStorage.getItem('mgr_setting_fitness_section_images');
+      if (rawFit) {
+        const parsedFit = typeof rawFit === 'string' ? JSON.parse(rawFit) : rawFit;
+        if (parsedFit) {
+          if (parsedFit.img1 && !cfg.fitness.img1) cfg.fitness.img1 = parsedFit.img1;
+          if (parsedFit.img2 && !cfg.fitness.img2) cfg.fitness.img2 = parsedFit.img2;
+          if (parsedFit.alt1 && !cfg.fitness.img1_alt) cfg.fitness.img1_alt = parsedFit.alt1;
+          if (parsedFit.alt2 && !cfg.fitness.img2_alt) cfg.fitness.img2_alt = parsedFit.alt2;
+        }
+      }
+    } catch (e) {}
+
     return cfg;
   }
 
@@ -815,6 +896,11 @@ class AdminCMSApp {
                   <div style="font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Original Clarity Guarantee</div>
                   <div style="font-size: 14px; font-weight: 800; color: #059669; margin-top: 2px;">Zero Forced Cropping</div>
                   <div style="font-size: 11px; color: #475569;">"Contain" mode renders full uncropped image with ambient backdrop</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.85); border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px;">
+                  <div style="font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Mobile &amp; Tablet Ready</div>
+                  <div style="font-size: 14px; font-weight: 800; color: #0073aa; margin-top: 2px;">Dynamic 16:9 Scale</div>
+                  <div style="font-size: 11px; color: #475569;">Fluid aspect-ratio scaling &amp; touch swipe across all handheld screen sizes</div>
                 </div>
               </div>
             </div>
@@ -1341,6 +1427,358 @@ class AdminCMSApp {
     `;
   }
 
+  renderWpFitnessDualImageControls(fStyles) {
+    const s = fStyles || {};
+    const fitImgs = (typeof this.getFitnessImages === 'function') ? this.getFitnessImages() : {};
+
+    // Image 1 defaults
+    const img1Url = s.img1 || s.imgUrl || fitImgs.img1 || 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600';
+    const img1Alt = s.img1_alt || 'Cycling Fitness in Mannar';
+    const img1Width = s.img1_width || s.imgWidth || 100;
+    const img1Style = s.img1_style || s.imgStyle || 'elevated';
+    const img1Radius = s.img1_radius !== undefined ? s.img1_radius : (s.imgRadius !== undefined ? s.imgRadius : 16);
+    const img1BorderW = s.img1_border_w !== undefined ? s.img1_border_w : (s.imgBorderWidth || 0);
+    const img1BorderC = s.img1_border_c || s.imgBorderColor || '#e2e8f0';
+    const img1Padding = s.img1_padding !== undefined ? s.img1_padding : (s.imgPadding || 0);
+    const img1Align = s.img1_align || s.imgMarginAlign || 'center';
+    const img1Brightness = s.img1_brightness !== undefined ? s.img1_brightness : (s.imgBrightness !== undefined ? s.imgBrightness : 100);
+    const img1Blur = s.img1_blur !== undefined ? s.img1_blur : (s.imgBlur || 0);
+
+    // Image 2 defaults
+    const img2Url = s.img2 || fitImgs.img2 || 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600';
+    const img2Alt = s.img2_alt || 'Tourist Adventure';
+    const img2Width = s.img2_width || 100;
+    const img2Style = s.img2_style || 'elevated';
+    const img2Radius = s.img2_radius !== undefined ? s.img2_radius : 16;
+    const img2BorderW = s.img2_border_w !== undefined ? s.img2_border_w : 0;
+    const img2BorderC = s.img2_border_c || '#e2e8f0';
+    const img2Padding = s.img2_padding !== undefined ? s.img2_padding : 0;
+    const img2Align = s.img2_align || 'center';
+    const img2Brightness = s.img2_brightness !== undefined ? s.img2_brightness : 100;
+    const img2Blur = s.img2_blur !== undefined ? s.img2_blur : 0;
+
+    const renderSingleFitnessImgPanel = (num, label, icon, url, alt, width, style, radius, borderW, borderC, padding, align, brightness, blur) => `
+      <div id="wp-fitness-img${num}-panel" class="wp-fitness-img-panel" style="${num === 2 ? 'display: none;' : ''}">
+        <div class="wp-control-grid">
+          <!-- 0. Source URL & Media Actions -->
+          <div class="wp-control-group" style="grid-column: 1 / -1; background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="wp-control-label" style="color: #0f172a; font-size: 12px; font-weight: 700; margin: 0;">
+                <i class="${icon}" style="color: #0073aa;"></i> ${label} Source URL
+              </label>
+              <span class="val-badge" id="wp-fitness-img${num}-status-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">Dual Image ${num}</span>
+            </div>
+            
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" class="form-input wp-img-url-input" id="wp-fitness-img${num}-url" value="${this.escapeHtml(url)}" placeholder="Paste image URL (https://...) or upload" style="flex: 1; min-width: 240px; font-size: 13px;">
+              <button type="button" class="btn btn-outline btn-sm wp-btn-pick-media" data-target="wp-fitness-img${num}-url" style="color: #0073aa; border-color: #93c5fd; white-space: nowrap; font-weight: 600;">
+                <i class="fa-solid fa-photo-film"></i> Media Library
+              </button>
+              <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer; color: #059669; border-color: #a7f3d0; font-weight: 600;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Image
+                <input type="file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFitnessImageUpload(this, ${num})">
+              </label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.resetFitnessImage(${num})" style="color: #64748b; border-color: #cbd5e1; white-space: nowrap;" title="Reset to default">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <label class="wp-control-label" style="font-size: 11px; margin-bottom: 4px;">Image Alt Text (SEO & Accessibility)</label>
+              <input type="text" class="form-input" id="wp-fitness-img${num}-alt" value="${this.escapeHtml(alt)}" placeholder="e.g. Cycling Fitness in Mannar" style="font-size: 12.5px; padding: 6px 10px;">
+            </div>
+          </div>
+
+          <!-- 1. Size / Width -->
+          <div class="wp-control-group">
+            <label class="wp-control-label">
+              Image Size (Width) <span class="val-badge" id="wp-fitness-img${num}-w-badge">${width}%</span>
+            </label>
+            <input type="range" class="wp-slider" id="wp-fitness-img${num}-width" min="20" max="100" value="${width}">
+            <div class="wp-chip-group">
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-width', 25)">25%</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-width', 50)">50%</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-width', 75)">75%</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-width', 100)">100% Full</button>
+            </div>
+          </div>
+
+          <!-- 2. Style & Margin Alignment -->
+          <div class="wp-control-group">
+            <label class="wp-control-label">Image Style & Shadow</label>
+            <div class="wp-btn-group" id="wp-fitness-img${num}-style-group">
+              <button type="button" data-val="default" class="${style === 'default' ? 'active' : ''}">Default</button>
+              <button type="button" data-val="elevated" class="${style === 'elevated' || !style ? 'active' : ''}">Elevated</button>
+              <button type="button" data-val="glow" class="${style === 'glow' ? 'active' : ''}">Glow</button>
+              <button type="button" data-val="glass" class="${style === 'glass' ? 'active' : ''}">Glass</button>
+            </div>
+            <input type="hidden" id="wp-fitness-img${num}-style" value="${style || 'elevated'}">
+
+            <label class="wp-control-label" style="margin-top: 10px;">Margin Alignment</label>
+            <div class="wp-btn-group" id="wp-fitness-img${num}-align-group">
+              <button type="button" data-val="left" class="${align === 'left' ? 'active' : ''}">Left</button>
+              <button type="button" data-val="center" class="${align === 'center' || !align ? 'active' : ''}">Center</button>
+              <button type="button" data-val="right" class="${align === 'right' ? 'active' : ''}">Right</button>
+            </div>
+            <input type="hidden" id="wp-fitness-img${num}-align" value="${align || 'center'}">
+          </div>
+
+          <!-- 3. Border & Radius -->
+          <div class="wp-control-group">
+            <label class="wp-control-label">
+              Border Radius <span class="val-badge" id="wp-fitness-img${num}-rad-badge">${radius}px</span>
+            </label>
+            <input type="range" class="wp-slider" id="wp-fitness-img${num}-radius" min="0" max="48" value="${radius}">
+            <div class="wp-chip-group">
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-radius', 0)">Sharp 0px</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-radius', 12)">Rounded 12px</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-radius', 24)">Curved 24px</button>
+              <button type="button" class="wp-chip" onclick="window.adminCMS.setFitnessSlider('wp-fitness-img${num}-radius', 48)">Pill 48px</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+              <div>
+                <label class="wp-control-label" style="font-size: 10px;">Border Width</label>
+                <input type="number" class="form-input" id="wp-fitness-img${num}-border-w" min="0" max="10" value="${borderW}" style="padding: 4px 8px; font-size: 12px;">
+              </div>
+              <div>
+                <label class="wp-control-label" style="font-size: 10px;">Border Color</label>
+                <input type="color" id="wp-fitness-img${num}-border-c" value="${borderC}" style="width: 100%; height: 32px; border: none; cursor: pointer; border-radius: 6px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Padding, Brightness & Blur -->
+          <div class="wp-control-group">
+            <label class="wp-control-label">
+              Padding (Spacing) <span class="val-badge" id="wp-fitness-img${num}-pad-badge">${padding}px</span>
+            </label>
+            <input type="range" class="wp-slider" id="wp-fitness-img${num}-padding" min="0" max="32" value="${padding}">
+
+            <label class="wp-control-label" style="margin-top: 10px;">
+              Brightness <span class="val-badge" id="wp-fitness-img${num}-bright-badge">${brightness}%</span>
+            </label>
+            <input type="range" class="wp-slider" id="wp-fitness-img${num}-brightness" min="50" max="150" value="${brightness}">
+
+            <label class="wp-control-label" style="margin-top: 10px;">
+              Blur Effect (bler) <span class="val-badge" id="wp-fitness-img${num}-blur-badge">${blur}px</span>
+            </label>
+            <input type="range" class="wp-slider" id="wp-fitness-img${num}-blur" min="0" max="15" value="${blur}">
+          </div>
+        </div>
+      </div>
+    `;
+
+    return `
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-layer-group" style="color: #0073aa;"></i> Dual Image Select & Controls
+          </div>
+          <div style="background: #e2e8f0; padding: 3px; border-radius: 8px; display: inline-flex; gap: 4px;">
+            <button type="button" class="btn btn-sm wp-subtab-btn active" id="wp-fitness-subtab-1" onclick="window.adminCMS.switchFitnessImgSubTab(1)" style="font-weight: 700; font-size: 11.5px; background: #0073aa; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; transition: all 0.2s;">
+              <i class="fa-solid fa-bicycle"></i> Image 1: Cycling Fitness
+            </button>
+            <button type="button" class="btn btn-sm wp-subtab-btn" id="wp-fitness-subtab-2" onclick="window.adminCMS.switchFitnessImgSubTab(2)" style="font-weight: 700; font-size: 11.5px; background: transparent; color: #475569; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; transition: all 0.2s;">
+              <i class="fa-solid fa-mountain-sun"></i> Image 2: Tourist Adventure
+            </button>
+          </div>
+        </div>
+
+        ${renderSingleFitnessImgPanel(1, 'Image 1: Cycling Fitness in Mannar', 'fa-solid fa-bicycle', img1Url, img1Alt, img1Width, img1Style, img1Radius, img1BorderW, img1BorderC, img1Padding, img1Align, img1Brightness, img1Blur)}
+        ${renderSingleFitnessImgPanel(2, 'Image 2: Tourist Adventure', 'fa-solid fa-mountain-sun', img2Url, img2Alt, img2Width, img2Style, img2Radius, img2BorderW, img2BorderC, img2Padding, img2Align, img2Brightness, img2Blur)}
+      </div>
+    `;
+  }
+
+  switchFitnessImgSubTab(num) {
+    const btn1 = document.getElementById('wp-fitness-subtab-1');
+    const btn2 = document.getElementById('wp-fitness-subtab-2');
+    const p1 = document.getElementById('wp-fitness-img1-panel');
+    const p2 = document.getElementById('wp-fitness-img2-panel');
+    if (!btn1 || !btn2 || !p1 || !p2) return;
+
+    if (num === 1) {
+      btn1.classList.add('active');
+      btn1.style.background = '#0073aa';
+      btn1.style.color = '#fff';
+      btn2.classList.remove('active');
+      btn2.style.background = 'transparent';
+      btn2.style.color = '#475569';
+      p1.style.display = 'block';
+      p2.style.display = 'none';
+    } else {
+      btn2.classList.add('active');
+      btn2.style.background = '#0073aa';
+      btn2.style.color = '#fff';
+      btn1.classList.remove('active');
+      btn1.style.background = 'transparent';
+      btn1.style.color = '#475569';
+      p1.style.display = 'none';
+      p2.style.display = 'block';
+    }
+  }
+
+  async handleFitnessImageUpload(input, num) {
+    const file = input?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showToast('Please select a valid image file', 'warning');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.showToast('Image size exceeds 10MB limit', 'warning');
+      return;
+    }
+
+    try {
+      this.showToast(`Uploading Image ${num}...`, 'info');
+      const ext = file.name.split('.').pop();
+      const filename = `fitness_${num}_${Date.now()}.${ext}`;
+      const path = `fitness/${filename}`;
+
+      const { data, error } = await this.supabase.storage
+        .from('website-media')
+        .upload(path, file, { cacheControl: '3600', upsert: true });
+
+      if (error) throw error;
+
+      const { data: pubData } = this.supabase.storage
+        .from('website-media')
+        .getPublicUrl(path);
+
+      const pubUrl = pubData?.publicUrl || '';
+      if (!pubUrl) throw new Error('Could not retrieve public URL for uploaded image');
+
+      const urlInput = document.getElementById(`wp-fitness-img${num}-url`);
+      if (urlInput) urlInput.value = pubUrl;
+
+      // Also sync with fitness cards tab if present
+      const altInput = document.getElementById(`fitness-img${num}-input`);
+      if (altInput) altInput.value = pubUrl;
+      const altPrev = document.getElementById(`fitness-img${num}-preview`);
+      if (altPrev) altPrev.src = pubUrl;
+
+      this.updateWpFitnessPreview();
+      this.showToast(`Image ${num} uploaded successfully!`, 'success');
+    } catch (err) {
+      this.showToast(err.message || `Failed to upload Image ${num}`, 'error');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  resetFitnessImage(num) {
+    const defaultUrls = {
+      1: 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600',
+      2: 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600'
+    };
+    const defaultAlts = {
+      1: 'Cycling Fitness in Mannar',
+      2: 'Tourist Adventure'
+    };
+
+    const urlInput = document.getElementById(`wp-fitness-img${num}-url`);
+    if (urlInput) urlInput.value = defaultUrls[num] || '';
+
+    const altInput = document.getElementById(`wp-fitness-img${num}-alt`);
+    if (altInput) altInput.value = defaultAlts[num] || '';
+
+    this.setFitnessSlider(`wp-fitness-img${num}-width`, 100);
+    this.setFitnessSlider(`wp-fitness-img${num}-radius`, 16);
+    this.setFitnessSlider(`wp-fitness-img${num}-padding`, 0);
+    this.setFitnessSlider(`wp-fitness-img${num}-brightness`, 100);
+    this.setFitnessSlider(`wp-fitness-img${num}-blur`, 0);
+
+    const bwInput = document.getElementById(`wp-fitness-img${num}-border-w`);
+    if (bwInput) bwInput.value = 0;
+
+    const bcInput = document.getElementById(`wp-fitness-img${num}-border-c`);
+    if (bcInput) bcInput.value = '#e2e8f0';
+
+    this.setFitnessBtnVal(`wp-fitness-img${num}-style-group`, `wp-fitness-img${num}-style`, 'elevated');
+    this.setFitnessBtnVal(`wp-fitness-img${num}-align-group`, `wp-fitness-img${num}-align`, 'center');
+
+    this.updateWpFitnessPreview();
+    this.showToast(`Image ${num} reset to default styles`, 'info');
+  }
+
+  setFitnessSlider(inputId, val) {
+    const el = document.getElementById(inputId);
+    if (el) {
+      el.value = val;
+      this.updateWpFitnessPreview();
+    }
+  }
+
+  setFitnessBtnVal(groupId, hiddenId, val) {
+    const group = document.getElementById(groupId);
+    const hidden = document.getElementById(hiddenId);
+    if (hidden) hidden.value = val;
+    if (group) {
+      group.querySelectorAll('button').forEach(btn => {
+        if (btn.dataset.val === val) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+    this.updateWpFitnessPreview();
+  }
+
+  updateWpFitnessPreview() {
+    [1, 2].forEach(num => {
+      const prevImg = document.getElementById(`wp-fitness-preview-img${num}`);
+      const url = document.getElementById(`wp-fitness-img${num}-url`)?.value?.trim();
+      const alt = document.getElementById(`wp-fitness-img${num}-alt`)?.value || '';
+      const w = document.getElementById(`wp-fitness-img${num}-width`)?.value || '100';
+      const st = document.getElementById(`wp-fitness-img${num}-style`)?.value || 'elevated';
+      const r = document.getElementById(`wp-fitness-img${num}-radius`)?.value || '16';
+      const bw = document.getElementById(`wp-fitness-img${num}-border-w`)?.value || '0';
+      const bc = document.getElementById(`wp-fitness-img${num}-border-c`)?.value || '#e2e8f0';
+      const p = document.getElementById(`wp-fitness-img${num}-padding`)?.value || '0';
+      const al = document.getElementById(`wp-fitness-img${num}-align`)?.value || 'center';
+      const br = document.getElementById(`wp-fitness-img${num}-brightness`)?.value || '100';
+      const bl = document.getElementById(`wp-fitness-img${num}-blur`)?.value || '0';
+
+      // Update badges
+      const wBadge = document.getElementById(`wp-fitness-img${num}-w-badge`);
+      if (wBadge) wBadge.textContent = `${w}%`;
+      const rBadge = document.getElementById(`wp-fitness-img${num}-rad-badge`);
+      if (rBadge) rBadge.textContent = `${r}px`;
+      const pBadge = document.getElementById(`wp-fitness-img${num}-pad-badge`);
+      if (pBadge) pBadge.textContent = `${p}px`;
+      const brBadge = document.getElementById(`wp-fitness-img${num}-bright-badge`);
+      if (brBadge) brBadge.textContent = `${br}%`;
+      const blBadge = document.getElementById(`wp-fitness-img${num}-blur-badge`);
+      if (blBadge) blBadge.textContent = `${bl}px`;
+
+      if (prevImg) {
+        if (url) prevImg.src = this.normalizeImageUrl(url);
+        prevImg.alt = alt;
+        prevImg.style.width = `${w}%`;
+        prevImg.style.borderRadius = `${r}px`;
+        prevImg.style.border = (parseInt(bw) > 0) ? `${bw}px solid ${bc}` : 'none';
+        prevImg.style.padding = `${p}px`;
+        prevImg.style.filter = `brightness(${br}%) blur(${bl}px)`;
+        prevImg.style.marginLeft = al === 'right' ? 'auto' : (al === 'center' ? 'auto' : '0');
+        prevImg.style.marginRight = al === 'left' ? 'auto' : (al === 'center' ? 'auto' : '0');
+
+        if (st === 'elevated') {
+          prevImg.style.boxShadow = '0 16px 30px rgba(0,0,0,0.2)';
+        } else if (st === 'glow') {
+          prevImg.style.boxShadow = '0 0 20px rgba(16,185,129,0.5)';
+        } else if (st === 'glass') {
+          prevImg.style.boxShadow = '0 8px 32px rgba(31,38,135,0.2)';
+          prevImg.style.border = '2px solid rgba(255,255,255,0.5)';
+        } else {
+          prevImg.style.boxShadow = 'none';
+        }
+      }
+    });
+  }
+
   renderWpPreviewCanvas(secKey, cfg, defaultTitle, defaultImg) {
     const t = cfg || {};
     const hasGrad = t.gradientEnabled;
@@ -1377,7 +1815,7 @@ class AdminCMSApp {
       const layoutCfg = this.heroLayoutData || this.getHeroLayoutConfig();
       const slides = (sliderCfg && Array.isArray(sliderCfg.slides) && sliderCfg.slides.length)
         ? sliderCfg.slides
-        : [{ id: "slide_1", url: defaultImg || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800', title: 'Eco-Friendly Cycling', subtitle: 'Explore Mannar' }];
+        : [{ id: "slide_1", url: defaultImg || 'https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600', title: 'Eco-Friendly Cycling', subtitle: 'Explore Mannar' }];
       const curIdx = this.activeHeroPreviewSlideIdx || 0;
       const activeSlide = slides[curIdx] || slides[0];
 
@@ -1444,6 +1882,65 @@ class AdminCMSApp {
                 <div id="wp-hero-preview-caption-title" style="font-size: 11px; font-weight: 700; color: #fff; line-height: 1.2;">${this.escapeHtml(activeSlide.title || '')}</div>
                 <div id="wp-hero-preview-caption-sub" style="font-size: 9.5px; color: #6ee7b7; line-height: 1.2;">${this.escapeHtml(activeSlide.subtitle || '')}</div>
               </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (secKey === 'fitness') {
+      const fitImgs = this.getFitnessImages();
+      const img1Src = this.normalizeImageUrl(t.img1 || t.imgUrl || fitImgs.img1 || 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600');
+      const img2Src = this.normalizeImageUrl(t.img2 || fitImgs.img2 || 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600');
+      const img1Alt = t.img1_alt || 'Cycling Fitness in Mannar';
+      const img2Alt = t.img2_alt || 'Tourist Adventure';
+
+      const img1Style = `
+        width: ${t.img1_width || 100}%;
+        border-radius: ${t.img1_radius !== undefined ? t.img1_radius : 16}px;
+        border: ${(t.img1_border_w > 0) ? `${t.img1_border_w}px solid ${t.img1_border_c || '#e2e8f0'}` : 'none'};
+        padding: ${t.img1_padding || 0}px;
+        filter: brightness(${t.img1_brightness !== undefined ? t.img1_brightness : 100}%) blur(${t.img1_blur || 0}px);
+        box-shadow: ${t.img1_style === 'elevated' ? '0 16px 30px rgba(0,0,0,0.2)' : (t.img1_style === 'glow' ? '0 0 20px rgba(16,185,129,0.5)' : (t.img1_style === 'glass' ? '0 8px 32px rgba(31,38,135,0.2)' : 'none'))};
+        display: block;
+        margin-left: ${t.img1_align === 'right' ? 'auto' : (t.img1_align === 'center' ? 'auto' : '0')};
+        margin-right: ${t.img1_align === 'left' ? 'auto' : (t.img1_align === 'center' ? 'auto' : '0')};
+        max-height: 200px;
+        object-fit: cover;
+        transition: all 0.2s ease;
+      `;
+
+      const img2Style = `
+        width: ${t.img2_width || 100}%;
+        border-radius: ${t.img2_radius !== undefined ? t.img2_radius : 16}px;
+        border: ${(t.img2_border_w > 0) ? `${t.img2_border_w}px solid ${t.img2_border_c || '#e2e8f0'}` : 'none'};
+        padding: ${t.img2_padding || 0}px;
+        filter: brightness(${t.img2_brightness !== undefined ? t.img2_brightness : 100}%) blur(${t.img2_blur || 0}px);
+        box-shadow: ${t.img2_style === 'elevated' ? '0 16px 30px rgba(0,0,0,0.2)' : (t.img2_style === 'glow' ? '0 0 20px rgba(16,185,129,0.5)' : (t.img2_style === 'glass' ? '0 8px 32px rgba(31,38,135,0.2)' : 'none'))};
+        display: block;
+        margin-left: ${t.img2_align === 'right' ? 'auto' : (t.img2_align === 'center' ? 'auto' : '0')};
+        margin-right: ${t.img2_align === 'left' ? 'auto' : (t.img2_align === 'center' ? 'auto' : '0')};
+        max-height: 200px;
+        object-fit: cover;
+        transition: all 0.2s ease;
+      `;
+
+      return `
+        <div class="wp-preview-canvas" id="wp-fitness-preview-box">
+          <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-eye" style="color: #10b981;"></i> WordPress Live Interactive Preview (Dual Images)
+          </div>
+          <div style="text-align: ${t.alignment || 'left'};">
+            <div id="wp-fitness-preview-title" style="${titleStyle}">${this.escapeHtml(defaultTitle)}</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; align-items: start;">
+            <div>
+              <div style="font-size: 10.5px; font-weight: 700; color: #475569; margin-bottom: 4px;"><i class="fa-solid fa-bicycle" style="color:#059669;"></i> Image 1: Cycling Fitness</div>
+              <img id="wp-fitness-preview-img1" src="${img1Src}" alt="${this.escapeHtml(img1Alt)}" style="${img1Style}">
+            </div>
+            <div style="margin-top: 22px;">
+              <div style="font-size: 10.5px; font-weight: 700; color: #475569; margin-bottom: 4px;"><i class="fa-solid fa-mountain-sun" style="color:#059669;"></i> Image 2: Tourist Adventure</div>
+              <img id="wp-fitness-preview-img2" src="${img2Src}" alt="${this.escapeHtml(img2Alt)}" style="${img2Style}">
             </div>
           </div>
         </div>
@@ -1570,7 +2067,7 @@ class AdminCMSApp {
               ${this.renderHeroBackgroundAndLayoutControls(this.heroLayoutData)}
             </div>
 
-            ${this.renderWpPreviewCanvas('hero', wpStyles.hero, hero.title || 'Explore Mannar Sustainably & Stay Fit with Mannar Green Ride', wpStyles.hero.imgUrl || 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800')}
+            ${this.renderWpPreviewCanvas('hero', wpStyles.hero, hero.title || 'Explore Mannar Sustainably & Stay Fit with Mannar Green Ride', wpStyles.hero.imgUrl || 'https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600')}
           </div>
 
           <div style="display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
@@ -1619,10 +2116,10 @@ class AdminCMSApp {
               ${this.renderWpTypographyControls('fitness', wpStyles.fitness, 'Fitness Heading')}
             </div>
             <div id="wp-tab-fitness-img" class="wp-tab-pane" style="display: none;">
-              ${this.renderWpImageControls('fitness', wpStyles.fitness, 'Fitness Section Image')}
+              ${this.renderWpFitnessDualImageControls(wpStyles.fitness)}
             </div>
 
-            ${this.renderWpPreviewCanvas('fitness', wpStyles.fitness, fitness.title || 'Ride for Health, Ride for the Planet', wpStyles.fitness.imgUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600')}
+            ${this.renderWpPreviewCanvas('fitness', wpStyles.fitness, fitness.title || 'Ride for Health, Ride for the Planet', wpStyles.fitness.img1 || wpStyles.fitness.imgUrl || 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600')}
           </div>
 
           <div style="display: flex; gap: 12px; margin-top: 18px;">
@@ -1668,7 +2165,7 @@ class AdminCMSApp {
               ${this.renderWpImageControls('about', wpStyles.about, 'About Image')}
             </div>
 
-            ${this.renderWpPreviewCanvas('about', wpStyles.about, about.title || 'Pioneering Eco-Mobility in Mannar', wpStyles.about.imgUrl || 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800')}
+            ${this.renderWpPreviewCanvas('about', wpStyles.about, about.title || 'Pioneering Eco-Mobility in Mannar', wpStyles.about.imgUrl || 'https://drive.google.com/thumbnail?id=1bN1Oi1kOZWa9Fh3o12uixVclaPClZ_sr&sz=w1600')}
           </div>
 
           <div style="display: flex; gap: 12px; margin-top: 18px;">
@@ -2042,6 +2539,46 @@ class AdminCMSApp {
           }
         });
       }
+    });
+
+    // Dual Image controls for Fitness Section
+    [1, 2].forEach(num => {
+      const sliderIds = [
+        `wp-fitness-img${num}-width`,
+        `wp-fitness-img${num}-radius`,
+        `wp-fitness-img${num}-border-w`,
+        `wp-fitness-img${num}-border-c`,
+        `wp-fitness-img${num}-padding`,
+        `wp-fitness-img${num}-brightness`,
+        `wp-fitness-img${num}-blur`
+      ];
+      sliderIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => this.updateWpFitnessPreview());
+      });
+
+      const urlEl = document.getElementById(`wp-fitness-img${num}-url`);
+      if (urlEl) urlEl.addEventListener('input', () => this.updateWpFitnessPreview());
+
+      const altEl = document.getElementById(`wp-fitness-img${num}-alt`);
+      if (altEl) altEl.addEventListener('input', () => this.updateWpFitnessPreview());
+
+      const setupFitnessBtnGroup = (groupId, hiddenId) => {
+        const group = document.getElementById(groupId);
+        const hidden = document.getElementById(hiddenId);
+        if (group && hidden) {
+          group.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+              group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              hidden.value = btn.dataset.val;
+              this.updateWpFitnessPreview();
+            });
+          });
+        }
+      };
+      setupFitnessBtnGroup(`wp-fitness-img${num}-style-group`, `wp-fitness-img${num}-style`);
+      setupFitnessBtnGroup(`wp-fitness-img${num}-align-group`, `wp-fitness-img${num}-align`);
     });
 
     // Media Library picker buttons
@@ -2762,6 +3299,91 @@ class AdminCMSApp {
 
   async saveWpSectionStyle(secKey) {
     const currentAll = this.getContentStyleConfig();
+
+    if (secKey === 'fitness') {
+      const img1Url = document.getElementById('wp-fitness-img1-url')?.value.trim() || '';
+      const img2Url = document.getElementById('wp-fitness-img2-url')?.value.trim() || '';
+
+      const tCfg = {
+        fontSize: parseInt(document.getElementById('wp-fitness-font-size')?.value || '32'),
+        fontStyle: document.getElementById('wp-fitness-font-style')?.value || 'normal',
+        fontWeight: document.getElementById('wp-fitness-font-weight')?.value || '700',
+        color: document.getElementById('wp-fitness-color')?.value || '#111827',
+        alignment: document.getElementById('wp-fitness-alignment')?.value || 'left',
+        gradientEnabled: document.getElementById('wp-fitness-grad-enable')?.checked || false,
+        gradientStart: document.getElementById('wp-fitness-grad-start')?.value || '#059669',
+        gradientEnd: document.getElementById('wp-fitness-grad-end')?.value || '#10b981',
+        // Image 1
+        img1: img1Url,
+        img1_alt: document.getElementById('wp-fitness-img1-alt')?.value || 'Cycling Fitness in Mannar',
+        img1_width: parseInt(document.getElementById('wp-fitness-img1-width')?.value || '100'),
+        img1_style: document.getElementById('wp-fitness-img1-style')?.value || 'elevated',
+        img1_radius: parseInt(document.getElementById('wp-fitness-img1-radius')?.value || '16'),
+        img1_border_w: parseInt(document.getElementById('wp-fitness-img1-border-w')?.value || '0'),
+        img1_border_c: document.getElementById('wp-fitness-img1-border-c')?.value || '#e2e8f0',
+        img1_padding: parseInt(document.getElementById('wp-fitness-img1-padding')?.value || '0'),
+        img1_align: document.getElementById('wp-fitness-img1-align')?.value || 'center',
+        img1_brightness: parseInt(document.getElementById('wp-fitness-img1-brightness')?.value || '100'),
+        img1_blur: parseInt(document.getElementById('wp-fitness-img1-blur')?.value || '0'),
+        // Image 2
+        img2: img2Url,
+        img2_alt: document.getElementById('wp-fitness-img2-alt')?.value || 'Tourist Adventure',
+        img2_width: parseInt(document.getElementById('wp-fitness-img2-width')?.value || '100'),
+        img2_style: document.getElementById('wp-fitness-img2-style')?.value || 'elevated',
+        img2_radius: parseInt(document.getElementById('wp-fitness-img2-radius')?.value || '16'),
+        img2_border_w: parseInt(document.getElementById('wp-fitness-img2-border-w')?.value || '0'),
+        img2_border_c: document.getElementById('wp-fitness-img2-border-c')?.value || '#e2e8f0',
+        img2_padding: parseInt(document.getElementById('wp-fitness-img2-padding')?.value || '0'),
+        img2_align: document.getElementById('wp-fitness-img2-align')?.value || 'center',
+        img2_brightness: parseInt(document.getElementById('wp-fitness-img2-brightness')?.value || '100'),
+        img2_blur: parseInt(document.getElementById('wp-fitness-img2-blur')?.value || '0'),
+        // Backwards-compatibility
+        imgUrl: img1Url,
+        imgWidth: parseInt(document.getElementById('wp-fitness-img1-width')?.value || '100'),
+        imgStyle: document.getElementById('wp-fitness-img1-style')?.value || 'elevated',
+        imgRadius: parseInt(document.getElementById('wp-fitness-img1-radius')?.value || '16'),
+        imgBorderWidth: parseInt(document.getElementById('wp-fitness-img1-border-w')?.value || '0'),
+        imgBorderColor: document.getElementById('wp-fitness-img1-border-c')?.value || '#e2e8f0',
+        imgPadding: parseInt(document.getElementById('wp-fitness-img1-padding')?.value || '0'),
+        imgMarginAlign: document.getElementById('wp-fitness-img1-align')?.value || 'center',
+        imgBrightness: parseInt(document.getElementById('wp-fitness-img1-brightness')?.value || '100'),
+        imgBlur: parseInt(document.getElementById('wp-fitness-img1-blur')?.value || '0')
+      };
+
+      currentAll.fitness = tCfg;
+      const jsonStr = JSON.stringify(currentAll);
+      const fitImgsPayload = JSON.stringify({ img1: img1Url, img2: img2Url });
+
+      try {
+        this.showToast("Saving Fitness section WordPress styles...", "info");
+        await this.batchSaveSettings([
+          { key: 'content_styling_config', val: jsonStr },
+          { key: 'fitness_section_images', val: fitImgsPayload }
+        ]);
+
+        if (this.settings) {
+          this.settings.content_styling_config = jsonStr;
+          this.settings.fitness_section_images = fitImgsPayload;
+        }
+
+        // Sync inputs in Fitness Cards tab
+        const fit1In = document.getElementById('fitness-img1-input');
+        if (fit1In) fit1In.value = img1Url;
+        const fit1Prev = document.getElementById('fitness-img1-preview');
+        if (fit1Prev) fit1Prev.src = this.normalizeImageUrl(img1Url);
+
+        const fit2In = document.getElementById('fitness-img2-input');
+        if (fit2In) fit2In.value = img2Url;
+        const fit2Prev = document.getElementById('fitness-img2-preview');
+        if (fit2Prev) fit2Prev.src = this.normalizeImageUrl(img2Url);
+
+        await this.logAudit("UPDATE", "WP_STYLES", "fitness", tCfg);
+        this.showToast("Fitness Dual Images & Typography styles applied to website!", "success");
+      } catch (err) {
+        this.showToast(err.message || "Failed to save WordPress styles", "error");
+      }
+      return;
+    }
 
     const tCfg = {
       fontSize: parseInt(document.getElementById(`wp-${secKey}-font-size`)?.value || '32'),
@@ -3703,6 +4325,7 @@ class AdminCMSApp {
                 <th style="width: 75px;">Order</th>
                 <th>Offer Title</th>
                 <th>Discount Value</th>
+                <th>Media</th>
                 <th>Description</th>
                 <th>CTA Button</th>
                 <th>Status</th>
@@ -3724,6 +4347,19 @@ class AdminCMSApp {
                   </td>
                   <td><strong>${this.escapeHtml(o.title)}</strong></td>
                   <td><span class="badge badge-published">${this.escapeHtml(o.discount_value || '')}</span></td>
+                  <td style="white-space: nowrap;">
+                    ${(() => {
+                      if (!o.image_url) return '<span style="color:#94a3b8; font-size:11px;">None</span>';
+                      const isVid = this.isVideoMedia(o.image_url);
+                      if (isVid) {
+                        return `<button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" style="padding: 2px 8px; font-size: 11px; color: #0284c7; border-color: #bae6fd;">
+                          <i class="fa-solid fa-video"></i> Video
+                        </button>`;
+                      } else {
+                        return `<img src="${this.normalizeImageUrl(o.image_url)}" alt="Media" style="width: 52px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" title="Click to preview">`;
+                      }
+                    })()}
+                  </td>
                   <td><span style="font-size: 12px; color: var(--slate-600);">${this.escapeHtml(o.description || '')}</span></td>
                   <td>${this.escapeHtml(o.button_text || 'Claim Offer')}</td>
                   <td>
@@ -3743,7 +4379,7 @@ class AdminCMSApp {
                     </button>
                   </td>
                 </tr>
-              `).join('') : `<tr><td colspan="7" style="text-align:center; color:var(--slate-500);">No promotional offers found.</td></tr>`;
+              `).join('') : `<tr><td colspan="8" style="text-align:center; color:var(--slate-500);">No promotional offers found.</td></tr>`;
               })()}
             </tbody>
           </table>
@@ -4111,7 +4747,158 @@ class AdminCMSApp {
     }
   }
 
+  /* ----------------- OFFER PROMOTIONAL MEDIA (Item 3) ----------------- */
+  isVideoMedia(url) {
+    if (!url) return false;
+    const str = String(url).toLowerCase();
+    return str.includes('.mp4') || str.includes('.webm') || str.includes('.ogg') || str.includes('.mov') ||
+           str.includes('youtube.com') || str.includes('youtu.be') || str.includes('vimeo.com') ||
+           str.startsWith('data:video');
+  }
+
+  previewOfferMedia(url, isEdit) {
+    const prefix = isEdit ? 'edit-offer' : 'offer';
+    const box = document.getElementById(`${prefix}-media-preview-box`);
+    const badge = document.getElementById(`${prefix}-media-type-badge`);
+    if (!box) return;
+
+    const trimmed = (url || '').trim();
+    if (!trimmed) {
+      box.innerHTML = `<span style="font-size: 12px; color: #94a3b8;"><i class="fa-solid fa-image"></i> No media attached. Upload an image (1200×675), video (1920×1080), or enter a media URL.</span>`;
+      if (badge) {
+        badge.className = 'badge badge-draft';
+        badge.textContent = 'Optional Media';
+      }
+      return;
+    }
+
+    const isVid = this.isVideoMedia(trimmed);
+    if (badge) {
+      badge.className = 'badge badge-published';
+      badge.innerHTML = isVid ? '<i class="fa-solid fa-video"></i> Video Attached' : '<i class="fa-solid fa-image"></i> Image Attached';
+    }
+
+    if (isVid) {
+      if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
+        let ytId = '';
+        const m = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        if (m) ytId = m[1];
+        box.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" style="width: 100%; height: 200px; aspect-ratio: 16/9; border-radius: 6px;" frameborder="0" allowfullscreen></iframe>`;
+      } else if (trimmed.includes('vimeo.com')) {
+        const vm = trimmed.match(/vimeo\.com\/(\d+)/);
+        const vId = vm ? vm[1] : '';
+        box.innerHTML = `<iframe src="https://player.vimeo.com/video/${vId}" style="width: 100%; height: 200px; aspect-ratio: 16/9; border-radius: 6px;" frameborder="0" allowfullscreen></iframe>`;
+      } else {
+        box.innerHTML = `<video src="${this.normalizeImageUrl(trimmed)}" controls style="width: 100%; max-height: 200px; aspect-ratio: 16/9; border-radius: 6px; background: #000;"></video>`;
+      }
+    } else {
+      box.innerHTML = `<img src="${this.normalizeImageUrl(trimmed)}" alt="Preview" style="width: 100%; max-height: 200px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">`;
+    }
+  }
+
+  removeOfferMedia(isEdit) {
+    const prefix = isEdit ? 'edit-offer' : 'offer';
+    const input = document.getElementById(`${prefix}-image-url`);
+    if (input) input.value = '';
+    this.previewOfferMedia('', isEdit);
+    this.showToast("Media removed from offer.", "info");
+  }
+
+  openMediaPickerForOffer(isEdit) {
+    const targetInputId = isEdit ? 'edit-offer-image-url' : 'offer-image-url';
+    this.openMediaPickerModal(targetInputId);
+  }
+
+  async handleOfferMediaUpload(input, isEdit) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const isVideo = file.type.startsWith('video/') || file.name.match(/\.(mp4|webm|ogg|mov)$/i);
+
+    // Validate capacities: 10MB image / 50MB video
+    if (isVideo && file.size > 50 * 1024 * 1024) {
+      this.showToast("Video exceeds 50MB maximum capacity limit!", "error");
+      input.value = '';
+      return;
+    }
+    if (!isVideo && file.size > 10 * 1024 * 1024) {
+      this.showToast("Image exceeds 10MB maximum capacity limit!", "error");
+      input.value = '';
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `offer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    const filePath = `offers/${fileName}`;
+
+    try {
+      this.showToast(`Uploading ${isVideo ? 'video' : 'image'} to Supabase Storage...`, "info");
+      const { error: uploadError } = await this.supabase.storage
+        .from('website-media')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = this.supabase.storage
+        .from('website-media')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Save to media table
+      await this.supabase.from('website_media').insert({
+        file_name: file.name,
+        storage_path: filePath,
+        public_url: publicUrl,
+        media_type: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+        file_size: file.size,
+        category: 'offers'
+      });
+
+      const prefix = isEdit ? 'edit-offer' : 'offer';
+      const targetInput = document.getElementById(`${prefix}-image-url`);
+      if (targetInput) {
+        targetInput.value = publicUrl;
+      }
+      this.previewOfferMedia(publicUrl, isEdit);
+      this.showToast(`${isVideo ? 'Video' : 'Image'} uploaded successfully!`, "success");
+    } catch (err) {
+      console.error("Offer media upload error:", err);
+      this.showToast(err.message || "Failed to upload media file", "error");
+    } finally {
+      input.value = '';
+    }
+  }
+
+  previewOfferMediaModal(url, title = 'Promotional Offer') {
+    if (!url) return;
+    const isVid = this.isVideoMedia(url);
+    const modalHtml = `
+      <div class="modal-backdrop active" id="offer-media-quick-modal" style="display: flex; align-items: center; justify-content: center; z-index: 9999;" onclick="if(event.target===this) this.remove()">
+        <div class="modal-box" style="max-width: 650px; width: 95%; padding: 0; overflow: hidden; border-radius: 12px; background: #000;">
+          <div style="padding: 12px 16px; background: #0f172a; color: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+            <span style="font-weight: 700; font-size: 13px;"><i class="fa-solid ${isVid ? 'fa-video' : 'fa-image'}"></i> ${this.escapeHtml(title)}</span>
+            <button onclick="document.getElementById('offer-media-quick-modal').remove()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+          </div>
+          <div style="background: #000; display: flex; align-items: center; justify-content: center; min-height: 240px;">
+            ${isVid 
+              ? (url.includes('youtube.com') || url.includes('youtu.be')
+                ? `<iframe src="https://www.youtube.com/embed/${url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)?.[1] || ''}?autoplay=1" style="width: 100%; aspect-ratio: 16/9; min-height: 320px;" frameborder="0" allowfullscreen></iframe>`
+                : `<video src="${this.normalizeImageUrl(url)}" controls autoplay style="width: 100%; max-height: 420px; aspect-ratio: 16/9;"></video>`)
+              : `<img src="${this.normalizeImageUrl(url)}" alt="Offer Preview" style="width: 100%; max-height: 420px; object-fit: contain;">`
+            }
+          </div>
+        </div>
+      </div>
+    `;
+    const existing = document.getElementById('offer-media-quick-modal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
   openAddOfferModal() {
+    const input = document.getElementById('offer-image-url');
+    if (input) input.value = '';
+    this.previewOfferMedia('', false);
     this.openModal('add-offer-modal');
   }
 
@@ -4127,6 +4914,7 @@ class AdminCMSApp {
     document.getElementById('edit-offer-btn-text').value = offer.button_text || 'Claim Offer';
     document.getElementById('edit-offer-btn-url').value = offer.button_url || '#booking';
     document.getElementById('edit-offer-image-url').value = offer.image_url || '';
+    this.previewOfferMedia(offer.image_url || '', true);
 
     this.openModal('edit-offer-modal');
   }
@@ -5575,7 +6363,25 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     }
   }
 
-  /* ----------------- SETTINGS HELPER ----------------- */
+  /* ----------------- SETTINGS HELPER & PERSISTENCE ----------------- */
+  broadcastPreviewUpdate(key, value) {
+    try {
+      if (window.BroadcastChannel) {
+        if (!this.cmsBroadcastChannel) {
+          this.cmsBroadcastChannel = new BroadcastChannel('mgr_cms_updates');
+        }
+        this.cmsBroadcastChannel.postMessage({
+          type: 'CMS_SETTING_UPDATED',
+          key: key,
+          value: value,
+          timestamp: Date.now()
+        });
+      }
+    } catch (e) {
+      console.warn("BroadcastChannel error:", e);
+    }
+  }
+
   async saveSettingsItem(key, value, auditModule = 'SETTINGS') {
     const stringVal = typeof value === 'string' ? value : JSON.stringify(value);
     this.settings[key] = stringVal;
@@ -5584,18 +6390,21 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     } catch (e) {}
 
     if (this.supabase) {
-      try {
-        await this.supabase.from('website_settings').upsert({
-          setting_key: key,
-          setting_value: stringVal,
-          setting_type: typeof value === 'object' ? 'json' : 'text',
-          is_public: true,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'setting_key' });
-      } catch (err) {
-        console.warn(`Could not save ${key} to Supabase:`, err);
+      const { error } = await this.supabase.from('website_settings').upsert({
+        setting_key: key,
+        setting_value: stringVal,
+        setting_type: typeof value === 'object' ? 'json' : 'text',
+        is_public: true,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'setting_key' });
+
+      if (error) {
+        console.error(`Supabase persistence failed for ${key}:`, error);
+        throw new Error(`Database save failed: ${error.message || error.details || 'Unknown database error'}`);
       }
     }
+
+    this.broadcastPreviewUpdate(key, value);
   }
 
   /* ----------------- 9. TRANSPORT CATEGORIES MANAGER ----------------- */
@@ -6622,11 +7431,14 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         try {
           localStorage.setItem('mgr_setting_' + item.key, item.val);
         } catch (e) {}
+        this.broadcastPreviewUpdate(item.key, item.val);
       }
       await this.logAudit("SETTINGS_CHANGE", "SETTINGS", "global", { count: list.length });
-      this.showToast("Settings updated successfully!", "success");
+      this.showToast("Settings updated and persisted successfully!", "success");
     } catch (err) {
+      console.error("Batch save settings error:", err);
       this.showToast(err.message || "Failed to update settings", "error");
+      throw err;
     }
   }
 
@@ -7201,14 +8013,14 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
             <label class="form-label" style="font-weight: 700;">Image 1: Cycling Fitness in Mannar</label>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="url" class="form-input" id="fitness-img1-input" value="${this.escapeHtml(this.getFitnessImages().img1 || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img1-input', 'fitness-img1-preview')">
+              <input type="url" class="form-input" id="fitness-img1-input" value="${this.escapeHtml(this.getFitnessImages().img1 || 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img1-input', 'fitness-img1-preview')">
               <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
                 <i class="fa-solid fa-upload"></i> Upload
                 <input type="file" id="fitness-img1-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'fitness-img1-input', 'fitness-img1-preview')">
               </label>
             </div>
             <div id="fitness-img1-preview-wrapper" style="margin-top: 8px;">
-              <img id="fitness-img1-preview" src="${this.escapeHtml(this.getFitnessImages().img1 || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800')}" alt="Fitness Preview 1" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
+              <img id="fitness-img1-preview" src="${this.escapeHtml(this.getFitnessImages().img1 || 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600')}" alt="Fitness Preview 1" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
             </div>
           </div>
 
@@ -7216,14 +8028,14 @@ ${safetyTips.map(t => "• " + t).join('\n')}
           <div class="form-group" style="background: var(--slate-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
             <label class="form-label" style="font-weight: 700;">Image 2: Tourist Adventure</label>
             <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="url" class="form-input" id="fitness-img2-input" value="${this.escapeHtml(this.getFitnessImages().img2 || 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img2-input', 'fitness-img2-preview')">
+              <input type="url" class="form-input" id="fitness-img2-input" value="${this.escapeHtml(this.getFitnessImages().img2 || 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600')}" placeholder="https://... image URL" oninput="window.adminCMS.previewImage('fitness-img2-input', 'fitness-img2-preview')">
               <label class="btn btn-outline btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer;">
                 <i class="fa-solid fa-upload"></i> Upload
                 <input type="file" id="fitness-img2-file" accept="image/*" style="display: none;" onchange="window.adminCMS.handleFileUpload(this, 'fitness-img2-input', 'fitness-img2-preview')">
               </label>
             </div>
             <div id="fitness-img2-preview-wrapper" style="margin-top: 8px;">
-              <img id="fitness-img2-preview" src="${this.escapeHtml(this.getFitnessImages().img2 || 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800')}" alt="Fitness Preview 2" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
+              <img id="fitness-img2-preview" src="${this.escapeHtml(this.getFitnessImages().img2 || 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600')}" alt="Fitness Preview 2" style="max-height: 120px; width: 100%; border-radius: 8px; border: 1px solid var(--slate-200); object-fit: cover;">
             </div>
           </div>
         </div>
@@ -7239,8 +8051,8 @@ ${safetyTips.map(t => "• " + t).join('\n')}
   getFitnessImages() {
     const raw = this.settings && this.settings.fitness_section_images;
     let imgs = {
-      img1: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=800',
-      img2: 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800'
+      img1: 'https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600',
+      img2: 'https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600'
     };
     if (raw) {
       try {
@@ -7259,6 +8071,24 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     try {
       this.showToast("Saving fitness images...", "info");
       await this.saveSettingsItem('fitness_section_images', payload, 'FITNESS');
+
+      // Also sync into content_styling_config so both places are unified
+      const styling = this.getContentStyleConfig();
+      if (!styling.fitness) styling.fitness = {};
+      styling.fitness.img1 = img1;
+      styling.fitness.img2 = img2;
+      styling.fitness.imgUrl = img1;
+      await this.saveSettingsItem('content_styling_config', styling, 'FITNESS');
+
+      // Sync into WordPress inputs if in DOM
+      const wp1 = document.getElementById('wp-fitness-img1-url');
+      if (wp1) wp1.value = img1;
+      const wp2 = document.getElementById('wp-fitness-img2-url');
+      if (wp2) wp2.value = img2;
+      if (typeof this.updateWpFitnessPreview === 'function') {
+        this.updateWpFitnessPreview();
+      }
+
       this.showToast("Fitness section images updated successfully!", "success");
     } catch (err) {
       this.showToast(err.message || "Failed to save fitness images", "error");
@@ -7579,7 +8409,12 @@ ${safetyTips.map(t => "• " + t).join('\n')}
   /* ----------------- Modal Helpers ----------------- */
   openModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.add('open');
+    if (modal) {
+      modal.classList.add('open');
+      if (window.history && window.history.pushState) {
+        window.history.pushState({ tab: this.activeTab, modalId: id }, '', '#' + this.activeTab);
+      }
+    }
   }
 
   closeModal(id) {

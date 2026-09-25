@@ -161,6 +161,74 @@
   }
   </script>
 
+  <!-- Instant Synchronous Image & Content Hydration (prevents hardcoded images from flashing on refresh) -->
+  <script>
+    (function() {
+      function applyEarlyStoredContent() {
+        try {
+          // 1. Fitness Section Images
+          var fitStr = localStorage.getItem('mgr_setting_fitness_section_images');
+          if (fitStr) {
+            var fitObj = JSON.parse(fitStr);
+            if (fitObj.img1) {
+              var el1 = document.getElementById('fitness-img-1');
+              if (el1) el1.src = fitObj.img1;
+            }
+            if (fitObj.img2) {
+              var el2 = document.getElementById('fitness-img-2');
+              if (el2) el2.src = fitObj.img2;
+            }
+          }
+
+          // 2. WP Content Styling Images
+          var wpStr = localStorage.getItem('mgr_setting_content_styling_config');
+          if (wpStr) {
+            var wpObj = JSON.parse(wpStr);
+            if (wpObj.fitness) {
+              if (wpObj.fitness.img1) {
+                var fit1 = document.getElementById('fitness-img-1');
+                if (fit1) fit1.src = wpObj.fitness.img1;
+              } else if (wpObj.fitness.imgUrl) {
+                var fit1 = document.getElementById('fitness-img-1');
+                if (fit1) fit1.src = wpObj.fitness.imgUrl;
+              }
+              if (wpObj.fitness.img2) {
+                var fit2 = document.getElementById('fitness-img-2');
+                if (fit2) fit2.src = wpObj.fitness.img2;
+              }
+            }
+            if (wpObj.about && wpObj.about.imgUrl) {
+              var abEl = document.getElementById('about-img');
+              if (abEl) abEl.src = wpObj.about.imgUrl;
+            }
+            if (wpObj.hero && wpObj.hero.imgUrl) {
+              var heroMain = document.querySelector('#hero-slider-track .hero-slide-main-img');
+              if (heroMain) heroMain.src = wpObj.hero.imgUrl;
+            }
+          }
+
+          // 3. Hero Slider Images
+          var sliderStr = localStorage.getItem('mgr_setting_hero_slider_config');
+          if (sliderStr) {
+            var sliderObj = JSON.parse(sliderStr);
+            if (sliderObj.slides && sliderObj.slides.length > 0 && sliderObj.slides[0].url) {
+              var hm = document.querySelector('#hero-slider-track .hero-slide-main-img');
+              if (hm) hm.src = sliderObj.slides[0].url;
+              var hb = document.querySelector('#hero-slider-track .hero-slide-bg-blur');
+              if (hb) hb.src = sliderObj.slides[0].url;
+            }
+          }
+        } catch(e) {}
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyEarlyStoredContent);
+      } else {
+        applyEarlyStoredContent();
+      }
+    })();
+  </script>
+
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -241,7 +309,7 @@
 
         <!-- Front Ceremony Image with Hologram Glowing Border -->
         <div class="ga-hologram-frame" id="ga-front-image-wrap">
-          <img id="ga-front-image" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=95&w=1200" alt="Launch Ceremony">
+          <img id="ga-front-image" src="https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600" alt="Launch Ceremony">
           <div class="ga-hologram-scanline"></div>
         </div>
 
@@ -431,9 +499,25 @@
           <div id="hero-slider-track" class="relative w-full h-full overflow-hidden">
             <!-- Populated dynamically by initHeroSlider() -->
             <div class="hero-slide active fit-contain" data-idx="0">
-              <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920" alt="" class="hero-slide-bg-blur" aria-hidden="true">
-              <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=95&w=1920" alt="Eco-Friendly Cycling Across Mannar" class="hero-slide-main-img">
+              <img src="https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600" alt="" class="hero-slide-bg-blur" aria-hidden="true">
+              <img src="https://drive.google.com/thumbnail?id=1ZuYVfL-kmlxJWkeSuMM6_b-V1fIclTf_&sz=w1600" alt="Eco-Friendly Cycling Across Mannar" class="hero-slide-main-img">
             </div>
+            <script>
+              (function() {
+                try {
+                  var sliderStr = localStorage.getItem('mgr_setting_hero_slider_config');
+                  if (sliderStr) {
+                    var sObj = JSON.parse(sliderStr);
+                    if (sObj && sObj.slides && sObj.slides.length > 0 && sObj.slides[0].url) {
+                      var hm = document.querySelector('#hero-slider-track .hero-slide-main-img');
+                      var hb = document.querySelector('#hero-slider-track .hero-slide-bg-blur');
+                      if (hm) hm.src = sObj.slides[0].url;
+                      if (hb) hb.src = sObj.slides[0].url;
+                    }
+                  }
+                } catch(e) {}
+              })();
+            </script>
           </div>
 
           <!-- Controls: Prev / Next -->
@@ -847,12 +931,35 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <img id="fitness-img-1" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=600"
-            alt="Cycling Fitness in Mannar" class="rounded-2xl shadow-md object-cover h-64 w-full"
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=600';">
-          <img id="fitness-img-2" src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=600"
-            alt="Tourist Adventure" class="rounded-2xl shadow-md object-cover h-64 w-full mt-8"
-            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&q=80&w=600';">
+          <img id="fitness-img-1" src="https://drive.google.com/thumbnail?id=1z3yc58-1GU81k5AvWuYIwWMrgwuyJN_s&sz=w1600"
+            alt="Cycling Fitness in Mannar" class="rounded-2xl shadow-md object-cover h-64 w-full">
+          <img id="fitness-img-2" src="https://drive.google.com/thumbnail?id=1Set2mnZc8B5Ua0qZcxFw52hzAAwApJ7x&sz=w1600"
+            alt="Tourist Adventure" class="rounded-2xl shadow-md object-cover h-64 w-full mt-8">
+          <script>
+            (function() {
+              try {
+                var fitStr = localStorage.getItem('mgr_setting_fitness_section_images');
+                var wpStr = localStorage.getItem('mgr_setting_content_styling_config');
+                var i1, i2;
+                if (fitStr) {
+                  var fo = JSON.parse(fitStr);
+                  if (fo) { if (fo.img1) i1 = fo.img1; if (fo.img2) i2 = fo.img2; }
+                }
+                if (wpStr) {
+                  var wo = JSON.parse(wpStr);
+                  if (wo && wo.fitness) {
+                    if (wo.fitness.img1) i1 = wo.fitness.img1;
+                    else if (wo.fitness.imgUrl) i1 = wo.fitness.imgUrl;
+                    if (wo.fitness.img2) i2 = wo.fitness.img2;
+                  }
+                }
+                var el1 = document.getElementById('fitness-img-1');
+                var el2 = document.getElementById('fitness-img-2');
+                if (el1 && i1) el1.src = i1;
+                if (el2 && i2) el2.src = i2;
+              } catch(e) {}
+            })();
+          </script>
         </div>
       </div>
     </div>
@@ -863,8 +970,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         <div>
-          <img id="about-img" src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?auto=format&fit=crop&q=80&w=800"
+          <img id="about-img" src="https://drive.google.com/thumbnail?id=1bN1Oi1kOZWa9Fh3o12uixVclaPClZ_sr&sz=w1600"
             alt="Mannar Landscape" class="rounded-3xl shadow-md w-full object-cover h-[380px]">
+          <script>
+            (function() {
+              try {
+                var wpStr = localStorage.getItem('mgr_setting_content_styling_config');
+                if (wpStr) {
+                  var wo = JSON.parse(wpStr);
+                  if (wo && wo.about && wo.about.imgUrl) {
+                    var ab = document.getElementById('about-img');
+                    if (ab) ab.src = wo.about.imgUrl;
+                  }
+                }
+              } catch(e) {}
+            })();
+          </script>
         </div>
         <div class="space-y-5">
           <span

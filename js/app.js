@@ -373,11 +373,44 @@ function initNavigation() {
   // Handle direct clicks on desktop and mobile navigation links
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', (e) => {
-      const targetId = link.getAttribute('href')?.replace('#', '');
-      if (targetId && sections.some(s => s.id === targetId)) {
-        setActiveButton(targetId);
+      const href = link.getAttribute('href');
+      const targetId = href ? href.replace('#', '') : '';
+      if (!targetId) return;
+
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        e.preventDefault();
+        // Update browser history so Back/Forward buttons work correctly
+        if (window.history && window.history.pushState && window.location.hash !== href) {
+          window.history.pushState({ section: targetId }, '', href);
+        }
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+        if (sections.some(s => s.id === targetId)) {
+          setActiveButton(targetId);
+        }
       }
     });
+  });
+
+  // Browser Forward / Backward button support (popstate)
+  window.addEventListener('popstate', (e) => {
+    const targetId = (e.state && e.state.section) || (window.location.hash ? window.location.hash.replace('#', '') : 'home');
+    const targetEl = document.getElementById(targetId);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth' });
+      if (sections.some(s => s.id === targetId)) {
+        setActiveButton(targetId);
+      }
+    }
+    // Restore preselected vehicle if present in history state
+    if (e.state && e.state.vehicle) {
+      const vInput = document.getElementById('book-vehicle');
+      if (vInput) vInput.value = e.state.vehicle;
+    }
+    if (e.state && e.state.package) {
+      const pInput = document.getElementById('book-package');
+      if (pInput) pInput.value = e.state.package;
+    }
   });
 
   // Smooth Scroll-Spy: detect which section is currently centered/active in viewport
@@ -410,10 +443,13 @@ function initNavigation() {
     setActiveButton(activeId);
   }, { passive: true });
 
-  // Initial active button based on URL hash
+  // Initial active button and state based on URL hash
   const initialHash = window.location.hash.replace('#', '') || 'home';
   if (sections.some(s => s.id === initialHash)) {
     setActiveButton(initialHash);
+  }
+  if (window.history && window.history.replaceState && !window.history.state) {
+    window.history.replaceState({ section: initialHash }, '', window.location.hash || '#home');
   }
 }
 

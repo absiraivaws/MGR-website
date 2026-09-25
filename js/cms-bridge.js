@@ -14,7 +14,32 @@
 
   let supabaseClient = null;
 
+  function applySynchronousPreHydration() {
+    try {
+      const keys = [
+        'hero_layout_config', 'currency_config', 'hero_slider_config', 'offer_animation_config',
+        'content_styling_config', 'floating_booking_config', 'transport_categories',
+        'statistics_counters_config', 'join_us_config', 'reviews_slider_config',
+        'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards',
+        'about_feature_cards', 'fitness_section_images', 'launch_ceremony_config'
+      ];
+      const cachedSettings = [];
+      keys.forEach(k => {
+        const val = localStorage.getItem('mgr_setting_' + k);
+        if (val) cachedSettings.push({ setting_key: k, setting_value: val });
+      });
+      if (cachedSettings.length > 0) {
+        applySettings(cachedSettings);
+      }
+    } catch (e) {
+      console.warn("Pre-hydration warning:", e);
+    }
+  }
+
   function initCMS() {
+    // Fast synchronous pre-hydration so customized images/content render immediately on refresh
+    applySynchronousPreHydration();
+
     // Fast initial check for Launch Ceremony (cached in localStorage or URL query param)
     try {
       const cachedCeremony = localStorage.getItem('mgr_setting_launch_ceremony_config');
@@ -57,7 +82,7 @@
       if (settings && settings.length) {
         settings.forEach(s => { settingsMap[s.setting_key] = s.setting_value; });
       }
-      ['hero_layout_config', 'currency_config', 'hero_slider_config', 'offer_animation_config', 'content_styling_config', 'floating_booking_config', 'transport_categories', 'statistics_counters_config', 'join_us_config', 'reviews_slider_config', 'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards', 'about_feature_cards'].forEach(k => {
+      ['hero_layout_config', 'currency_config', 'hero_slider_config', 'offer_animation_config', 'content_styling_config', 'floating_booking_config', 'transport_categories', 'statistics_counters_config', 'join_us_config', 'reviews_slider_config', 'host_whatsapp_group_url', 'host_vehicle_cards', 'fitness_feature_cards', 'about_feature_cards', 'fitness_section_images', 'launch_ceremony_config'].forEach(k => {
         try {
           const val = localStorage.getItem('mgr_setting_' + k);
           if (val) settingsMap[k] = val;
@@ -725,8 +750,9 @@
     const bgStyle = cfg.bg_style || 'blur';
 
     if (sliderBox) {
-      sliderBox.style.height = `${sliderHeight}px`;
-      sliderBox.style.maxHeight = `${sliderHeight + 40}px`;
+      sliderBox.style.setProperty('--hero-slider-h', `${sliderHeight}px`);
+      sliderBox.style.height = '';
+      sliderBox.style.maxHeight = '';
       if (bgStyle === 'dark') {
         sliderBox.style.background = '#0f172a';
       } else if (bgStyle === 'emerald') {
@@ -836,6 +862,43 @@
     if (sliderBox) {
       sliderBox.onmouseenter = () => { if (heroSliderTimer) clearInterval(heroSliderTimer); };
       sliderBox.onmouseleave = () => { resetAutoPlay(); };
+
+      // Touch swipe navigation for mobile & tablet
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let isSwiping = false;
+
+      sliderBox.addEventListener('touchstart', (e) => {
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        isSwiping = true;
+        if (heroSliderTimer) clearInterval(heroSliderTimer);
+      }, { passive: true });
+
+      sliderBox.addEventListener('touchend', (e) => {
+        if (!isSwiping || !e.changedTouches || e.changedTouches.length === 0) return;
+        isSwiping = false;
+        const touchEndX = e.changedTouches[0].screenX;
+        const touchEndY = e.changedTouches[0].screenY;
+        const diffX = touchEndX - touchStartX;
+        const diffY = touchEndY - touchStartY;
+
+        // Ensure horizontal swipe is dominant and exceeds minimum threshold (40px)
+        if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+          if (diffX < 0) {
+            // Swiped left -> next slide
+            const nextIdx = (heroCurrentSlideIdx + 1) % heroSlidesData.length;
+            goToSlide(nextIdx);
+          } else {
+            // Swiped right -> prev slide
+            const prevIdx = (heroCurrentSlideIdx - 1 + heroSlidesData.length) % heroSlidesData.length;
+            goToSlide(prevIdx);
+          }
+        } else {
+          resetAutoPlay();
+        }
+      }, { passive: true });
     }
 
     updateCaption(0);
@@ -925,22 +988,52 @@
       }
       if (cfg.hero.imgUrl) {
         // If single image was set in WP Image Editor, replace active slide or first slide
-        const firstSlideImg = document.querySelector('#hero-slider-track .hero-slide img');
-        if (firstSlideImg) {
-          firstSlideImg.src = normalizeImageUrl(cfg.hero.imgUrl);
-        }
+        const normUrl = normalizeImageUrl(cfg.hero.imgUrl);
+        const mainImgs = document.querySelectorAll('#hero-slider-track .hero-slide-main-img');
+        if (mainImgs.length > 0) mainImgs[0].src = normUrl;
+        const blurImgs = document.querySelectorAll('#hero-slider-track .hero-slide-bg-blur');
+        if (blurImgs.length > 0) blurImgs[0].src = normUrl;
       }
     }
 
     // 2. Fitness Section
     if (cfg.fitness) {
       applyTextStyles(document.getElementById('fitness-title'), cfg.fitness);
-      if (cfg.fitness.imgUrl) {
-        const fit1 = document.getElementById('fitness-img-1');
-        if (fit1) fit1.src = normalizeImageUrl(cfg.fitness.imgUrl);
-      }
-      applyImageStyles(document.getElementById('fitness-img-1'), cfg.fitness);
-      applyImageStyles(document.getElementById('fitness-img-2'), cfg.fitness);
+      const fit1 = document.getElementById('fitness-img-1');
+      const fit2 = document.getElementById('fitness-img-2');
+
+      const img1Src = cfg.fitness.img1 || cfg.fitness.imgUrl;
+      if (fit1 && img1Src) fit1.src = normalizeImageUrl(img1Src);
+      if (fit2 && cfg.fitness.img2) fit2.src = normalizeImageUrl(cfg.fitness.img2);
+
+      if (fit1 && cfg.fitness.img1_alt) fit1.alt = cfg.fitness.img1_alt;
+      if (fit2 && cfg.fitness.img2_alt) fit2.alt = cfg.fitness.img2_alt;
+
+      const img1Styles = {
+        imgWidth: cfg.fitness.img1_width || cfg.fitness.imgWidth,
+        imgRadius: cfg.fitness.img1_radius !== undefined ? cfg.fitness.img1_radius : cfg.fitness.imgRadius,
+        imgBorderWidth: cfg.fitness.img1_border_w !== undefined ? cfg.fitness.img1_border_w : cfg.fitness.imgBorderWidth,
+        imgBorderColor: cfg.fitness.img1_border_c || cfg.fitness.imgBorderColor,
+        imgPadding: cfg.fitness.img1_padding !== undefined ? cfg.fitness.img1_padding : cfg.fitness.imgPadding,
+        imgMarginAlign: cfg.fitness.img1_align || cfg.fitness.imgMarginAlign,
+        imgBrightness: cfg.fitness.img1_brightness !== undefined ? cfg.fitness.img1_brightness : cfg.fitness.imgBrightness,
+        imgBlur: cfg.fitness.img1_blur !== undefined ? cfg.fitness.img1_blur : cfg.fitness.imgBlur,
+        imgStyle: cfg.fitness.img1_style || cfg.fitness.imgStyle
+      };
+      const img2Styles = {
+        imgWidth: cfg.fitness.img2_width || cfg.fitness.imgWidth,
+        imgRadius: cfg.fitness.img2_radius !== undefined ? cfg.fitness.img2_radius : cfg.fitness.imgRadius,
+        imgBorderWidth: cfg.fitness.img2_border_w !== undefined ? cfg.fitness.img2_border_w : cfg.fitness.imgBorderWidth,
+        imgBorderColor: cfg.fitness.img2_border_c || cfg.fitness.imgBorderColor,
+        imgPadding: cfg.fitness.img2_padding !== undefined ? cfg.fitness.img2_padding : cfg.fitness.imgPadding,
+        imgMarginAlign: cfg.fitness.img2_align || cfg.fitness.imgMarginAlign,
+        imgBrightness: cfg.fitness.img2_brightness !== undefined ? cfg.fitness.img2_brightness : cfg.fitness.imgBrightness,
+        imgBlur: cfg.fitness.img2_blur !== undefined ? cfg.fitness.img2_blur : cfg.fitness.imgBlur,
+        imgStyle: cfg.fitness.img2_style || cfg.fitness.imgStyle
+      };
+
+      if (fit1) applyImageStyles(fit1, img1Styles);
+      if (fit2) applyImageStyles(fit2, img2Styles);
     }
 
     // 3. About Section
@@ -1224,7 +1317,86 @@
     });
   }
 
-  /* ----------------- Apply Promotional Offers ----------------- */
+  /* ----------------- Apply Promotional Offers & Media Lightbox ----------------- */
+  function showOfferMediaModal(offer) {
+    let modal = document.getElementById('mgr-offer-media-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mgr-offer-media-modal';
+      modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl relative border border-emerald-500/20" style="animation: modalPop 0.2s ease-out;">
+          <button id="mgr-offer-modal-close" class="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/90 transition text-lg" aria-label="Close modal">&times;</button>
+          <div id="mgr-offer-media-container" class="relative bg-black w-full" style="aspect-ratio: 16 / 9; max-height: 380px; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
+          <div class="p-5 space-y-3">
+            <div class="flex items-center justify-between gap-3">
+              <span id="mgr-offer-modal-badge" class="bg-emerald-100 text-emerald-800 text-xs font-black uppercase px-2.5 py-1 rounded-full"></span>
+              <span class="text-xs text-gray-500 font-semibold"><i class="fa-solid fa-bolt text-amber-500"></i> Promotional Offer</span>
+            </div>
+            <h3 id="mgr-offer-modal-title" class="text-xl font-extrabold text-gray-900 leading-tight"></h3>
+            <p id="mgr-offer-modal-desc" class="text-gray-600 text-sm leading-relaxed"></p>
+            <div class="pt-2 flex justify-end gap-3">
+              <button id="mgr-offer-modal-cancel" class="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm font-semibold">Close</button>
+              <a id="mgr-offer-modal-btn" href="#booking" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md transition inline-flex items-center gap-2">
+                <i class="fa-solid fa-gift"></i> <span id="mgr-offer-modal-btn-text">Claim Offer</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        const vid = modal.querySelector('video');
+        if (vid) vid.pause();
+        const iframe = modal.querySelector('iframe');
+        if (iframe) iframe.src = iframe.src;
+      };
+
+      document.getElementById('mgr-offer-modal-close').addEventListener('click', closeModal);
+      document.getElementById('mgr-offer-modal-cancel').addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    const container = document.getElementById('mgr-offer-media-container');
+    const badgeEl = document.getElementById('mgr-offer-modal-badge');
+    const titleEl = document.getElementById('mgr-offer-modal-title');
+    const descEl = document.getElementById('mgr-offer-modal-desc');
+    const btnEl = document.getElementById('mgr-offer-modal-btn');
+    const btnTextEl = document.getElementById('mgr-offer-modal-btn-text');
+
+    if (badgeEl) badgeEl.textContent = offer.discount_value || 'SPECIAL OFFER';
+    if (titleEl) titleEl.textContent = offer.title || 'Special Promotion';
+    if (descEl) descEl.textContent = offer.description || '';
+    if (btnEl && offer.button_url) btnEl.href = offer.button_url;
+    if (btnTextEl && offer.button_text) btnTextEl.textContent = offer.button_text;
+
+    const mediaUrl = offer.image_url || '';
+    const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov)($|\?)/i) || mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be') || mediaUrl.includes('vimeo.com');
+
+    if (isVideo) {
+      if (mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be')) {
+        let ytId = '';
+        const m = mediaUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        if (m) ytId = m[1];
+        container.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" style="width:100%; height:100%; aspect-ratio:16/9;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      } else if (mediaUrl.includes('vimeo.com')) {
+        const vm = mediaUrl.match(/vimeo\.com\/(\d+)/);
+        const vId = vm ? vm[1] : '';
+        container.innerHTML = `<iframe src="https://player.vimeo.com/video/${vId}?autoplay=1" style="width:100%; height:100%; aspect-ratio:16/9;" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      } else {
+        container.innerHTML = `<video src="${normalizeImageUrl(mediaUrl)}" controls autoplay style="width:100%; height:100%; object-fit:contain; background:#000;"></video>`;
+      }
+    } else {
+      container.innerHTML = `<img src="${normalizeImageUrl(mediaUrl)}" alt="${escapeHtml(offer.title || 'Offer')}" style="width:100%; height:100%; object-fit:cover;">`;
+    }
+
+    modal.classList.remove('hidden');
+  }
+
   function applyOffers(offers) {
     const banner = document.getElementById('promo-offer-banner');
     if (!banner || !offers || !offers.length) return;
@@ -1242,6 +1414,29 @@
     if (btn) {
       if (offer.button_url) btn.href = offer.button_url;
       if (btnText && offer.button_text) btnText.textContent = offer.button_text;
+    }
+
+    // Offer Media Trigger Button (Image / Video preview)
+    if (offer.image_url) {
+      let mediaTrigger = document.getElementById('promo-offer-media-trigger');
+      if (!mediaTrigger) {
+        mediaTrigger = document.createElement('button');
+        mediaTrigger.id = 'promo-offer-media-trigger';
+        mediaTrigger.type = 'button';
+        mediaTrigger.className = 'inline-flex items-center gap-1.5 bg-black/25 hover:bg-black/40 text-white px-2.5 py-1 rounded-lg text-xs font-bold backdrop-blur-sm transition border border-white/20 shadow-sm';
+        if (btn && btn.parentNode) {
+          btn.parentNode.insertBefore(mediaTrigger, btn);
+        }
+      }
+      const isVid = offer.image_url.match(/\.(mp4|webm|ogg|mov)($|\?)/i) || offer.image_url.includes('youtube.com') || offer.image_url.includes('youtu.be') || offer.image_url.includes('vimeo.com');
+      mediaTrigger.innerHTML = isVid
+        ? '<i class="fa-solid fa-circle-play text-amber-300"></i> <span>Watch Promo Video</span>'
+        : '<i class="fa-solid fa-image text-emerald-200"></i> <span>View Deal Media</span>';
+      mediaTrigger.onclick = () => showOfferMediaModal(offer);
+      mediaTrigger.classList.remove('hidden');
+    } else {
+      const mediaTrigger = document.getElementById('promo-offer-media-trigger');
+      if (mediaTrigger) mediaTrigger.classList.add('hidden');
     }
 
     banner.classList.remove('hidden');
@@ -1732,10 +1927,64 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function handleLiveCMSUpdate(key, value) {
+    if (!key) return;
+    try {
+      const parsedVal = (typeof value === 'string' && (value.startsWith('{') || value.startsWith('[')))
+        ? JSON.parse(value)
+        : value;
+
+      if (key === 'fitness_section_images') {
+        const fit1 = document.getElementById('fitness-img-1');
+        const fit2 = document.getElementById('fitness-img-2');
+        if (fit1 && parsedVal.img1) fit1.src = normalizeImageUrl(parsedVal.img1);
+        if (fit2 && parsedVal.img2) fit2.src = normalizeImageUrl(parsedVal.img2);
+      } else if (key === 'content_styling_config') {
+        applyContentStyling(parsedVal);
+      } else if (key === 'hero_slider_config') {
+        applyHeroSlider(parsedVal);
+      } else if (key === 'offer_animation_config') {
+        applyOfferAnimation(parsedVal);
+      } else if (key === 'currency_config') {
+        if (typeof window.applyCurrencyToPricing === 'function') {
+          window.applyCurrencyToPricing(parsedVal);
+        }
+      } else if (key === 'launch_ceremony_config') {
+        initLaunchCeremony(parsedVal);
+      }
+    } catch (e) {
+      console.warn("Live CMS update handling note:", e);
+    }
+  }
+
+  function setupLiveCMSListeners() {
+    try {
+      if (window.BroadcastChannel) {
+        const ch = new BroadcastChannel('mgr_cms_updates');
+        ch.onmessage = function(ev) {
+          if (ev.data && ev.data.type === 'CMS_SETTING_UPDATED') {
+            handleLiveCMSUpdate(ev.data.key, ev.data.value);
+          }
+        };
+      }
+    } catch (e) {}
+
+    window.addEventListener('storage', function(ev) {
+      if (ev.key && ev.key.startsWith('mgr_setting_')) {
+        const k = ev.key.replace('mgr_setting_', '');
+        handleLiveCMSUpdate(k, ev.newValue);
+      }
+    });
+  }
+
   // Self-initialize on DOM load
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCMS);
+    document.addEventListener('DOMContentLoaded', () => {
+      initCMS();
+      setupLiveCMSListeners();
+    });
   } else {
     initCMS();
+    setupLiveCMSListeners();
   }
 })();

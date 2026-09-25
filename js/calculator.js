@@ -203,6 +203,9 @@ function preselectVehicle(vehicleName, packageType, targetSection) {
 
   const section = document.getElementById(targetId);
   if (section) {
+    if (window.history && window.history.pushState && window.location.hash !== '#' + targetId) {
+      window.history.pushState({ section: targetId, vehicle: vehicleName, package: packageType }, '', '#' + targetId);
+    }
     section.scrollIntoView({ behavior: 'smooth' });
   }
 }
