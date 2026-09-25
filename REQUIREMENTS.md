@@ -433,5 +433,18 @@ Full UI and SEO translation dictionary support for:
   - Second tier: Local browser storage (`localStorage.mgr_setting_*`) for instant client-side offline hydration and zero-latency page loads.
   - Third tier: Real-time broadcast channel (`BroadcastChannel('mgr_cms_updates')`) for immediate cross-tab live synchronization.
 
-
-
+### 6.17. Exclusive Administrator Authentication Gate (absiraiva@gmail.com - Implemented)
+- **1. Strict Single-User Access Enforcement:**
+  - Access to the Admin Control Panel (`/admin/` and `/admin/index.html`) is strictly restricted to **`absiraiva@gmail.com`**.
+  - All other users and email addresses are permanently blocked from access.
+- **2. Fullscreen Security Login Gate (`#admin-auth-gate`):**
+  - Visitors without an active authenticated session for `absiraiva@gmail.com` are blocked by a full-screen branded security gate.
+  - The admin interface (sidebar, header, metrics, data tables, and editors) remains completely hidden (`display: none`) until verified.
+- **3. Dual Authentication Mechanisms for `absiraiva@gmail.com`:**
+  - **Password Sign In:** Authenticates with Supabase `signInWithPassword` with password visibility toggle and instant validation.
+  - **One-Click Magic Link / OTP:** Option to send a secure passwordless login link directly to `absiraiva@gmail.com` via Supabase `signInWithOtp`.
+- **4. Automatic Rejection of Unauthorized Logins:**
+  - If a user signs in with any email other than `absiraiva@gmail.com`, the session is immediately invalidated, Supabase signs them out, and an explicit security alert is displayed: *"Access Denied: Only the authorized administrator (absiraiva@gmail.com) is permitted to access this portal."*
+- **5. Session Management & Sign Out:**
+  - When authenticated, the sidebar displays `absiraiva@gmail.com` with a "Super Administrator" badge.
+  - The logout button terminates the Supabase session, clears cached admin data, and instantly locks the admin interface behind the login gate.

@@ -14,6 +14,9 @@ class AdminCMSApp {
   constructor() {
     this.supabase = null;
     this.session = null;
+    this.authorizedEmail = 'absiraiva@gmail.com';
+    this.unauthorizedMessage = null;
+    this.dataLoaded = false;
     this.activeTab = 'dashboard';
     this.activeSeoPage = 'global';
     this.stats = {
@@ -42,7 +45,17 @@ class AdminCMSApp {
     this.supabase = window.getSupabaseClient();
     this.bindGlobalEvents();
     await this.checkAuth();
+
+    // STRICT ACCESS GATE: Only absiraiva@gmail.com is permitted
+    if (!this.isAuthenticated()) {
+      this.showLoginGate(this.unauthorizedMessage);
+      return;
+    }
+
+    this.hideLoginGate();
+    this.updateAuthUI();
     await this.loadAllData();
+    this.dataLoaded = true;
 
     // Restore tab from URL hash or query param (?tab=...)
     const urlParams = new URLSearchParams(window.location.search);
@@ -60,51 +73,220 @@ class AdminCMSApp {
     }
   }
 
-  /* ----------------- Authentication ----------------- */
+  /* ----------------- Authentication (absiraiva@gmail.com ONLY) ----------------- */
+  isAuthenticated() {
+    return !!(
+      this.session &&
+      this.session.user &&
+      this.session.user.email &&
+      this.session.user.email.toLowerCase() === this.authorizedEmail.toLowerCase()
+    );
+  }
+
   async checkAuth() {
     if (!this.supabase) return;
     try {
       const { data: { session } } = await this.supabase.auth.getSession();
-      this.session = session;
-      
-      this.supabase.auth.onAuthStateChange((_event, session) => {
-        this.session = session;
-        this.updateAuthUI();
+      if (session && session.user && session.user.email) {
+        if (session.user.email.toLowerCase() === this.authorizedEmail.toLowerCase()) {
+          this.session = session;
+          this.unauthorizedMessage = null;
+        } else {
+          // Reject any other user immediately
+          console.warn("Unauthorized user attempted access:", session.user.email);
+          await this.supabase.auth.signOut();
+          this.session = null;
+          this.unauthorizedMessage = `Access Denied: Only the authorized administrator (${this.authorizedEmail}) is permitted to access this portal. User (${session.user.email}) has been signed out.`;
+        }
+      } else {
+        this.session = null;
+      }
+
+      this.supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session && session.user && session.user.email) {
+          if (session.user.email.toLowerCase() === this.authorizedEmail.toLowerCase()) {
+            this.session = session;
+            this.hideLoginGate();
+            this.updateAuthUI();
+            if (!this.dataLoaded) {
+              await this.loadAllData();
+              this.dataLoaded = true;
+              this.render();
+            }
+          } else {
+            await this.supabase.auth.signOut();
+            this.session = null;
+            this.showLoginGate(`Access Denied: Account (${session.user.email}) is not authorized. Only ${this.authorizedEmail} is permitted.`);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          this.session = null;
+          this.dataLoaded = false;
+          this.showLoginGate();
+        }
       });
     } catch (err) {
       console.warn("Auth check warning:", err);
     }
-    this.updateAuthUI();
   }
 
-  updateAuthUI() {
-    const userCard = document.getElementById('sidebar-user-card');
-    const userEmailEl = document.getElementById('user-email-display');
-    const userRoleEl = document.getElementById('user-role-display');
+  showLoginGate(errorMessage = null) {
+    const gate = document.getElementById('admin-auth-gate');
+    const appContainer = document.getElementById('admin-app-container');
+    const alertBox = document.getElementById('auth-alert-box');
+    const emailInput = document.getElementById('auth-email-input');
+    const pwdInput = document.getElementById('auth-password-input');
 
-    if (this.session && this.session.user) {
-      const email = this.session.user.email || 'Admin';
-      if (userEmailEl) userEmailEl.textContent = email.split('@')[0];
-      if (userRoleEl) userRoleEl.textContent = 'Administrator';
-    } else {
-      if (userEmailEl) userEmailEl.textContent = 'Admin (Guest/Demo)';
-      if (userRoleEl) userRoleEl.textContent = 'Administrator';
+    if (appContainer) appContainer.style.display = 'none';
+    if (gate) gate.style.display = 'flex';
+
+    if (emailInput) emailInput.value = this.authorizedEmail;
+    if (pwdInput) pwdInput.value = '';
+
+    if (alertBox) {
+      if (errorMessage) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${this.escapeHtml(errorMessage)}</span>`;
+        alertBox.style.display = 'flex';
+      } else {
+        alertBox.style.display = 'none';
+      }
     }
   }
 
-  async handleLogin(email, password) {
-    if (!this.supabase) return;
+  hideLoginGate() {
+    const gate = document.getElementById('admin-auth-gate');
+    const appContainer = document.getElementById('admin-app-container');
+    const alertBox = document.getElementById('auth-alert-box');
+
+    if (gate) gate.style.display = 'none';
+    if (appContainer) appContainer.style.display = 'flex';
+    if (alertBox) alertBox.style.display = 'none';
+  }
+
+  togglePasswordVisibility() {
+    const pwdInput = document.getElementById('auth-password-input');
+    const icon = document.getElementById('toggle-pwd-icon');
+    const btn = document.getElementById('btn-toggle-password');
+    if (!pwdInput) return;
+
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      if (icon) icon.className = 'fa-solid fa-eye-slash';
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-eye-slash" id="toggle-pwd-icon"></i> Hide`;
+    } else {
+      pwdInput.type = 'password';
+      if (icon) icon.className = 'fa-solid fa-eye';
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-eye" id="toggle-pwd-icon"></i> Show`;
+    }
+  }
+
+  async handleLoginFormSubmit() {
+    if (!this.supabase) {
+      this.showLoginGate("Database connection is initializing. Please retry in a moment.");
+      return;
+    }
+
+    const emailInput = document.getElementById('auth-email-input');
+    const pwdInput = document.getElementById('auth-password-input');
+    const submitBtn = document.getElementById('btn-login-submit');
+    const btnText = document.getElementById('btn-login-text');
+    const alertBox = document.getElementById('auth-alert-box');
+
+    const email = (emailInput?.value || '').trim();
+    const password = (pwdInput?.value || '').trim();
+
+    if (email.toLowerCase() !== this.authorizedEmail.toLowerCase()) {
+      if (alertBox) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-ban"></i> <span>Access Denied: Only ${this.authorizedEmail} is permitted access.</span>`;
+        alertBox.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (!password) {
+      if (alertBox) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>Please enter your administrator password.</span>`;
+        alertBox.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...`;
+
     try {
-      this.showToast("Authenticating admin...", "info");
-      const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email: this.authorizedEmail,
+        password: password
+      });
+
       if (error) throw error;
+
+      if (!data.user || data.user.email.toLowerCase() !== this.authorizedEmail.toLowerCase()) {
+        await this.supabase.auth.signOut();
+        throw new Error(`Unauthorized account. Access is strictly restricted to ${this.authorizedEmail}.`);
+      }
+
       this.session = data.session;
-      this.closeModal('login-modal');
-      this.showToast("Login successful! Welcome back.", "success");
+      this.hideLoginGate();
+      this.updateAuthUI();
+      this.showToast(`Welcome back, ${this.authorizedEmail}!`, "success");
+
       await this.loadAllData();
+      this.dataLoaded = true;
       this.render();
     } catch (err) {
-      this.showToast(err.message || "Failed to log in", "error");
+      console.error("Login failed:", err);
+      if (alertBox) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${this.escapeHtml(err.message || 'Login failed. Please check your password.')}</span>`;
+        alertBox.style.display = 'flex';
+      }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = `Sign In as ${this.authorizedEmail}`;
+    }
+  }
+
+  async handleSendMagicLink() {
+    if (!this.supabase) return;
+    const alertBox = document.getElementById('auth-alert-box');
+    const magicBtn = document.getElementById('btn-magic-link');
+
+    if (magicBtn) magicBtn.disabled = true;
+    if (alertBox) {
+      alertBox.className = 'auth-alert info';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending secure login link to ${this.authorizedEmail}...</span>`;
+      alertBox.style.display = 'flex';
+    }
+
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { error } = await this.supabase.auth.signInWithOtp({
+        email: this.authorizedEmail,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (error) throw error;
+
+      if (alertBox) {
+        alertBox.className = 'auth-alert success';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Magic login link sent to <strong>${this.authorizedEmail}</strong>! Please check your email inbox and tap the link to sign in.</span>`;
+        alertBox.style.display = 'flex';
+      }
+    } catch (err) {
+      console.error("Magic link error:", err);
+      if (alertBox) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${this.escapeHtml(err.message || 'Failed to send magic link.')}</span>`;
+        alertBox.style.display = 'flex';
+      }
+    } finally {
+      if (magicBtn) magicBtn.disabled = false;
     }
   }
 
@@ -113,8 +295,22 @@ class AdminCMSApp {
       await this.supabase.auth.signOut();
     }
     this.session = null;
-    this.showToast("Logged out successfully.", "info");
-    this.updateAuthUI();
+    this.dataLoaded = false;
+    this.showLoginGate("You have been securely signed out.");
+    this.showToast("Signed out of admin session.", "info");
+  }
+
+  updateAuthUI() {
+    const userEmailEl = document.getElementById('user-email-display');
+    const userRoleEl = document.getElementById('user-role-display');
+
+    if (this.isAuthenticated()) {
+      if (userEmailEl) userEmailEl.textContent = this.authorizedEmail;
+      if (userRoleEl) userRoleEl.textContent = 'Super Administrator';
+    } else {
+      if (userEmailEl) userEmailEl.textContent = 'Restricted';
+      if (userRoleEl) userRoleEl.textContent = 'Sign In Required';
+    }
   }
 
   /* ----------------- Data Loading ----------------- */
@@ -505,7 +701,7 @@ class AdminCMSApp {
     `;
   }
 
-  bindDashboardEvents() {}
+  bindDashboardEvents() { }
 
   /* ----------------- 2. WEBSITE CONTENT VIEW (With WordPress-Style Controls) ----------------- */
   getContentStyleConfig() {
@@ -606,7 +802,7 @@ class AdminCMSApp {
             about: { ...cfg.about, ...(parsed.about || {}) }
           };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const local = localStorage.getItem('mgr_setting_content_styling_config');
@@ -618,7 +814,7 @@ class AdminCMSApp {
             about: { ...cfg.about, ...(parsed.about || {}) }
           };
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // Synchronize fitness_section_images if available
@@ -633,7 +829,7 @@ class AdminCMSApp {
           if (parsedFit.alt2 && !cfg.fitness.img2_alt) cfg.fitness.img2_alt = parsedFit.alt2;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     return cfg;
   }
@@ -678,7 +874,7 @@ class AdminCMSApp {
         if (parsed && typeof parsed === 'object') {
           cfg = { ...cfg, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const local = localStorage.getItem('mgr_setting_hero_slider_config');
@@ -688,7 +884,7 @@ class AdminCMSApp {
             cfg = { ...cfg, ...parsed };
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (!Array.isArray(cfg.slides) || cfg.slides.length === 0) {
@@ -730,7 +926,7 @@ class AdminCMSApp {
         if (parsed && typeof parsed === 'object') {
           cfg = { ...cfg, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const local = localStorage.getItem('mgr_setting_hero_layout_config');
@@ -740,7 +936,7 @@ class AdminCMSApp {
             cfg = { ...cfg, ...parsed };
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return cfg;
@@ -1787,8 +1983,8 @@ class AdminCMSApp {
       font-style: ${t.fontStyle || 'normal'};
       font-weight: ${t.fontWeight || '700'};
       text-align: ${t.alignment || 'center'};
-      ${hasGrad 
-        ? `background-image: linear-gradient(135deg, ${t.gradientStart || '#059669'}, ${t.gradientEnd || '#10b981'}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent; display: inline-block;` 
+      ${hasGrad
+        ? `background-image: linear-gradient(135deg, ${t.gradientStart || '#059669'}, ${t.gradientEnd || '#10b981'}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent; display: inline-block;`
         : `color: ${t.color || '#111827'};`}
       transition: all 0.2s ease;
       line-height: 1.25;
@@ -2230,7 +2426,7 @@ class AdminCMSApp {
           ? JSON.parse(this.settings.join_us_config)
           : this.settings.join_us_config;
         if (cfg && typeof cfg === 'object') return cfg;
-      } catch (e) {}
+      } catch (e) { }
     }
     return {
       title: "Do You Own a Car, Van, or Tourist Bus in Mannar?",
@@ -2602,7 +2798,7 @@ class AdminCMSApp {
     const updatePreviewCarousel = () => {
       const slides = (this.heroSliderData && this.heroSliderData.slides) || [];
       if (!slides.length) return;
-      
+
       const idx = Math.max(0, Math.min(this.activeHeroPreviewSlideIdx || 0, slides.length - 1));
       this.activeHeroPreviewSlideIdx = idx;
       const cur = slides[idx];
@@ -3011,8 +3207,8 @@ class AdminCMSApp {
 
       // Contrast
       const isDark = (bgType === 'color' && this.isColorDark(bgColor)) ||
-                     (bgType === 'image' && overlayOpacityVal >= 35) ||
-                     (contrastMode === 'light');
+        (bgType === 'image' && overlayOpacityVal >= 35) ||
+        (contrastMode === 'light');
 
       if (title) {
         if (isDark) {
@@ -3454,7 +3650,7 @@ class AdminCMSApp {
         if (parsed && typeof parsed === 'object') {
           cfg = { ...cfg, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const local = localStorage.getItem('mgr_setting_currency_config');
@@ -3462,7 +3658,7 @@ class AdminCMSApp {
           const parsed = JSON.parse(local);
           if (parsed && typeof parsed === 'object') cfg = { ...cfg, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return cfg;
   }
@@ -3529,8 +3725,8 @@ class AdminCMSApp {
             </thead>
             <tbody>
               ${(() => {
-                const sorted = [...this.services].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-                return sorted.map((svc, idx) => `
+        const sorted = [...this.services].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        return sorted.map((svc, idx) => `
                 <tr>
                   <td style="white-space: nowrap;">
                     <button class="btn-reorder" onclick="window.adminCMS.moveService('${svc.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
@@ -3541,10 +3737,10 @@ class AdminCMSApp {
                     </button>
                   </td>
                   <td>
-                    ${svc.image_url 
-                      ? `<img src="${this.escapeHtml(svc.image_url)}" alt="${this.escapeHtml(svc.service_name)}" style="width: 54px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid var(--slate-200);">`
-                      : `<div style="width: 54px; height: 38px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--primary); font-size: 16px;"><i class="fa-solid ${this.escapeHtml(svc.icon_reference || 'fa-bicycle')}"></i></div>`
-                    }
+                    ${svc.image_url
+            ? `<img src="${this.escapeHtml(svc.image_url)}" alt="${this.escapeHtml(svc.service_name)}" style="width: 54px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid var(--slate-200);">`
+            : `<div style="width: 54px; height: 38px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--primary); font-size: 16px;"><i class="fa-solid ${this.escapeHtml(svc.icon_reference || 'fa-bicycle')}"></i></div>`
+          }
                   </td>
                   <td>
                     <strong>${this.escapeHtml(svc.service_name)}</strong>
@@ -3576,7 +3772,7 @@ class AdminCMSApp {
                   </td>
                 </tr>
               `).join('');
-              })()}
+      })()}
             </tbody>
           </table>
         </div>
@@ -3856,7 +4052,7 @@ class AdminCMSApp {
     }
   }
 
-  bindServicesEvents() {}
+  bindServicesEvents() { }
 
   openAddServiceModal() {
     const modalTitle = document.getElementById('service-modal-title');
@@ -4334,8 +4530,8 @@ class AdminCMSApp {
             </thead>
             <tbody>
               ${(() => {
-                const sorted = [...this.offers].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-                return sorted.length ? sorted.map((o, idx) => `
+        const sorted = [...this.offers].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        return sorted.length ? sorted.map((o, idx) => `
                 <tr>
                   <td style="white-space: nowrap;">
                     <button class="btn-reorder" onclick="window.adminCMS.moveOffer('${o.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
@@ -4349,16 +4545,16 @@ class AdminCMSApp {
                   <td><span class="badge badge-published">${this.escapeHtml(o.discount_value || '')}</span></td>
                   <td style="white-space: nowrap;">
                     ${(() => {
-                      if (!o.image_url) return '<span style="color:#94a3b8; font-size:11px;">None</span>';
-                      const isVid = this.isVideoMedia(o.image_url);
-                      if (isVid) {
-                        return `<button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" style="padding: 2px 8px; font-size: 11px; color: #0284c7; border-color: #bae6fd;">
+            if (!o.image_url) return '<span style="color:#94a3b8; font-size:11px;">None</span>';
+            const isVid = this.isVideoMedia(o.image_url);
+            if (isVid) {
+              return `<button type="button" class="btn btn-outline btn-sm" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" style="padding: 2px 8px; font-size: 11px; color: #0284c7; border-color: #bae6fd;">
                           <i class="fa-solid fa-video"></i> Video
                         </button>`;
-                      } else {
-                        return `<img src="${this.normalizeImageUrl(o.image_url)}" alt="Media" style="width: 52px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" title="Click to preview">`;
-                      }
-                    })()}
+            } else {
+              return `<img src="${this.normalizeImageUrl(o.image_url)}" alt="Media" style="width: 52px; height: 30px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; cursor: pointer;" onclick="window.adminCMS.previewOfferMediaModal('${this.escapeHtml(o.image_url)}', '${this.escapeHtml(o.title || '')}')" title="Click to preview">`;
+            }
+          })()}
                   </td>
                   <td><span style="font-size: 12px; color: var(--slate-600);">${this.escapeHtml(o.description || '')}</span></td>
                   <td>${this.escapeHtml(o.button_text || 'Claim Offer')}</td>
@@ -4380,7 +4576,7 @@ class AdminCMSApp {
                   </td>
                 </tr>
               `).join('') : `<tr><td colspan="8" style="text-align:center; color:var(--slate-500);">No promotional offers found.</td></tr>`;
-              })()}
+      })()}
             </tbody>
           </table>
         </div>
@@ -4409,14 +4605,14 @@ class AdminCMSApp {
         if (parsed && typeof parsed === 'object') {
           cfg = { ...cfg, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const localVal = localStorage.getItem('mgr_setting_offer_animation_config');
         if (localVal) {
           cfg = { ...cfg, ...JSON.parse(localVal) };
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return cfg;
   }
@@ -4752,8 +4948,8 @@ class AdminCMSApp {
     if (!url) return false;
     const str = String(url).toLowerCase();
     return str.includes('.mp4') || str.includes('.webm') || str.includes('.ogg') || str.includes('.mov') ||
-           str.includes('youtube.com') || str.includes('youtu.be') || str.includes('vimeo.com') ||
-           str.startsWith('data:video');
+      str.includes('youtube.com') || str.includes('youtu.be') || str.includes('vimeo.com') ||
+      str.startsWith('data:video');
   }
 
   previewOfferMedia(url, isEdit) {
@@ -4880,12 +5076,12 @@ class AdminCMSApp {
             <button onclick="document.getElementById('offer-media-quick-modal').remove()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
           </div>
           <div style="background: #000; display: flex; align-items: center; justify-content: center; min-height: 240px;">
-            ${isVid 
-              ? (url.includes('youtube.com') || url.includes('youtu.be')
-                ? `<iframe src="https://www.youtube.com/embed/${url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)?.[1] || ''}?autoplay=1" style="width: 100%; aspect-ratio: 16/9; min-height: 320px;" frameborder="0" allowfullscreen></iframe>`
-                : `<video src="${this.normalizeImageUrl(url)}" controls autoplay style="width: 100%; max-height: 420px; aspect-ratio: 16/9;"></video>`)
-              : `<img src="${this.normalizeImageUrl(url)}" alt="Offer Preview" style="width: 100%; max-height: 420px; object-fit: contain;">`
-            }
+            ${isVid
+        ? (url.includes('youtube.com') || url.includes('youtu.be')
+          ? `<iframe src="https://www.youtube.com/embed/${url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)?.[1] || ''}?autoplay=1" style="width: 100%; aspect-ratio: 16/9; min-height: 320px;" frameborder="0" allowfullscreen></iframe>`
+          : `<video src="${this.normalizeImageUrl(url)}" controls autoplay style="width: 100%; max-height: 420px; aspect-ratio: 16/9;"></video>`)
+        : `<img src="${this.normalizeImageUrl(url)}" alt="Offer Preview" style="width: 100%; max-height: 420px; object-fit: contain;">`
+      }
           </div>
         </div>
       </div>
@@ -5079,10 +5275,10 @@ class AdminCMSApp {
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 16px;">
           ${(() => {
-            const sorted = [...this.blogs].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-            return sorted.map((blog, idx) => {
-            const isPublished = blog.status === 'published';
-            return `
+        const sorted = [...this.blogs].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        return sorted.map((blog, idx) => {
+          const isPublished = blog.status === 'published';
+          return `
               <div style="background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-md); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);">
                 <div style="position: relative; height: 170px; background: #f8fafc;">
                   <img src="${this.escapeHtml(blog.featured_image_url || 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=600')}" alt="${this.escapeHtml(blog.title)}" style="height: 100%; width: 100%; object-fit: cover;">
@@ -5124,14 +5320,14 @@ class AdminCMSApp {
                 </div>
               </div>
             `;
-          }).join('');
-          })()}
+        }).join('');
+      })()}
         </div>
       </div>
     `;
   }
 
-  bindBlogsEvents() {}
+  bindBlogsEvents() { }
 
   openAddBlogModal() {
     const modalTitle = document.getElementById('blog-modal-title');
@@ -5368,7 +5564,7 @@ class AdminCMSApp {
     `;
   }
 
-  bindGalleryEvents() {}
+  bindGalleryEvents() { }
 
   openAddMediaUrlModal() {
     const nameEl = document.getElementById('media-url-name');
@@ -5504,7 +5700,7 @@ class AdminCMSApp {
           ? JSON.parse(this.settings.reviews_slider_config)
           : this.settings.reviews_slider_config;
         if (cfg && typeof cfg === 'object') return cfg;
-      } catch (e) {}
+      } catch (e) { }
     }
     return { auto_slide: true, speed: 40 };
   }
@@ -5582,8 +5778,8 @@ class AdminCMSApp {
             </thead>
             <tbody>
               ${(() => {
-                const sorted = [...this.testimonials].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-                return sorted.length ? sorted.map((t, idx) => `
+        const sorted = [...this.testimonials].sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        return sorted.length ? sorted.map((t, idx) => `
                 <tr>
                   <td style="white-space: nowrap;">
                     <button class="btn-reorder" onclick="window.adminCMS.moveTestimonial('${t.id}', -1)" ${idx === 0 ? 'disabled' : ''} title="Move Up">
@@ -5624,7 +5820,7 @@ class AdminCMSApp {
                   </td>
                 </tr>
               `).join('') : `<tr><td colspan="7" style="text-align:center; color:var(--slate-500);">No testimonials added yet.</td></tr>`;
-              })()}
+      })()}
             </tbody>
           </table>
         </div>
@@ -5661,7 +5857,7 @@ class AdminCMSApp {
     }
   }
 
-  bindTestimonialsEvents() {}
+  bindTestimonialsEvents() { }
 
   openAddTestimonialModal() {
     this.openModal('add-testimonial-modal');
@@ -6004,7 +6200,7 @@ class AdminCMSApp {
     `;
   }
 
-  bindAiAssistantEvents() {}
+  bindAiAssistantEvents() { }
 
   async saveAiAssistantConfig() {
     const title = document.getElementById('ai-cfg-title')?.value || "Custom Mannar Ride & Route Generator";
@@ -6247,7 +6443,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     `;
   }
 
-  bindLanguagesEvents() {}
+  bindLanguagesEvents() { }
 
   openAddLanguageModal() {
     const codeEl = document.getElementById('lang-code-input');
@@ -6387,7 +6583,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     this.settings[key] = stringVal;
     try {
       localStorage.setItem('mgr_setting_' + key, stringVal);
-    } catch (e) {}
+    } catch (e) { }
 
     if (this.supabase) {
       const { error } = await this.supabase.from('website_settings').upsert({
@@ -6425,7 +6621,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
             };
           }).sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return [
       { id: 'cat-bike', name: 'Bicycle', i18n: 'cat_bike', subtext: 'Fitness & City', badge: 'Rs. 100/hr', icon: 'fa-solid fa-bicycle', color: 'emerald', preselect: 'Bicycle (Rs. 100/hr)', package: 'Hourly Rental', target_url: '#pricing-rates', status: 'active', order: 1 },
@@ -6496,16 +6692,16 @@ ${safetyTips.map(t => "• " + t).join('\n')}
                   <td><code style="font-size: 11px;">${this.escapeHtml(cat.preselect || cat.name)}</code></td>
                   <td>
                     ${(() => {
-                      const nLower = (cat.name || '').toLowerCase();
-                      const isRates = nLower.includes('bike') || nLower.includes('bicycle') || nLower.includes('motorcycle') || nLower.includes('scooter') || cat.target_url === '#pricing-rates';
-                      const isBooking = !isRates;
-                      return `
+        const nLower = (cat.name || '').toLowerCase();
+        const isRates = nLower.includes('bike') || nLower.includes('bicycle') || nLower.includes('motorcycle') || nLower.includes('scooter') || cat.target_url === '#pricing-rates';
+        const isBooking = !isRates;
+        return `
                         <span class="badge ${isBooking ? 'badge-published' : 'badge-draft'}" style="font-size: 11px; white-space: nowrap;">
                           <i class="fa-solid ${isBooking ? 'fa-calendar-check' : 'fa-tags'}"></i>
                           ${isBooking ? 'Top Booking (#booking)' : 'Rates Matrix (#pricing-rates)'}
                         </span>
                       `;
-                    })()}
+      })()}
                   </td>
                   <td>
                     <span class="badge ${cat.status === 'active' ? 'badge-published' : 'badge-draft'}">
@@ -6532,7 +6728,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     `;
   }
 
-  bindCategoriesEvents() {}
+  bindCategoriesEvents() { }
 
   openAddCategoryModal() {
     document.getElementById('category-modal-title').innerHTML = '<i class="fa-solid fa-shapes"></i> Add Transport Category';
@@ -6720,7 +6916,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         if (Array.isArray(list) && list.length) {
           return list.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return [
       { id: 'stat-rides', title: 'Completed Rides & Tours', target: 100, suffix: '+', icon: 'fa-solid fa-route', image: '', dataSource: 'rpc:get_public_business_stats.completed_services', status: 'active', order: 1 },
@@ -6771,20 +6967,20 @@ ${safetyTips.map(t => "• " + t).join('\n')}
                   </td>
                   <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                      ${c.image 
-                        ? `<img src="${this.escapeHtml(c.image)}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px;">`
-                        : `<div style="width: 32px; height: 32px; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><i class="${this.escapeHtml(c.icon || 'fa-solid fa-chart-simple')}"></i></div>`
-                      }
+                      ${c.image
+        ? `<img src="${this.escapeHtml(c.image)}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 8px;">`
+        : `<div style="width: 32px; height: 32px; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><i class="${this.escapeHtml(c.icon || 'fa-solid fa-chart-simple')}"></i></div>`
+      }
                       <strong>${this.escapeHtml(c.title || c.label)}</strong>
                     </div>
                   </td>
                   <td><span style="font-size: 16px; font-weight: 800; color: #047857;">${this.escapeHtml(c.target)}</span></td>
                   <td><code>${this.escapeHtml(c.suffix || '')}</code></td>
                   <td>
-                    ${c.dataSource && c.dataSource !== 'manual' 
-                      ? `<span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;"><i class="fa-solid fa-database"></i> ${this.escapeHtml(c.dataSource)}</span>`
-                      : '<span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;"><i class="fa-solid fa-pen"></i> Manual Count</span>'
-                    }
+                    ${c.dataSource && c.dataSource !== 'manual'
+        ? `<span class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;"><i class="fa-solid fa-database"></i> ${this.escapeHtml(c.dataSource)}</span>`
+        : '<span class="badge" style="background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;"><i class="fa-solid fa-pen"></i> Manual Count</span>'
+      }
                   </td>
                   <td>
                     <span class="badge ${c.status === 'active' ? 'badge-published' : 'badge-draft'}">
@@ -6811,7 +7007,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     `;
   }
 
-  bindCountersEvents() {}
+  bindCountersEvents() { }
 
   openAddCounterModal() {
     document.getElementById('counter-modal-title').innerHTML = '<i class="fa-solid fa-plus"></i> Add Statistics Counter';
@@ -6989,14 +7185,14 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         if (parsed && typeof parsed === 'object') {
           floatConfig = { ...floatConfig, ...parsed };
         }
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const localCfg = localStorage.getItem('mgr_setting_floating_booking_config');
         if (localCfg) {
           floatConfig = { ...floatConfig, ...JSON.parse(localCfg) };
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const floatWords = Array.isArray(floatConfig.words) && floatConfig.words.length > 0
@@ -7430,7 +7626,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         this.settings[item.key] = item.val;
         try {
           localStorage.setItem('mgr_setting_' + item.key, item.val);
-        } catch (e) {}
+        } catch (e) { }
         this.broadcastPreviewUpdate(item.key, item.val);
       }
       await this.logAudit("SETTINGS_CHANGE", "SETTINGS", "global", { count: list.length });
@@ -7506,7 +7702,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
             cfg.whatsapp_url = this.settings.host_whatsapp_group_url;
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return cfg;
   }
@@ -7520,7 +7716,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         if (Array.isArray(list) && list.length) {
           return list.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return [
       { id: 'h-car', name: 'Cars', subtitle: 'Alto, WagonR, Sedan', icon: 'fa-solid fa-car', status: 'active', order: 1 },
@@ -7915,7 +8111,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         if (Array.isArray(list) && list.length) {
           return list.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return [
       { id: 'fit-cardio', title: 'Cardio & Coastal Fitness', description: 'Maintain your fitness regimen on high-quality multi-gear bicycles with low impact on joints while breathing clean sea breeze.', icon: 'fa-solid fa-heart-pulse', status: 'active', order: 1 },
@@ -8058,7 +8254,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
       try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         imgs = { ...imgs, ...parsed };
-      } catch (e) {}
+      } catch (e) { }
     }
     return imgs;
   }
@@ -8219,7 +8415,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         if (Array.isArray(list) && list.length) {
           return list.sort((a, b) => (a.order || 0) - (b.order || 0));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return [
       { id: 'abt-multi', title: 'Multilingual Support', description: 'Tamil, English, Sinhala, Russian, French & Chinese', status: 'active', order: 1 },
@@ -8293,7 +8489,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     `;
   }
 
-  bindAboutCardsEvents() {}
+  bindAboutCardsEvents() { }
 
   openAddAboutCardModal() {
     document.getElementById('about-card-modal-title').innerHTML = '<i class="fa-solid fa-circle-info"></i> Add About Highlight Card';
@@ -8429,10 +8625,10 @@ ${safetyTips.map(t => "• " + t).join('\n')}
 
     const toast = document.createElement('div');
     toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
-    
+
     const icon = type === 'error' ? 'fa-triangle-exclamation' : (type === 'info' ? 'fa-circle-info' : 'fa-check-circle');
     toast.innerHTML = `<i class="fa-solid ${icon}" style="color: ${type === 'error' ? 'var(--danger)' : 'var(--primary)'};"></i> <span>${this.escapeHtml(message)}</span>`;
-    
+
     container.appendChild(toast);
     setTimeout(() => {
       toast.style.opacity = '0';
@@ -8468,7 +8664,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
       try {
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         cfg = { ...cfg, ...parsed };
-      } catch (e) {}
+      } catch (e) { }
     } else {
       try {
         const local = localStorage.getItem('mgr_setting_launch_ceremony_config');
@@ -8478,7 +8674,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
             cfg = { ...cfg, ...parsed };
           }
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return cfg;
   }
@@ -8486,7 +8682,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
   renderLaunchCeremonyView() {
     const cfg = this.getLaunchCeremonyConfig();
     const isActive = !!cfg.active;
-    const activeBadge = isActive 
+    const activeBadge = isActive
       ? `<span class="badge badge-published" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-circle-dot fa-fade"></i> ACTIVE - Ceremony Screen Live on Website</span>`
       : `<span class="badge badge-draft" style="font-size: 12px; padding: 6px 12px;"><i class="fa-solid fa-ban"></i> DEACTIVATED - Website Loads Normally</span>`;
 
@@ -8765,7 +8961,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
     const active = document.getElementById('ceremony-status-input')?.value === 'active';
     const countdown_seconds = parseInt(document.getElementById('ceremony-countdown-input')?.value, 10) || 5;
     const front_image = this.normalizeImageUrl(document.getElementById('ceremony-front-image')?.value?.trim() || '');
-    
+
     // Stage Header & Brand
     const govt_badge = document.getElementById('ceremony-govt-badge-input')?.value?.trim() || 'Govt. Approved Tourist Transport Service';
     const brand_title = document.getElementById('ceremony-brand-title-input')?.value?.trim() || 'MANNAR GREEN RIDE';
