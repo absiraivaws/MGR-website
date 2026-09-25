@@ -649,11 +649,14 @@ class AdminCMSApp {
       previewBtn.addEventListener('click', () => this.openPreviewModal());
     }
 
-    // Logout
-    const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => this.handleLogout());
-    }
+    // Logout (Top Header & Sidebar Footer)
+    const logoutBtns = document.querySelectorAll('#btn-logout, #btn-header-logout');
+    logoutBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleLogout();
+      });
+    });
 
     // Browser Back / Forward Button Navigation Support
     window.addEventListener('popstate', (e) => {
