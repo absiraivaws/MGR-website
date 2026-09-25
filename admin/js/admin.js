@@ -44,7 +44,19 @@ class AdminCMSApp {
   async init() {
     this.supabase = window.getSupabaseClient();
     this.bindGlobalEvents();
+
+    // Check if URL contains Supabase recovery tokens (#access_token=...&type=recovery or ?type=recovery)
+    const hash = window.location.hash || '';
+    const isRecoveryMode = hash.includes('type=recovery') || hash.includes('type=invite') || window.location.search.includes('type=recovery');
+
     await this.checkAuth();
+
+    if (isRecoveryMode) {
+      console.log("Password recovery flow detected.");
+      this.hideLoginGate();
+      this.openResetPasswordModal();
+      return;
+    }
 
     // STRICT ACCESS GATE: Only absiraiva@gmail.com is permitted
     if (!this.isAuthenticated()) {
@@ -60,7 +72,10 @@ class AdminCMSApp {
     // Restore tab from URL hash or query param (?tab=...)
     const urlParams = new URLSearchParams(window.location.search);
     const queryTab = urlParams.get('tab');
-    const hashTab = window.location.hash ? window.location.hash.replace('#', '') : null;
+    let hashTab = window.location.hash ? window.location.hash.replace('#', '') : null;
+    if (hashTab && (hashTab.includes('access_token=') || hashTab.includes('error='))) {
+      hashTab = null;
+    }
     let initialTab = queryTab || hashTab || 'dashboard';
     if (initialTab.includes('?')) initialTab = initialTab.split('?')[0];
     if (initialTab === 'join-editor-card' || initialTab === 'fitness-editor-card' || initialTab === 'about-editor-card') {
@@ -68,8 +83,87 @@ class AdminCMSApp {
     }
 
     this.switchTab(initialTab, false);
-    if (window.history && window.history.replaceState) {
+    if (window.history && window.history.replaceState && !isRecoveryMode) {
       window.history.replaceState({ tab: initialTab }, '', '#' + initialTab);
+    }
+  }
+
+  /* ----------------- Authentication Helpers & Masking ----------------- */
+  maskEmail(email) {
+    if (!email || typeof email !== 'string' || !email.includes('@')) return email || '';
+    const [user, domain] = email.split('@');
+    if (user.length <= 3) {
+      return user[0] + '••••@' + domain;
+    }
+    const start = user.slice(0, 2);
+    const end = user.slice(-2);
+    return `${start}••••••${end}@${domain}`;
+  }
+
+  toggleEmailMask() {
+    const emailInput = document.getElementById('auth-email-input');
+    const icon = document.getElementById('toggle-email-icon');
+    const text = document.getElementById('toggle-email-text');
+    const noticeCode = document.getElementById('notice-admin-email');
+    const magicText = document.getElementById('btn-magic-text');
+    if (!emailInput) return;
+
+    const isMasked = emailInput.getAttribute('data-masked') !== 'false';
+    if (isMasked) {
+      // Show full email
+      emailInput.value = this.authorizedEmail;
+      emailInput.setAttribute('data-masked', 'false');
+      if (icon) icon.className = 'fa-solid fa-eye-slash';
+      if (text) text.textContent = 'Mask';
+      if (noticeCode) noticeCode.textContent = this.authorizedEmail;
+      if (magicText) magicText.textContent = `Send Magic Login Link to ${this.authorizedEmail}`;
+    } else {
+      // Mask email
+      const masked = this.maskEmail(this.authorizedEmail);
+      emailInput.value = masked;
+      emailInput.setAttribute('data-masked', 'true');
+      if (icon) icon.className = 'fa-solid fa-eye';
+      if (text) text.textContent = 'Show';
+      if (noticeCode) noticeCode.textContent = masked;
+      if (magicText) magicText.textContent = `Send Magic Login Link (${masked})`;
+    }
+  }
+
+  toggleResetPwdVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Hide';
+    } else {
+      input.type = 'password';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-eye"></i> Show';
+    }
+  }
+
+  openResetPasswordModal() {
+    const modal = document.getElementById('reset-password-modal');
+    const alertEl = document.getElementById('reset-pwd-alert');
+    const newPwd = document.getElementById('reset-new-password');
+    const confirmPwd = document.getElementById('reset-confirm-password');
+    const emailEl = document.getElementById('reset-modal-email');
+
+    if (emailEl) emailEl.textContent = this.maskEmail(this.authorizedEmail);
+    if (alertEl) alertEl.style.display = 'none';
+    if (newPwd) newPwd.value = '';
+    if (confirmPwd) confirmPwd.value = '';
+
+    if (modal) {
+      modal.classList.add('open');
+      modal.style.display = 'flex';
+    }
+  }
+
+  closeResetPasswordModal() {
+    const modal = document.getElementById('reset-password-modal');
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
     }
   }
 
@@ -96,13 +190,21 @@ class AdminCMSApp {
           console.warn("Unauthorized user attempted access:", session.user.email);
           await this.supabase.auth.signOut();
           this.session = null;
-          this.unauthorizedMessage = `Access Denied: Only the authorized administrator (${this.authorizedEmail}) is permitted to access this portal. User (${session.user.email}) has been signed out.`;
+          this.unauthorizedMessage = `Access Denied: Only the authorized administrator (${this.maskEmail(this.authorizedEmail)}) is permitted to access this portal. User (${this.maskEmail(session.user.email)}) has been signed out.`;
         }
       } else {
         this.session = null;
       }
 
       this.supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log("Supabase Auth Event:", event);
+        if (event === 'PASSWORD_RECOVERY') {
+          this.session = session;
+          this.hideLoginGate();
+          this.openResetPasswordModal();
+          return;
+        }
+
         if (session && session.user && session.user.email) {
           if (session.user.email.toLowerCase() === this.authorizedEmail.toLowerCase()) {
             this.session = session;
@@ -116,7 +218,7 @@ class AdminCMSApp {
           } else {
             await this.supabase.auth.signOut();
             this.session = null;
-            this.showLoginGate(`Access Denied: Account (${session.user.email}) is not authorized. Only ${this.authorizedEmail} is permitted.`);
+            this.showLoginGate(`Access Denied: Account (${this.maskEmail(session.user.email)}) is not authorized. Only ${this.maskEmail(this.authorizedEmail)} is permitted.`);
           }
         } else if (event === 'SIGNED_OUT') {
           this.session = null;
@@ -135,11 +237,21 @@ class AdminCMSApp {
     const alertBox = document.getElementById('auth-alert-box');
     const emailInput = document.getElementById('auth-email-input');
     const pwdInput = document.getElementById('auth-password-input');
+    const noticeCode = document.getElementById('notice-admin-email');
+    const magicText = document.getElementById('btn-magic-text');
+    const btnLoginText = document.getElementById('btn-login-text');
 
     if (appContainer) appContainer.style.display = 'none';
     if (gate) gate.style.display = 'flex';
 
-    if (emailInput) emailInput.value = this.authorizedEmail;
+    const masked = this.maskEmail(this.authorizedEmail);
+    if (emailInput) {
+      emailInput.value = masked;
+      emailInput.setAttribute('data-masked', 'true');
+    }
+    if (noticeCode) noticeCode.textContent = masked;
+    if (magicText) magicText.textContent = `Send Magic Login Link (${masked})`;
+    if (btnLoginText) btnLoginText.textContent = 'Sign In to Admin Portal';
     if (pwdInput) pwdInput.value = '';
 
     if (alertBox) {
@@ -186,23 +298,12 @@ class AdminCMSApp {
       return;
     }
 
-    const emailInput = document.getElementById('auth-email-input');
     const pwdInput = document.getElementById('auth-password-input');
     const submitBtn = document.getElementById('btn-login-submit');
     const btnText = document.getElementById('btn-login-text');
     const alertBox = document.getElementById('auth-alert-box');
 
-    const email = (emailInput?.value || '').trim();
     const password = (pwdInput?.value || '').trim();
-
-    if (email.toLowerCase() !== this.authorizedEmail.toLowerCase()) {
-      if (alertBox) {
-        alertBox.className = 'auth-alert error';
-        alertBox.innerHTML = `<i class="fa-solid fa-ban"></i> <span>Access Denied: Only ${this.authorizedEmail} is permitted access.</span>`;
-        alertBox.style.display = 'flex';
-      }
-      return;
-    }
 
     if (!password) {
       if (alertBox) {
@@ -226,13 +327,13 @@ class AdminCMSApp {
 
       if (!data.user || data.user.email.toLowerCase() !== this.authorizedEmail.toLowerCase()) {
         await this.supabase.auth.signOut();
-        throw new Error(`Unauthorized account. Access is strictly restricted to ${this.authorizedEmail}.`);
+        throw new Error(`Unauthorized account. Access is strictly restricted to ${this.maskEmail(this.authorizedEmail)}.`);
       }
 
       this.session = data.session;
       this.hideLoginGate();
       this.updateAuthUI();
-      this.showToast(`Welcome back, ${this.authorizedEmail}!`, "success");
+      this.showToast(`Welcome back, Administrator!`, "success");
 
       await this.loadAllData();
       this.dataLoaded = true;
@@ -246,7 +347,134 @@ class AdminCMSApp {
       }
     } finally {
       if (submitBtn) submitBtn.disabled = false;
-      if (btnText) btnText.textContent = `Sign In as ${this.authorizedEmail}`;
+      if (btnText) btnText.textContent = 'Sign In to Admin Portal';
+    }
+  }
+
+  async handleSendPasswordReset() {
+    if (!this.supabase) return;
+    const alertBox = document.getElementById('auth-alert-box');
+    const masked = this.maskEmail(this.authorizedEmail);
+
+    if (alertBox) {
+      alertBox.className = 'auth-alert info';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending password reset email to ${masked}...</span>`;
+      alertBox.style.display = 'flex';
+    }
+
+    try {
+      const redirectUrl = window.location.origin + window.location.pathname;
+      const { error } = await this.supabase.auth.resetPasswordForEmail(this.authorizedEmail, {
+        redirectTo: redirectUrl
+      });
+
+      if (error) throw error;
+
+      if (alertBox) {
+        alertBox.className = 'auth-alert success';
+        alertBox.innerHTML = `<i class="fa-solid fa-envelope-circle-check"></i> <span>Password reset link sent to <strong>${masked}</strong>! Please check your email inbox and tap the link to set your new password.</span>`;
+        alertBox.style.display = 'flex';
+      }
+    } catch (err) {
+      console.error("Password reset error:", err);
+      if (alertBox) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${this.escapeHtml(err.message || 'Failed to send reset email.')}</span>`;
+        alertBox.style.display = 'flex';
+      }
+    }
+  }
+
+  async handleUpdatePassword() {
+    if (!this.supabase) {
+      this.showToast("Database client is not ready. Please refresh.", "error");
+      return;
+    }
+
+    const newPwdInput = document.getElementById('reset-new-password');
+    const confirmPwdInput = document.getElementById('reset-confirm-password');
+    const saveBtn = document.getElementById('btn-save-new-password');
+    const alertEl = document.getElementById('reset-pwd-alert');
+
+    const newPassword = (newPwdInput?.value || '').trim();
+    const confirmPassword = (confirmPwdInput?.value || '').trim();
+
+    if (!newPassword || newPassword.length < 6) {
+      if (alertEl) {
+        alertEl.className = 'auth-alert error';
+        alertEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Password must be at least 6 characters long.</span>';
+        alertEl.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      if (alertEl) {
+        alertEl.className = 'auth-alert error';
+        alertEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <span>Passwords do not match. Please verify.</span>';
+        alertEl.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving Password...';
+    }
+
+    try {
+      const { data, error } = await this.supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      // Also ensure must_change_password flag is cleared in user_accounts
+      try {
+        await this.supabase
+          .from('user_accounts')
+          .update({ must_change_password: false, updated_at: new Date().toISOString() })
+          .eq('email', this.authorizedEmail);
+      } catch (syncErr) {
+        console.warn("user_accounts sync notice:", syncErr);
+      }
+
+      if (alertEl) {
+        alertEl.className = 'auth-alert success';
+        alertEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Password updated successfully! Redirecting...</span>';
+        alertEl.style.display = 'flex';
+      }
+
+      this.showToast("Master password updated successfully!", "success");
+
+      setTimeout(async () => {
+        this.closeResetPasswordModal();
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({ tab: 'dashboard' }, '', window.location.pathname + '#dashboard');
+        }
+        if (!this.session && data?.user) {
+          this.session = { user: data.user };
+        }
+        this.hideLoginGate();
+        this.updateAuthUI();
+        if (!this.dataLoaded) {
+          await this.loadAllData();
+          this.dataLoaded = true;
+          this.render();
+        }
+      }, 1200);
+    } catch (err) {
+      console.error("Failed to update password:", err);
+      if (alertEl) {
+        alertEl.className = 'auth-alert error';
+        alertEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${this.escapeHtml(err.message || 'Failed to update password.')}</span>`;
+        alertEl.style.display = 'flex';
+      }
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Save New Password';
+      }
     }
   }
 
@@ -254,11 +482,12 @@ class AdminCMSApp {
     if (!this.supabase) return;
     const alertBox = document.getElementById('auth-alert-box');
     const magicBtn = document.getElementById('btn-magic-link');
+    const masked = this.maskEmail(this.authorizedEmail);
 
     if (magicBtn) magicBtn.disabled = true;
     if (alertBox) {
       alertBox.className = 'auth-alert info';
-      alertBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending secure login link to ${this.authorizedEmail}...</span>`;
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending secure login link to ${masked}...</span>`;
       alertBox.style.display = 'flex';
     }
 
@@ -275,7 +504,7 @@ class AdminCMSApp {
 
       if (alertBox) {
         alertBox.className = 'auth-alert success';
-        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Magic login link sent to <strong>${this.authorizedEmail}</strong>! Please check your email inbox and tap the link to sign in.</span>`;
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>Magic login link sent to <strong>${masked}</strong>! Please check your email inbox and tap the link to sign in.</span>`;
         alertBox.style.display = 'flex';
       }
     } catch (err) {
@@ -305,8 +534,8 @@ class AdminCMSApp {
     const userRoleEl = document.getElementById('user-role-display');
 
     if (this.isAuthenticated()) {
-      if (userEmailEl) userEmailEl.textContent = this.authorizedEmail;
-      if (userRoleEl) userRoleEl.textContent = 'Super Administrator';
+      if (userEmailEl) userEmailEl.textContent = 'Absir Aiva';
+      if (userRoleEl) userRoleEl.textContent = `Super Admin (${this.maskEmail(this.authorizedEmail)})`;
     } else {
       if (userEmailEl) userEmailEl.textContent = 'Restricted';
       if (userRoleEl) userRoleEl.textContent = 'Sign In Required';
@@ -7414,6 +7643,31 @@ ${safetyTips.map(t => "• " + t).join('\n')}
         ${this.renderOfferAnimationCard()}
       </div>
 
+      <!-- Administrator Security & Master Password Card -->
+      <div class="card" style="margin-top: 24px; border-left: 4px solid #10b981;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="card-title"><i class="fa-solid fa-shield-halved" style="color: #059669;"></i> Administrator Security &amp; Credentials</h3>
+          <span class="badge badge-published"><i class="fa-solid fa-circle-check"></i> Single Admin Protected</span>
+        </div>
+        <div style="padding: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+            <div>
+              <div style="font-weight: 800; font-size: 15px; color: var(--slate-800);">Absir Aiva</div>
+              <div style="font-size: 13px; color: var(--slate-600); margin-top: 4px;">
+                Authorized Admin Email: <code style="background: rgba(16, 185, 129, 0.12); color: #047857; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-family: var(--font-mono);">${this.maskEmail(this.authorizedEmail)}</code>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.adminCMS.openResetPasswordModal()">
+              <i class="fa-solid fa-key"></i> Change Master Password
+            </button>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: 8px; padding: 12px 16px; font-size: 12.5px; color: var(--slate-600); display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-lock" style="color: #059669; font-size: 16px;"></i>
+            <span>Access to this administrative portal is exclusively restricted to this verified administrator account. You can update your master password whenever needed.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Audit Trail Table -->
       <div class="card" style="margin-top: 24px;">
         <div class="card-header">
@@ -7435,7 +7689,7 @@ ${safetyTips.map(t => "• " + t).join('\n')}
               ${this.auditLogs.length ? this.auditLogs.map(log => `
                 <tr>
                   <td style="font-size: 12px; color: var(--slate-500); font-family: var(--font-mono);">${new Date(log.created_at).toLocaleString()}</td>
-                  <td><strong>${this.escapeHtml(log.user_email || 'admin')}</strong></td>
+                  <td><strong>${this.escapeHtml(this.maskEmail(log.user_email || 'admin'))}</strong></td>
                   <td><span class="badge ${log.action === 'CREATE' ? 'badge-published' : (log.action === 'DELETE' ? 'badge-archived' : 'badge-draft')}">${log.action}</span></td>
                   <td><code>${this.escapeHtml(log.module)}</code></td>
                   <td style="font-size: 12px;">${this.escapeHtml(log.record_id || '-')}</td>
